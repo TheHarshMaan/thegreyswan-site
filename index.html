@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Grey Swan Editorial | Manuscript Pre-Submission Checker</title>
+<meta name="description" content="Free tools for authors and journals. Check a manuscript before submission: IMRaD structure, abbreviations, figure and table citations, ethics and consent statements, declarations and references.">
+<link rel="canonical" href="https://thegreyswan.in/">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta name="theme-color" content="#111315">
+
+<!-- Link previews (LinkedIn, WhatsApp, X) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Grey Swan Editorial">
+<meta property="og:title" content="The Grey Swan Editorial | Manuscript Pre-Submission Checker">
+<meta property="og:description" content="Run the technical checks a journal screening desk performs, before you submit. Free and private.">
+<meta property="og:url" content="https://thegreyswan.in/">
+<meta property="og:image" content="https://thegreyswan.in/assets/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- Tells Google what this site and tool are -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {"@type": "Organization", "name": "The Grey Swan Editorial", "url": "https://thegreyswan.in/",
+     "logo": "https://thegreyswan.in/assets/grey_swan_icon.png", "email": "theharshmaan@gmail.com"},
+    {"@type": "WebApplication", "name": "Manuscript Pre-Submission Checker",
+     "url": "https://greyswan-editorial.streamlit.app", "applicationCategory": "ProductivityApplication",
+     "operatingSystem": "Web browser", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"},
+     "publisher": {"@type": "Organization", "name": "The Grey Swan Editorial"}}
+  ]
+}
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #111315; --card: #1A1D20; --line: #2E2A24;
+    --ink: #ECE8E1; --muted: #A9A49B; --gold: #C69F70; --gold-bright: #E2B885;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --caps: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+         font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  a { color: var(--gold); }
+  a:hover { color: var(--gold-bright); }
+  img { max-width: 100%; height: auto; display: block; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header { border-bottom: 1px solid var(--line); }
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+  .brand img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  .brand span { font-family: var(--caps); letter-spacing: 3px; font-size: 0.85rem; color: var(--gold); }
+  .nav ul { display: flex; gap: 28px; list-style: none; margin: 0; padding: 0; }
+  .nav ul a { color: var(--muted); text-decoration: none; font-size: 0.92rem; }
+  .nav ul a:hover { color: var(--ink); }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: center; padding-top: 72px; padding-bottom: 64px; }
+  .eyebrow { font-family: var(--caps); color: var(--gold); letter-spacing: 5px; font-size: 0.85rem; text-transform: uppercase; }
+  .eyebrow span { color: var(--muted); }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.08; margin: 0; }
+  h1 { font-size: clamp(2.6rem, 6vw, 4.2rem); margin: 14px 0 20px; }
+  h1 em, h2 em { color: var(--gold); }
+  .lead { color: var(--muted); font-size: 1.1rem; max-width: 560px; margin: 0 0 32px; }
+  .buttons { display: flex; flex-wrap: wrap; gap: 14px; }
+  .btn { display: inline-block; padding: 14px 26px; border-radius: 6px; text-decoration: none; font-weight: 500;
+         font-size: 0.98rem; min-height: 48px; }
+  .btn-gold { background: var(--gold); color: #15130F; }
+  .btn-gold:hover { background: var(--gold-bright); color: #15130F; }
+  .btn-line { border: 1px solid var(--gold); color: var(--gold); }
+  .btn-line:hover { background: rgba(198, 159, 112, 0.1); }
+  .hero-art img { margin: 0 auto; max-height: 420px; width: auto; }
+
+  /* Ornament divider */
+  .ornament { display: flex; align-items: center; gap: 14px; margin: 0 auto; max-width: 520px; }
+  .ornament::before, .ornament::after { content: ""; flex: 1; height: 1px; background: var(--gold); opacity: 0.5; }
+  .ornament svg { width: 14px; height: 14px; flex: none; }
+
+  /* Sections */
+  section { padding: 72px 0; }
+  .section-head { text-align: center; max-width: 720px; margin: 0 auto 44px; }
+  h2 { font-size: clamp(2rem, 4.5vw, 2.9rem); margin: 10px 0 14px; }
+  .section-head p { color: var(--muted); margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 24px; }
+  .card h3 { font-size: 1.45rem; color: var(--ink); margin-bottom: 8px; }
+  .card p { color: var(--muted); margin: 0; font-size: 0.96rem; }
+  .steps { counter-reset: step; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .step { counter-increment: step; padding: 24px; border-top: 1px solid var(--gold); }
+  .step::before { content: counter(step, upper-roman); font-family: var(--caps); color: var(--gold); font-size: 1.1rem; letter-spacing: 2px; }
+  .step h3 { font-size: 1.4rem; margin: 10px 0 6px; }
+  .step p { color: var(--muted); margin: 0; font-size: 0.96rem; }
+  .note { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px;
+          color: var(--muted); font-size: 0.95rem; margin-top: 32px; }
+  .note b { color: var(--ink); font-weight: 500; }
+
+  .about { display: grid; grid-template-columns: 1fr 1.6fr; gap: 48px; align-items: center; }
+  .stats { display: flex; gap: 36px; flex-wrap: wrap; margin-top: 24px; }
+  .stat b { display: block; font-family: var(--serif); font-size: 2.6rem; color: var(--gold); font-weight: 500; line-height: 1; }
+  .stat span { color: var(--muted); font-size: 0.9rem; }
+  .about p { color: var(--muted); }
+  .about-logo img { max-width: 320px; margin: 0 auto; }
+
+  .soon li { margin-bottom: 8px; color: var(--muted); }
+  .soon li b { color: var(--ink); font-weight: 500; }
+
+  .contact { text-align: center; }
+  footer { border-top: 1px solid var(--line); padding: 28px 0; color: var(--muted); font-size: 0.88rem; text-align: center; }
+  footer .name { font-family: var(--caps); color: var(--gold); letter-spacing: 2px; }
+
+  @media (max-width: 860px) {
+    .hero, .about { grid-template-columns: 1fr; gap: 32px; }
+    .hero { padding-top: 40px; padding-bottom: 48px; text-align: left; }
+    .hero-art { order: -1; }
+    .hero-art img { max-height: 260px; }
+    .grid, .steps { grid-template-columns: 1fr; }
+    .nav ul { gap: 16px; }
+    .about-logo { order: -1; }
+    section { padding: 52px 0; }
+  }
+  @media (max-width: 520px) {
+    .nav ul { display: none; }
+    .eyebrow { letter-spacing: 3px; font-size: 0.75rem; }
+    .btn { width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top" aria-label="The Grey Swan Editorial, home">
+      <img src="assets/grey_swan_icon.png" alt="" width="40" height="40">
+      <span>The Grey Swan</span>
+    </a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="#checker">The checker</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <div>
+      <div class="eyebrow">The Grey Swan <span>· Editorial</span></div>
+      <h1>Smart publishing tools for <em>authors</em> and <em>publishers</em></h1>
+      <p class="lead">Check your manuscript the way a journal screening desk would, before you submit. Catch the missing
+        ethics details, undefined abbreviations and uncited figures that send papers back to authors.</p>
+      <div class="buttons">
+        <a class="btn btn-gold" href="https://greyswan-editorial.streamlit.app">Try the Manuscript Checker</a>
+        <a class="btn btn-line" href="https://github.com/TheHarshMaan/manuscript-checker">View the code</a>
+      </div>
+    </div>
+    <div class="hero-art">
+      <img src="assets/grey_swan_emblem.png" alt="The Grey Swan emblem: a crowned swan beneath a gilded arch" width="400" height="420">
+    </div>
+  </div>
+
+  <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0C10.8 6.5 13.5 9.2 20 10C13.5 10.8 10.8 13.5 10 20C9.2 13.5 6.5 10.8 0 10C6.5 9.2 9.2 6.5 10 0Z" fill="#C69F70"/></svg></div>
+
+  <section id="checker">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Free tool</div>
+        <h2>The Manuscript <em>Pre-Submission</em> Checker</h2>
+        <p>Upload a Word manuscript and get a clear, colour-coded report in seconds. It recognises research articles,
+          case reports, reviews and letters, and applies the right rules to each.</p>
+      </div>
+
+      <div class="grid">
+        <div class="card"><h3>Structure</h3><p>IMRaD sections, abstract length and keywords, adjusted for case reports, reviews and letters.</p></div>
+        <div class="card"><h3>Abbreviations</h3><p>Used before definition, never defined, defined twice or never used again, in the abstract and the main text.</p></div>
+        <div class="card"><h3>Figures &amp; tables</h3><p>Every figure and table cited, in numerical order, with matching legends.</p></div>
+        <div class="card"><h3>Ethics &amp; consent</h3><p>Committee name, approval number and date; written, verbal or waived consent; consent for minors.</p></div>
+        <div class="card"><h3>Study details</h3><p>Sample size, study period, inclusion and exclusion criteria, questionnaires, and trial or PROSPERO registration where required.</p></div>
+        <div class="card"><h3>Declarations &amp; references</h3><p>Conflict of interest, funding, author contributions, data availability, and citations that match the reference list.</p></div>
+      </div>
+
+      <div class="steps" style="margin-top:48px">
+        <div class="step"><h3>Upload</h3><p>Drop in one or more .docx manuscripts.</p></div>
+        <div class="step"><h3>Check</h3><p>Every rule runs in seconds, tuned on a labelled test set of manuscripts.</p></div>
+        <div class="step"><h3>Fix</h3><p>See each issue by section, and download the full report as Excel.</p></div>
+      </div>
+
+      <div class="note"><b>Private by design.</b> Files are checked in memory and discarded when the check finishes; nothing
+        is stored. <b>A screening aid, not a verdict:</b> the checker flags issues for a person to review and does not judge the science.</div>
+
+      <div class="buttons" style="justify-content:center;margin-top:32px">
+        <a class="btn btn-gold" href="https://greyswan-editorial.streamlit.app">Check a manuscript now</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" style="border-top:1px solid var(--line)">
+    <div class="wrap about">
+      <div class="about-logo"><img src="assets/the_grey_swan_logo.png" alt="The Grey Swan logo" width="320" height="320"></div>
+      <div>
+        <div class="eyebrow">About</div>
+        <h2>Built from the <em>screening desk</em></h2>
+        <p>The Grey Swan Editorial is run by Harsh Maan, a journal screening editor with a master's in microbiology.
+          After screening hundreds of manuscripts for medical journals at an international publisher, and managing
+          reviewer selection at a publishing-services company, he saw the same avoidable issues delay papers again and again.</p>
+        <p>These tools turn that experience into checks anyone can run, so authors can submit with confidence and
+          editorial teams can spend their time on what matters.</p>
+        <div class="stats">
+          <div class="stat"><b>900+</b><span>manuscripts screened</span></div>
+          <div class="stat"><b>2,500+</b><span>manuscripts through reviewer selection</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="border-top:1px solid var(--line)">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Coming next</div>
+        <h2>On the <em>roadmap</em></h2>
+      </div>
+      <ul class="soon" style="max-width:640px;margin:0 auto">
+        <li><b>Reference checks</b>: invalid DOIs and retracted papers, via Crossref</li>
+        <li><b>PDF support</b>: check manuscripts in PDF as well as Word</li>
+        <li><b>AI review (opt-in)</b>: deeper checks of ethics, consent and consistency between abstract and results</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="contact" class="contact" style="border-top:1px solid var(--line)">
+    <div class="wrap">
+      <div class="eyebrow">Contact</div>
+      <h2>Work with <em>The Grey Swan</em></h2>
+      <p style="color:var(--muted);max-width:620px;margin:0 auto 28px">Pre-submission screening for authors, screening support for
+        journals, or feedback on the checker: get in touch.</p>
+      <div class="buttons" style="justify-content:center">
+        <a class="btn btn-gold" href="mailto:theharshmaan@gmail.com?subject=The%20Grey%20Swan%20Editorial">Email Harsh</a>
+        <a class="btn btn-line" href="https://www.linkedin.com/in/harsh-maan-a67a702b4">LinkedIn</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · thegreyswan.in</div>
+</footer>
+
+</body>
+</html>
