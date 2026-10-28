@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reviewer Tracker | The Grey Swan Editorial</title>
+<meta name="description" content="A free, private reviewer tracker for journal editors and peer review teams. Log invitations, track who responds and delivers, and find reliable reviewers by expertise. Your data stays in your browser.">
+<link rel="canonical" href="https://thegreyswan.in/tracker/">
+<link rel="icon" type="image/png" href="../assets/favicon.png">
+<link rel="apple-touch-icon" href="../assets/apple-touch-icon.png">
+<meta name="theme-color" content="#111315">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Grey Swan Editorial">
+<meta property="og:title" content="Reviewer Tracker | The Grey Swan Editorial">
+<meta property="og:description" content="Track which reviewers respond and deliver. Free, private, no sign-up.">
+<meta property="og:url" content="https://thegreyswan.in/tracker/">
+<meta property="og:image" content="https://thegreyswan.in/assets/og-image.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Same colours and fonts as the main site */
+  :root {
+    color-scheme: dark;   /* dark date pickers, dropdowns and scrollbars */
+    --bg: #111315; --card: #1A1D20; --field: #15181A; --line: #2E2A24;
+    --ink: #ECE8E1; --muted: #A9A49B; --gold: #C69F70; --gold-bright: #E2B885;
+    --green: #8FC79A; --amber: #E0B86A; --red: #E8907F; --grey: #8C8880;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --caps: 'Cinzel', Georgia, serif;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+         font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  a { color: var(--gold); }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  header { border-bottom: 1px solid var(--line); }
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .brand img { width: 40px; height: 40px; border-radius: 50%; }
+  .brand span { font-family: var(--caps); letter-spacing: 3px; font-size: 0.85rem; color: var(--gold); }
+  .nav a.back { color: var(--muted); text-decoration: none; font-size: 0.92rem; }
+
+  .intro { padding: 48px 0 24px; }
+  .eyebrow { font-family: var(--caps); color: var(--gold); letter-spacing: 5px; font-size: 0.85rem; text-transform: uppercase; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.1; margin: 0; }
+  h1 { font-size: clamp(2.3rem, 5vw, 3.4rem); margin: 10px 0 12px; }
+  h1 em { color: var(--gold); }
+  h2 { font-size: 1.7rem; margin-bottom: 14px; }
+  .lead { color: var(--muted); max-width: 720px; margin: 0; }
+  .note { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px;
+          color: var(--muted); font-size: 0.92rem; margin: 20px 0 0; }
+  .note b { color: var(--ink); font-weight: 500; }
+  .warn { border-color: var(--red); }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin: 28px 0 24px; }
+  .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted);
+                 font: 500 0.95rem var(--sans); padding: 10px 14px; cursor: pointer; }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--gold); }
+  .panel[hidden] { display: none; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 22px; margin-bottom: 20px; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* Forms */
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin: 0 0 4px; }
+  input, select, textarea { width: 100%; background: var(--field); border: 1px solid var(--line); border-radius: 6px;
+                            color: var(--ink); font: 0.95rem var(--sans); padding: 9px 11px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--gold); }
+  textarea { min-height: 64px; resize: vertical; }
+  .field { margin-bottom: 14px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .check { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 0.9rem; }
+  .check input { width: auto; }
+  .btn { display: inline-block; background: var(--gold); color: #15130F; border: 1px solid var(--gold); border-radius: 6px;
+         font: 500 0.92rem var(--sans); padding: 9px 18px; cursor: pointer; text-decoration: none; }
+  .btn:hover { background: var(--gold-bright); }
+  .btn.line { background: none; color: var(--gold); }
+  .btn.line:hover { background: rgba(198,159,112,0.1); }
+  .btn.small { padding: 5px 10px; font-size: 0.82rem; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+  .msg { color: var(--green); font-size: 0.9rem; min-height: 1.4em; margin-top: 8px; }
+  .hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 14px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; white-space: nowrap; }
+  tr.click { cursor: pointer; }
+  tr.click:hover td { background: rgba(198,159,112,0.06); }
+  td select { padding: 5px 8px; font-size: 0.85rem; min-width: 150px; }
+  .small-text { color: var(--muted); font-size: 0.82rem; }
+  .empty { color: var(--muted); font-style: italic; padding: 16px 0; }
+
+  /* Status badges */
+  .badge { display: inline-block; border: 1px solid; border-radius: 20px; padding: 1px 10px; font-size: 0.8rem; white-space: nowrap; }
+  .Reliable { color: var(--green); } .Mixed { color: var(--amber); }
+  .Unresponsive, .Dead { color: var(--red); } .New { color: var(--grey); }
+  .tags span { display: inline-block; background: var(--field); border: 1px solid var(--line); border-radius: 4px;
+               padding: 0 6px; margin: 0 4px 4px 0; font-size: 0.8rem; color: var(--muted); }
+  .tags span.hit { border-color: var(--gold); color: var(--gold); }
+
+  .stats { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat b { display: block; font-family: var(--serif); font-size: 2.1rem; color: var(--gold); font-weight: 500; line-height: 1; }
+  .stat span { color: var(--muted); font-size: 0.85rem; }
+  .filters { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+
+  footer { border-top: 1px solid var(--line); padding: 28px 0; margin-top: 48px; color: var(--muted); font-size: 0.88rem; text-align: center; }
+  footer .name { font-family: var(--caps); color: var(--gold); letter-spacing: 2px; }
+
+  @media (max-width: 760px) {
+    .cols, .row, .filters { grid-template-columns: 1fr; }
+    .intro { padding-top: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="../" aria-label="The Grey Swan Editorial, home">
+      <img src="../assets/grey_swan_icon.png" alt="" width="40" height="40">
+      <span>The Grey Swan</span>
+    </a>
+    <a class="back" href="../">← All tools</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="intro">
+    <div class="eyebrow">Free tool</div>
+    <h1>Reviewer <em>Tracker</em></h1>
+    <p class="lead">Log every reviewer invitation and its outcome. The tracker works out who accepts, who delivers,
+      how fast, and who never replies, so next time you invite the people most likely to say yes.</p>
+    <div class="note" id="storage-note"><b>Your data stays on this device.</b> Everything is saved in this browser only:
+      nothing is sent to a server, and nobody else can see it. Clearing your browser data deletes it, and it doesn't
+      move between devices, so <b>download a backup regularly</b> (Backup tab).</div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" data-tab="log" aria-selected="true">Log invitations</button>
+    <button role="tab" data-tab="reviewers" aria-selected="false">Reviewers</button>
+    <button role="tab" data-tab="find" aria-selected="false">Find reviewers</button>
+    <button role="tab" data-tab="backup" aria-selected="false">Backup &amp; import</button>
+  </div>
+
+  <!-- ============ LOG ============ -->
+  <section class="panel" id="tab-log">
+    <div class="cols">
+      <div class="card">
+        <h2>Log an invitation</h2>
+        <p class="hint">Start typing a name to pick an existing reviewer. A new name adds a new reviewer.</p>
+        <form id="invite-form">
+          <div class="field">
+            <label for="inv-name">Reviewer name *</label>
+            <input id="inv-name" list="reviewer-names" required autocomplete="off">
+            <datalist id="reviewer-names"></datalist>
+          </div>
+          <div class="row">
+            <div class="field"><label for="inv-email">Email</label><input id="inv-email" type="email"></div>
+            <div class="field"><label for="inv-aff">Affiliation</label><input id="inv-aff"></div>
+          </div>
+          <div class="field"><label for="inv-kw">Keywords / expertise (comma-separated)</label>
+            <input id="inv-kw" placeholder="e.g. antimicrobial resistance, E. coli, UTI"></div>
+          <div class="row">
+            <div class="field"><label for="inv-ms">Manuscript ID</label><input id="inv-ms" placeholder="e.g. JMB-26-0142"></div>
+            <div class="field"><label for="inv-date">Date invited *</label><input id="inv-date" type="date" required></div>
+          </div>
+          <button class="btn" type="submit">Save invitation</button>
+          <div class="msg" id="invite-msg" role="status"></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Open invitations</h2>
+        <p class="hint">Update each one as replies and reports come in. Accepted reviews older than 21 days are marked overdue.</p>
+        <div id="open-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REVIEWERS ============ -->
+  <section class="panel" id="tab-reviewers" hidden>
+    <div class="stats" id="stats"></div>
+    <div class="filters">
+      <div><label for="search">Search name, affiliation or keyword</label><input id="search" type="search"></div>
+      <div><label for="status-filter">Status</label>
+        <select id="status-filter">
+          <option value="">All</option><option>Reliable</option><option>Mixed</option>
+          <option>Unresponsive</option><option>Dead</option><option>New</option>
+        </select></div>
+      <div><label for="sort">Sort by</label>
+        <select id="sort">
+          <option value="name">Name</option><option value="rate">Acceptance rate</option>
+          <option value="speed">Fastest turnaround</option><option value="recent">Last invited</option>
+        </select></div>
+    </div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>Reviewer</th><th>Keywords</th><th>Status</th><th>Invites</th><th>Accepted</th>
+          <th>Reports</th><th>Avg days</th><th>Last invited</th></tr></thead>
+        <tbody id="reviewer-rows"></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="edit-card" hidden>
+      <h2 id="edit-title">Edit reviewer</h2>
+      <form id="edit-form">
+        <div class="row">
+          <div class="field"><label for="ed-name">Name</label><input id="ed-name" required></div>
+          <div class="field"><label for="ed-email">Email</label><input id="ed-email" type="email"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label for="ed-aff">Affiliation</label><input id="ed-aff"></div>
+          <div class="field"><label for="ed-kw">Keywords (comma-separated)</label><input id="ed-kw"></div>
+        </div>
+        <div class="field"><label for="ed-notes">Notes</label><textarea id="ed-notes"></textarea></div>
+        <label class="check"><input type="checkbox" id="ed-dead"> Email is dead or bouncing</label>
+        <div class="actions" style="margin-top:14px">
+          <button class="btn" type="submit">Save changes</button>
+          <button class="btn line" type="button" id="ed-close">Close</button>
+          <button class="btn line" type="button" id="ed-delete">Delete reviewer</button>
+        </div>
+      </form>
+      <h3 style="font-size:1.3rem;margin:24px 0 8px">Invitation history</h3>
+      <div class="table-wrap" id="history"></div>
+    </div>
+  </section>
+
+  <!-- ============ FIND ============ -->
+  <section class="panel" id="tab-find" hidden>
+    <div class="card">
+      <h2>Find reviewers for a manuscript</h2>
+      <p class="hint">Enter the manuscript's keywords. Reviewers are ranked by expertise match first, then by how reliably
+        they accept and deliver. Dead emails are left out, and anyone invited recently is marked.</p>
+      <div class="row">
+        <div class="field"><label for="find-kw">Manuscript keywords (comma-separated)</label>
+          <input id="find-kw" placeholder="e.g. UTI, antimicrobial resistance, Klebsiella"></div>
+        <div class="field"><label for="find-days">Mark reviewers invited in the last (days)</label>
+          <input id="find-days" type="number" min="0" value="30"></div>
+      </div>
+    </div>
+    <div class="card table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Reviewer</th><th>Matching keywords</th><th>Status</th><th>Acceptance</th><th>Note</th></tr></thead>
+        <tbody id="find-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ BACKUP ============ -->
+  <section class="panel" id="tab-backup" hidden>
+    <div class="cols">
+      <div class="card">
+        <h2>Download</h2>
+        <p class="hint">A full backup restores everything on any browser. The CSV files open in Excel or Google Sheets.</p>
+        <div class="actions">
+          <button class="btn" id="dl-json">Full backup (.json)</button>
+          <button class="btn line" id="dl-reviewers">Reviewers (.csv)</button>
+          <button class="btn line" id="dl-invites">Invitations (.csv)</button>
+        </div>
+        <p class="small-text" id="last-backup" style="margin-top:12px"></p>
+      </div>
+      <div class="card">
+        <h2>Restore or import</h2>
+        <div class="field"><label for="up-json">Restore a full backup (.json). This replaces current data.</label>
+          <input id="up-json" type="file" accept=".json,application/json"></div>
+        <div class="field"><label for="up-csv">Import reviewers from a spreadsheet saved as .csv</label>
+          <input id="up-csv" type="file" accept=".csv,text/csv"></div>
+        <p class="small-text">Columns: <b>name</b>, <b>email</b>, <b>affiliation</b>, <b>keywords</b> (keywords separated by
+          semicolons or commas inside the cell). Existing reviewers with the same email or name are updated, not duplicated.</p>
+        <div class="msg" id="import-msg" role="status"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Try it out</h2>
+      <p class="hint">Load a set of invented reviewers to see how the tracker works, then clear it when you're ready to start.</p>
+      <div class="actions">
+        <button class="btn line" id="load-demo">Load example data</button>
+        <button class="btn line" id="clear-all">Delete all data</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · <a href="../">thegreyswan.in</a></div>
+</footer>
+
+<script>
+/* =====================================================================
+   The Grey Swan Reviewer Tracker
+   All data lives in the browser's localStorage under one key, as JSON:
+     { reviewers: [ {id, name, email, affiliation, keywords[], notes, dead} ],
+       invites:   [ {id, reviewerId, manuscript, invited, outcome, reported} ] }
+   Nothing is sent anywhere.
+   ===================================================================== */
+
+const STORAGE_KEY = "greyswan-reviewer-tracker-v1";
+const OVERDUE_DAYS = 21;          // accepted, but no report after this many days
+const OUTCOMES = {
+  awaiting:  "Awaiting reply",
+  accepted:  "Accepted",
+  declined:  "Declined",
+  noreply:   "No response",
+  submitted: "Report submitted",
+};
+
+let data = { reviewers: [], invites: [], lastBackup: null };
+let editingId = null;             // reviewer open in the edit card
+let storageWorks = true;
+
+// ---------- Saving and loading ----------
+function load() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) data = Object.assign({ reviewers: [], invites: [], lastBackup: null }, JSON.parse(saved));
+  } catch (e) {
+    storageWorks = false;
+  }
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    storageWorks = false;
+    showStorageWarning();
+  }
+}
+
+function showStorageWarning() {
+  const note = document.getElementById("storage-note");
+  note.classList.add("warn");
+  note.innerHTML = "<b>This browser isn't letting the tracker save.</b> (Private browsing can do this.) " +
+                   "Anything you enter will be lost when you close the page unless you download a backup.";
+}
+
+// ---------- Small helpers ----------
+const $ = (id) => document.getElementById(id);
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const today = () => new Date().toISOString().slice(0, 10);
+
+function escapeHtml(text) {
+  // Anything typed or imported is shown as text, never run as HTML
+  return String(text ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function splitKeywords(text) {
+  return String(text || "").split(/[,;]/).map((k) => k.trim()).filter(Boolean);
+}
+
+function daysBetween(a, b) {
+  return Math.round((new Date(b) - new Date(a)) / 86400000);
+}
+
+function formatDate(iso) {
+  if (!iso) return "–";
+  return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function findReviewer(name, email) {
+  const n = name.trim().toLowerCase(), e = (email || "").trim().toLowerCase();
+  return data.reviewers.find((r) => (e && r.email.toLowerCase() === e) || r.name.toLowerCase() === n);
+}
+
+// ---------- The numbers behind each reviewer ----------
+function statsFor(reviewer) {
+  const invites = data.invites.filter((i) => i.reviewerId === reviewer.id);
+  const decided = invites.filter((i) => i.outcome !== "awaiting");
+  const accepted = invites.filter((i) => i.outcome === "accepted" || i.outcome === "submitted");
+  const reports = invites.filter((i) => i.outcome === "submitted" && i.reported);
+  const noReply = invites.filter((i) => i.outcome === "noreply");
+  const turnaround = reports.map((i) => daysBetween(i.invited, i.reported));
+  const lastInvited = invites.map((i) => i.invited).sort().pop() || null;
+
+  const rate = decided.length ? accepted.length / decided.length : null;
+  const avgDays = turnaround.length ? Math.round(turnaround.reduce((a, b) => a + b, 0) / turnaround.length) : null;
+
+  // Status rules: dead email first, then too little history, then behaviour
+  let status;
+  if (reviewer.dead) status = "Dead";
+  else if (decided.length < 2) status = "New";
+  else if (noReply.length / decided.length >= 0.5) status = "Unresponsive";
+  else if (reports.length >= 1 && rate >= 0.5) status = "Reliable";
+  else status = "Mixed";
+
+  return { invites: invites.length, accepted: accepted.length, reports: reports.length,
+           rate, avgDays, lastInvited, status };
+}
+
+const percent = (rate) => (rate === null ? "–" : Math.round(rate * 100) + "%");
+const badge = (status) => `<span class="badge ${status}">${status === "Dead" ? "Dead email" : status}</span>`;
+const tags = (keywords, hits = []) =>
+  `<div class="tags">${keywords.map((k) =>
+    `<span class="${hits.includes(k) ? "hit" : ""}">${escapeHtml(k)}</span>`).join("")}</div>`;
+
+// ---------- Tab 1: logging invitations ----------
+$("inv-name").addEventListener("change", () => {
+  // Picking an existing reviewer fills in their details
+  const r = findReviewer($("inv-name").value);
+  if (r) {
+    $("inv-email").value = r.email;
+    $("inv-aff").value = r.affiliation;
+    $("inv-kw").value = r.keywords.join(", ");
+  }
+});
+
+$("invite-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = $("inv-name").value.trim();
+  const email = $("inv-email").value.trim();
+  let reviewer = findReviewer(name, email);
+
+  if (!reviewer) {
+    reviewer = { id: newId(), name, email, affiliation: "", keywords: [], notes: "", dead: false };
+    data.reviewers.push(reviewer);
+  }
+  // Keep the reviewer's details up to date with what was typed
+  if (email) reviewer.email = email;
+  if ($("inv-aff").value.trim()) reviewer.affiliation = $("inv-aff").value.trim();
+  const newKeywords = splitKeywords($("inv-kw").value);
+  reviewer.keywords = [...new Set([...reviewer.keywords, ...newKeywords])];
+
+  data.invites.push({ id: newId(), reviewerId: reviewer.id, manuscript: $("inv-ms").value.trim(),
+                      invited: $("inv-date").value || today(), outcome: "awaiting", reported: null });
+  save();
+
+  $("invite-msg").textContent = `Saved: ${name} invited${$("inv-ms").value ? " for " + $("inv-ms").value : ""}.`;
+  // Keep the manuscript ID and date, clear the reviewer, so several reviewers can be logged for one paper
+  ["inv-name", "inv-email", "inv-aff", "inv-kw"].forEach((id) => ($(id).value = ""));
+  $("inv-name").focus();
+  renderAll();
+});
+
+function outcomeSelect(invite) {
+  const options = Object.entries(OUTCOMES).map(([value, label]) =>
+    `<option value="${value}" ${invite.outcome === value ? "selected" : ""}>${label}</option>`).join("");
+  return `<select data-invite="${invite.id}" aria-label="Outcome">${options}</select>`;
+}
+
+function setOutcome(inviteId, outcome) {
+  const invite = data.invites.find((i) => i.id === inviteId);
+  if (!invite) return;
+  invite.outcome = outcome;
+  invite.reported = outcome === "submitted" ? (invite.reported || today()) : null;
+  save();
+  renderAll();
+}
+
+// Any outcome dropdown on the page (open list or history) updates the invitation
+document.addEventListener("change", (event) => {
+  if (event.target.matches("select[data-invite]")) setOutcome(event.target.dataset.invite, event.target.value);
+});
+
+function renderOpen() {
+  const open = data.invites
+    .filter((i) => i.outcome === "awaiting" || i.outcome === "accepted")
+    .sort((a, b) => a.invited.localeCompare(b.invited));
+  if (!open.length) {
+    $("open-list").innerHTML = '<p class="empty">No open invitations.</p>';
+    return;
+  }
+  const rows = open.map((i) => {
+    const r = data.reviewers.find((x) => x.id === i.reviewerId) || { name: "(deleted)" };
+    const age = daysBetween(i.invited, today());
+    const overdue = i.outcome === "accepted" && age > OVERDUE_DAYS;
+    return `<tr><td>${escapeHtml(r.name)}<div class="small-text">${escapeHtml(i.manuscript || "")}
+              · ${age} day${age === 1 ? "" : "s"} ago${overdue ? ' · <span class="Unresponsive">overdue</span>' : ""}</div></td>
+            <td>${outcomeSelect(i)}</td></tr>`;
+  }).join("");
+  $("open-list").innerHTML = `<div class="table-wrap"><table><tbody>${rows}</tbody></table></div>`;
+}
+
+// ---------- Tab 2: reviewer list ----------
+function renderStats() {
+  const all = data.reviewers.map(statsFor);
+  const count = (s) => all.filter((x) => x.status === s).length;
+  $("stats").innerHTML = [
+    [data.reviewers.length, "reviewers"], [data.invites.length, "invitations logged"],
+    [count("Reliable"), "reliable"], [count("Unresponsive") + count("Dead"), "unresponsive or dead"],
+  ].map(([n, label]) => `<div class="stat"><b>${n}</b><span>${label}</span></div>`).join("");
+}
+
+function renderReviewers() {
+  const query = $("search").value.trim().toLowerCase();
+  const wanted = $("status-filter").value;
+  let list = data.reviewers.map((r) => ({ r, s: statsFor(r) }));
+
+  if (query) list = list.filter(({ r }) =>
+    [r.name, r.email, r.affiliation, ...r.keywords].join(" ").toLowerCase().includes(query));
+  if (wanted) list = list.filter(({ s }) => s.status === wanted);
+
+  const sorters = {
+    name:   (a, b) => a.r.name.localeCompare(b.r.name),
+    rate:   (a, b) => (b.s.rate ?? -1) - (a.s.rate ?? -1),
+    speed:  (a, b) => (a.s.avgDays ?? 9999) - (b.s.avgDays ?? 9999),
+    recent: (a, b) => (b.s.lastInvited || "").localeCompare(a.s.lastInvited || ""),
+  };
+  list.sort(sorters[$("sort").value]);
+
+  $("reviewer-rows").innerHTML = list.length ? list.map(({ r, s }) => `
+    <tr class="click" data-reviewer="${r.id}">
+      <td>${escapeHtml(r.name)}<div class="small-text">${escapeHtml(r.affiliation)}</div></td>
+      <td>${tags(r.keywords)}</td><td>${badge(s.status)}</td><td>${s.invites}</td>
+      <td>${s.accepted} (${percent(s.rate)})</td><td>${s.reports}</td>
+      <td>${s.avgDays ?? "–"}</td><td>${formatDate(s.lastInvited)}</td>
+    </tr>`).join("")
+    : `<tr><td colspan="8" class="empty">${data.reviewers.length ? "No reviewers match." : "No reviewers yet. Log an invitation to start."}</td></tr>`;
+}
+
+["search", "status-filter", "sort"].forEach((id) => $(id).addEventListener("input", renderReviewers));
+
+$("reviewer-rows").addEventListener("click", (event) => {
+  const row = event.target.closest("tr[data-reviewer]");
+  if (row) openEditor(row.dataset.reviewer);
+});
+
+function openEditor(id) {
+  const r = data.reviewers.find((x) => x.id === id);
+  if (!r) return;
+  editingId = id;
+  $("edit-title").textContent = r.name;
+  $("ed-name").value = r.name;
+  $("ed-email").value = r.email;
+  $("ed-aff").value = r.affiliation;
+  $("ed-kw").value = r.keywords.join(", ");
+  $("ed-notes").value = r.notes;
+  $("ed-dead").checked = r.dead;
+  renderHistory();
+  $("edit-card").hidden = false;
+  $("edit-card").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderHistory() {
+  const invites = data.invites.filter((i) => i.reviewerId === editingId)
+                              .sort((a, b) => b.invited.localeCompare(a.invited));
+  $("history").innerHTML = invites.length ? `<table>
+      <thead><tr><th>Invited</th><th>Manuscript</th><th>Outcome</th><th>Report</th><th></th></tr></thead>
+      <tbody>${invites.map((i) => `<tr><td>${formatDate(i.invited)}</td><td>${escapeHtml(i.manuscript || "–")}</td>
+        <td>${outcomeSelect(i)}</td>
+        <td>${i.reported ? formatDate(i.reported) + ` (${daysBetween(i.invited, i.reported)} days)` : "–"}</td>
+        <td><button class="btn line small" data-delete-invite="${i.id}">Remove</button></td></tr>`).join("")}</tbody></table>`
+    : '<p class="empty">No invitations logged.</p>';
+}
+
+$("history").addEventListener("click", (event) => {
+  const id = event.target.dataset.deleteInvite;
+  if (id && confirm("Remove this invitation?")) {
+    data.invites = data.invites.filter((i) => i.id !== id);
+    save();
+    renderAll();
+  }
+});
+
+$("edit-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const r = data.reviewers.find((x) => x.id === editingId);
+  Object.assign(r, { name: $("ed-name").value.trim(), email: $("ed-email").value.trim(),
+                     affiliation: $("ed-aff").value.trim(), keywords: splitKeywords($("ed-kw").value),
+                     notes: $("ed-notes").value.trim(), dead: $("ed-dead").checked });
+  save();
+  renderAll();
+});
+
+$("ed-close").addEventListener("click", () => { $("edit-card").hidden = true; editingId = null; });
+
+$("ed-delete").addEventListener("click", () => {
+  if (!confirm("Delete this reviewer and all their invitations?")) return;
+  data.reviewers = data.reviewers.filter((r) => r.id !== editingId);
+  data.invites = data.invites.filter((i) => i.reviewerId !== editingId);
+  editingId = null;
+  $("edit-card").hidden = true;
+  save();
+  renderAll();
+});
+
+// ---------- Tab 3: find reviewers ----------
+function keywordMatches(reviewerKeywords, wanted) {
+  // A reviewer keyword matches if either one contains the other ("resistance" ~ "antimicrobial resistance")
+  return reviewerKeywords.filter((k) => wanted.some((w) => {
+    const a = k.toLowerCase(), b = w.toLowerCase();
+    return a.includes(b) || b.includes(a);
+  }));
+}
+
+function renderFind() {
+  const wanted = splitKeywords($("find-kw").value);
+  const recentDays = Number($("find-days").value) || 0;
+  if (!wanted.length) {
+    $("find-rows").innerHTML = '<tr><td colspan="6" class="empty">Enter keywords to see suggestions.</td></tr>';
+    return;
+  }
+  const ranked = data.reviewers
+    .filter((r) => !r.dead)
+    .map((r) => {
+      const s = statsFor(r);
+      const hits = keywordMatches(r.keywords, wanted);
+      const expertise = hits.length / wanted.length;                     // 0 to 1
+      const reliability = s.rate === null ? 0.3 : s.rate;                // new reviewers get a modest default
+      const penalty = s.status === "Unresponsive" ? 0.5 : 1;
+      return { r, s, hits, score: (expertise * 0.65 + reliability * 0.35) * penalty };
+    })
+    .filter((x) => x.hits.length)
+    .sort((a, b) => b.score - a.score);
+
+  $("find-rows").innerHTML = ranked.length ? ranked.map(({ r, s, hits }, n) => {
+    const since = s.lastInvited ? daysBetween(s.lastInvited, today()) : null;
+    const note = since !== null && since <= recentDays ? `Invited ${since} day${since === 1 ? "" : "s"} ago` : "";
+    return `<tr class="click" data-reviewer="${r.id}"><td>${n + 1}</td>
+      <td>${escapeHtml(r.name)}<div class="small-text">${escapeHtml(r.email)}</div></td>
+      <td>${tags(r.keywords, hits)}</td><td>${badge(s.status)}</td>
+      <td>${percent(s.rate)}${s.avgDays !== null ? `<div class="small-text">${s.avgDays} days avg</div>` : ""}</td>
+      <td class="small-text">${note}</td></tr>`;
+  }).join("") : '<tr><td colspan="6" class="empty">No reviewers with matching keywords.</td></tr>';
+}
+
+["find-kw", "find-days"].forEach((id) => $(id).addEventListener("input", renderFind));
+
+$("find-rows").addEventListener("click", (event) => {
+  const row = event.target.closest("tr[data-reviewer]");
+  if (row) { showTab("reviewers"); openEditor(row.dataset.reviewer); }
+});
+
+// ---------- Tab 4: backup, export, import ----------
+function download(filename, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const link = Object.assign(document.createElement("a"), { href: url, download: filename });
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvCell(value) {
+  const text = String(value ?? "");
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function toCsv(rows) {
+  // The ﻿ at the start tells Excel the file is UTF-8, so accented names display correctly
+  return "﻿" + rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+}
+
+$("dl-json").addEventListener("click", () => {
+  data.lastBackup = new Date().toISOString();
+  save();
+  download(`reviewer-tracker-backup-${today()}.json`, JSON.stringify(data, null, 2), "application/json");
+  renderBackupNote();
+});
+
+$("dl-reviewers").addEventListener("click", () => {
+  const rows = [["Name", "Email", "Affiliation", "Keywords", "Status", "Invites", "Accepted",
+                 "Acceptance rate", "Reports", "Avg days to report", "Last invited", "Notes"]];
+  data.reviewers.forEach((r) => {
+    const s = statsFor(r);
+    rows.push([r.name, r.email, r.affiliation, r.keywords.join("; "), s.status, s.invites, s.accepted,
+               percent(s.rate), s.reports, s.avgDays ?? "", s.lastInvited || "", r.notes]);
+  });
+  download(`reviewers-${today()}.csv`, toCsv(rows), "text/csv");
+});
+
+$("dl-invites").addEventListener("click", () => {
+  const rows = [["Reviewer", "Email", "Manuscript", "Invited", "Outcome", "Report date"]];
+  data.invites.forEach((i) => {
+    const r = data.reviewers.find((x) => x.id === i.reviewerId) || {};
+    rows.push([r.name, r.email, i.manuscript, i.invited, OUTCOMES[i.outcome], i.reported || ""]);
+  });
+  download(`invitations-${today()}.csv`, toCsv(rows), "text/csv");
+});
+
+$("up-json").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const restored = JSON.parse(await file.text());
+    if (!Array.isArray(restored.reviewers) || !Array.isArray(restored.invites)) throw new Error("not a tracker backup");
+    if (!confirm(`Replace current data with this backup (${restored.reviewers.length} reviewers)?`)) return;
+    data = Object.assign({ lastBackup: null }, restored);
+    save();
+    renderAll();
+    $("import-msg").textContent = "Backup restored.";
+  } catch (e) {
+    $("import-msg").textContent = "That file isn't a Reviewer Tracker backup.";
+  } finally {
+    event.target.value = "";
+  }
+});
+
+function parseCsv(text) {
+  // Handles quoted cells containing commas, quotes and line breaks
+  const rows = [];
+  let row = [], cell = "", quoted = false;
+  text = text.replace(/^﻿/, "");
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); rows.push(row); row = []; cell = "";
+    } else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim()));
+}
+
+$("up-csv").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  const rows = parseCsv(await file.text());
+  event.target.value = "";
+  if (rows.length < 2) { $("import-msg").textContent = "The file has no rows to import."; return; }
+
+  const header = rows[0].map((h) => h.trim().toLowerCase());
+  const col = (...names) => header.findIndex((h) => names.some((n) => h.includes(n)));
+  const c = { name: col("name"), email: col("email", "e-mail"), aff: col("affiliation", "institution"),
+              kw: col("keyword", "expertise", "subject") };
+  if (c.name < 0) { $("import-msg").textContent = "No 'name' column found in the first row."; return; }
+
+  let added = 0, updated = 0;
+  rows.slice(1).forEach((cells) => {
+    const get = (i) => (i >= 0 ? (cells[i] || "").trim() : "");
+    const name = get(c.name);
+    if (!name) return;
+    const existing = findReviewer(name, get(c.email));
+    const keywords = splitKeywords(get(c.kw));
+    if (existing) {
+      existing.email = get(c.email) || existing.email;
+      existing.affiliation = get(c.aff) || existing.affiliation;
+      existing.keywords = [...new Set([...existing.keywords, ...keywords])];
+      updated++;
+    } else {
+      data.reviewers.push({ id: newId(), name, email: get(c.email), affiliation: get(c.aff),
+                            keywords, notes: "", dead: false });
+      added++;
+    }
+  });
+  save();
+  renderAll();
+  $("import-msg").textContent = `Imported: ${added} new reviewer(s), ${updated} updated.`;
+});
+
+function renderBackupNote() {
+  $("last-backup").textContent = data.lastBackup
+    ? "Last backup downloaded: " + formatDate(data.lastBackup.slice(0, 10))
+    : "No backup downloaded yet.";
+}
+
+$("clear-all").addEventListener("click", () => {
+  if (!confirm("Delete ALL reviewers and invitations from this browser? Download a backup first if you need one.")) return;
+  data = { reviewers: [], invites: [], lastBackup: null };
+  save();
+  renderAll();
+});
+
+$("load-demo").addEventListener("click", () => {
+  if (data.reviewers.length && !confirm("Add example reviewers to your current data?")) return;
+  // Invented people at invented institutions, for demonstration only
+  const people = [
+    ["Dr Asha Verma", "asha.verma@example.org", "Northfield Institute of Medical Sciences", "antimicrobial resistance, UTI, Klebsiella"],
+    ["Dr Tomas Lind", "t.lind@example.org", "Halvard University Hospital", "sepsis, intensive care, antibiotic stewardship"],
+    ["Prof Mei Tan", "mei.tan@example.org", "Eastbay School of Public Health", "epidemiology, vaccines, public health"],
+    ["Dr Kofi Mensah", "k.mensah@example.org", "Coastline Medical College", "UTI, E. coli, molecular diagnostics"],
+    ["Dr Laura Benn", "l.benn@example.org", "Riverside Cancer Centre", "breast cancer, oncology, clinical trials"],
+  ];
+  const ids = people.map(([name, email, affiliation, kw]) => {
+    const r = { id: newId(), name, email, affiliation, keywords: splitKeywords(kw), notes: "", dead: false };
+    data.reviewers.push(r);
+    return r.id;
+  });
+  const ago = (d) => new Date(Date.now() - d * 86400000).toISOString().slice(0, 10);
+  // [reviewer, manuscript, invited days ago, outcome, report days ago]
+  [[0, "DEMO-001", 120, "submitted", 98], [0, "DEMO-004", 60, "submitted", 41], [0, "DEMO-009", 5, "awaiting"],
+   [1, "DEMO-002", 110, "declined"], [1, "DEMO-006", 70, "submitted", 30], [1, "DEMO-010", 30, "accepted"],
+   [2, "DEMO-003", 100, "noreply"], [2, "DEMO-007", 50, "noreply"], [2, "DEMO-011", 12, "awaiting"],
+   [3, "DEMO-005", 80, "submitted", 66], [3, "DEMO-008", 40, "declined"],
+   [4, "DEMO-012", 3, "awaiting"]].forEach(([who, ms, d, outcome, rep]) => {
+    data.invites.push({ id: newId(), reviewerId: ids[who], manuscript: ms, invited: ago(d),
+                        outcome, reported: rep ? ago(rep) : null });
+  });
+  save();
+  renderAll();
+  $("import-msg").textContent = "Example data loaded. Look at the Reviewers and Find reviewers tabs.";
+});
+
+// ---------- Tabs and start-up ----------
+function showTab(name) {
+  document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === name));
+  document.querySelectorAll(".panel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
+}
+document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+function renderAll() {
+  $("reviewer-names").innerHTML = data.reviewers.map((r) => `<option value="${escapeHtml(r.name)}">`).join("");
+  renderOpen();
+  renderStats();
+  renderReviewers();
+  renderFind();
+  renderBackupNote();
+  if (editingId && data.reviewers.some((r) => r.id === editingId)) renderHistory();
+}
+
+load();
+if (!storageWorks) showStorageWarning();
+$("inv-date").value = today();
+renderAll();
+</script>
+</body>
+</html>
