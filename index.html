@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+<script>document.documentElement.classList.add("js")</script>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -119,6 +120,55 @@
   footer { border-top: 1px solid var(--line); padding: 28px 0; color: var(--muted); font-size: 0.88rem; text-align: center; }
   footer .name { font-family: var(--caps); color: var(--gold); letter-spacing: 2px; }
 
+  /* ---------- Still side rails + scrolling centre page ---------- */
+  body { background: #0B0C0E; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse 50% 60% at 0% 50%, rgba(198,159,112,0.07), transparent 70%),
+                radial-gradient(ellipse 50% 60% at 100% 50%, rgba(198,159,112,0.07), transparent 70%); }
+  .page { max-width: 1180px; margin: 0 auto; background: var(--bg);
+          border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+          box-shadow: 0 0 80px rgba(0,0,0,0.6); }
+  header { position: sticky; top: 0; z-index: 20; background: rgba(17,19,21,0.86);
+           -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+
+  .rail { position: fixed; top: 0; bottom: 0; width: calc((100vw - 1180px) / 2); z-index: 10;
+          display: none; align-items: center; justify-content: center; pointer-events: none; }
+  .rail-left { left: 0; }
+  .rail-right { right: 0; }
+  .rail-line { position: absolute; top: 12vh; bottom: 12vh; left: 50%; width: 1px;
+               background: linear-gradient(to bottom, transparent, rgba(198,159,112,0.45), transparent); }
+  .rail-text { position: relative; writing-mode: vertical-rl; transform: rotate(180deg);
+               font-family: var(--caps); color: var(--gold); letter-spacing: 8px; font-size: 0.78rem;
+               background: #0B0C0E; padding: 18px 0; opacity: 0.85; }
+  .rail-mark { position: absolute; width: 12px; height: 12px; left: calc(50% - 6px); }
+  .rail-mark.top { top: calc(12vh - 6px); } .rail-mark.bottom { bottom: calc(12vh - 6px); }
+  .progress { position: absolute; left: 50%; top: 12vh; width: 1px; background: var(--gold-bright);
+              height: 0; transform-origin: top; }
+  .rail-nav { position: relative; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;
+              gap: 22px; pointer-events: auto; }
+  .rail-nav a { display: flex; align-items: center; justify-content: center; position: relative;
+                width: 16px; height: 16px; text-decoration: none; }
+  .rail-nav a::before { content: ""; width: 7px; height: 7px; transform: rotate(45deg);
+                        border: 1px solid var(--gold); background: #0B0C0E; transition: all .3s; }
+  .rail-nav a.active::before { background: var(--gold-bright); box-shadow: 0 0 12px rgba(226,184,133,0.7);
+                               width: 10px; height: 10px; }
+  .rail-nav span { position: absolute; right: 26px; white-space: nowrap; font-size: 0.78rem; color: var(--muted);
+                   opacity: 0; transform: translateX(6px); transition: all .25s; }
+  .rail-nav a:hover span, .rail-nav a.active span { opacity: 1; transform: none; }
+  .rail-nav a.active span { color: var(--gold); }
+  @media (min-width: 1360px) { .rail { display: flex; } }
+
+  section, main { scroll-margin-top: 76px; }
+
+  /* Gentle fade-up as sections come into view */
+  .js .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+  .js .reveal.in { opacity: 1; transform: none; }
+  .hero-art img { will-change: transform; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .js .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
   @media (max-width: 860px) {
     .hero, .about { grid-template-columns: 1fr; gap: 32px; }
     .hero { padding-top: 40px; padding-bottom: 48px; text-align: left; }
@@ -138,6 +188,25 @@
 </head>
 <body>
 
+<aside class="rail rail-left" aria-hidden="true">
+  <div class="rail-line"></div><div class="progress" id="progress"></div>
+  <svg class="rail-mark top" viewBox="0 0 20 20"><path d="M10 0C10.8 6.5 13.5 9.2 20 10C13.5 10.8 10.8 13.5 10 20C9.2 13.5 6.5 10.8 0 10C6.5 9.2 9.2 6.5 10 0Z" fill="#C69F70"/></svg><svg class="rail-mark bottom" viewBox="0 0 20 20"><path d="M10 0C10.8 6.5 13.5 9.2 20 10C13.5 10.8 10.8 13.5 10 20C9.2 13.5 6.5 10.8 0 10C6.5 9.2 9.2 6.5 10 0Z" fill="#C69F70"/></svg>
+  <div class="rail-text">The Grey Swan · Editorial · MMXXVI</div>
+</aside>
+<aside class="rail rail-right">
+  <div class="rail-line"></div>
+  <svg class="rail-mark top" viewBox="0 0 20 20"><path d="M10 0C10.8 6.5 13.5 9.2 20 10C13.5 10.8 10.8 13.5 10 20C9.2 13.5 6.5 10.8 0 10C6.5 9.2 9.2 6.5 10 0Z" fill="#C69F70"/></svg><svg class="rail-mark bottom" viewBox="0 0 20 20"><path d="M10 0C10.8 6.5 13.5 9.2 20 10C13.5 10.8 10.8 13.5 10 20C9.2 13.5 6.5 10.8 0 10C6.5 9.2 9.2 6.5 10 0Z" fill="#C69F70"/></svg>
+  <ul class="rail-nav" aria-label="Sections">
+    <li><a href="#top"><span>Home</span></a></li>
+    <li><a href="#checker"><span>Screening tool</span></a></li>
+    <li><a href="#tracker"><span>Reviewer tracker</span></a></li>
+    <li><a href="#references"><span>Reference integrity</span></a></li>
+    <li><a href="#about"><span>About</span></a></li>
+    <li><a href="#contact"><span>Contact</span></a></li>
+  </ul>
+</aside>
+
+<div class="page">
 <header>
   <div class="wrap nav">
     <a class="brand" href="#top" aria-label="The Grey Swan, home">
@@ -270,7 +339,7 @@
           and trackers anyone can use, so authors can submit with confidence and editorial teams can spend their time on
           what matters.</p>
         <div class="stats">
-          <div class="stat"><b>2</b><span>free tools</span></div>
+          <div class="stat"><b>3</b><span>free tools</span></div>
           <div class="stat"><b>0</b><span>manuscripts stored</span></div>
         </div>
       </div>
@@ -284,9 +353,9 @@
         <h2>On the <em>roadmap</em></h2>
       </div>
       <ul class="soon" style="max-width:640px;margin:0 auto">
-        <li><b>Reference checks</b>: invalid DOIs and retracted papers, via Crossref</li>
-        <li><b>PDF support</b>: check manuscripts in PDF as well as Word</li>
         <li><b>AI review (opt-in)</b>: deeper checks of ethics, consent and consistency between abstract and results</li>
+        <li><b>Journal profiles</b>: ready-made settings for more journals and publishers</li>
+        <li><b>More publishing tools</b>: built from the problems editorial teams meet every day</li>
       </ul>
     </div>
   </section>
@@ -305,8 +374,41 @@
 </main>
 
 <footer>
-  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · thegreyswan.in</div>
+  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · thegreyswan.in · Open source (AGPL-3.0) · <a href="https://github.com/TheHarshMaan/manuscript-checker">Source code</a></div>
 </footer>
+</div>
 
+
+<script>
+(function () {
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // Fade sections in as they scroll into view
+  var items = document.querySelectorAll(".section-head, .card, .step, .note, .about > div, .soon, .contact .buttons");
+  if ("IntersectionObserver" in window && !reduce) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    items.forEach(function (el, i) { el.classList.add("reveal"); el.style.transitionDelay = (i % 3) * 80 + "ms"; io.observe(el); });
+  }
+  // Right rail: highlight the section on screen
+  var links = document.querySelectorAll(".rail-nav a");
+  var ids = Array.prototype.map.call(links, function (a) { return a.getAttribute("href").slice(1); });
+  var bar = document.getElementById("progress"), art = document.querySelector(".hero-art img"), ticking = false;
+  function update() {
+    ticking = false;
+    var y = window.scrollY, h = document.documentElement.scrollHeight - innerHeight, current = ids[0];
+    ids.forEach(function (id) { var el = document.getElementById(id); if (el && el.getBoundingClientRect().top < innerHeight * 0.4) current = id; });
+    if (y >= h - 2) current = ids[ids.length - 1];
+    links.forEach(function (a) { a.classList.toggle("active", a.getAttribute("href") === "#" + current); });
+    // Left rail: a gold line fills as you read down the page
+    if (bar) bar.style.height = (h > 0 ? y / h : 0) * 76 + "vh";
+    // The swan drifts slightly slower than the page
+    if (art && !reduce && y < innerHeight) art.style.transform = "translateY(" + y * 0.12 + "px)";
+  }
+  addEventListener("scroll", function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  addEventListener("resize", update);
+  update();
+})();
+</script>
 </body>
 </html>
