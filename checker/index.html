@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manuscript Pre-Submission Checker | The Grey Swan Editorial</title>
-<meta name="description" content="Free pre-submission checker for journal manuscripts: structure, abbreviations, figure and table citations, ethics, consent, declarations and references. Runs in your browser; your files never leave your computer.">
+<meta name="description" content="Free pre-submission checker for journal manuscripts: structure, abbreviations, figure and table citations, ethics, consent, declarations, references, citation styles (APA, AMA, Vancouver, Harvard, IEEE) and double-blind anonymisation. Runs in your browser; your files never leave your computer.">
 <link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,9 +24,9 @@
 
   <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
 
-  <p class="lead">Check a Word manuscript (.docx) the way a journal screening desk does before peer review:
-    structure, abbreviations, figure and table citations, ethics and consent statements, declarations and
-    references. Choose your journal's profile, or adjust the rules to match its guidelines.</p>
+  <p class="lead">Check a manuscript the way a journal screening desk does before peer review:
+    structure, abbreviations, figure and table citations, ethics and consent statements, declarations,
+    references and citation style (APA, AMA, Vancouver, Harvard, IEEE) and, for double-blind journals, anonymisation. Choose your journal's profile, or adjust the rules to match its guidelines.</p>
 
   <div class="card">
     <b>Private by design.</b> The checker runs inside your browser. Your manuscripts are never uploaded,
@@ -47,6 +47,14 @@
       <p id="profile-note" class="small note" hidden></p>
 
       <h3>Settings</h3>
+      <label class="field">Peer review
+        <select id="review-model"></select>
+        <span class="muted small">Double-blind adds checks that the manuscript doesn't reveal who the authors are.</span>
+      </label>
+      <label class="field">Reference style
+        <select id="citation-style"></select>
+        <span class="muted small">“Any” checks citations match the list and are consistent; a named style also checks its format.</span>
+      </label>
       <label class="field">Abstract word limit
         <input type="number" id="abstract-limit" min="50" max="1000" step="10">
       </label>
@@ -80,11 +88,12 @@
         <span id="status-text">Preparing the checker. The first visit takes a few seconds…</span></div>
 
       <label id="dropzone" class="dropzone">
-        <input type="file" id="file-input" accept=".docx" multiple hidden>
-        <strong>Drop .docx manuscripts here</strong>
-        <span>or click to choose files</span>
+        <input type="file" id="file-input" accept=".docx,.pdf,.odt,.rtf,.tex" multiple hidden>
+        <strong>Drop your submission files here</strong>
+        <span>or click to choose: Word, PDF, OpenDocument, RTF or LaTeX. Add the title page and cover letter too.</span>
       </label>
-      <p class="muted small">PDF and .doc files are not supported yet. In Word, use File → Save As → .docx.</p>
+      <p class="muted small">Word files give the fullest check: a PDF can't show tracked changes, hidden text, superscripts
+        or page layout. Old .doc files: in Word, use File → Save As → .docx.</p>
 
       <div id="results"></div>
     </section>

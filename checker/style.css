@@ -80,6 +80,8 @@ details#rules-box summary { cursor: pointer; font-family: var(--caps); color: va
         border-bottom: 1px solid var(--line); font-size: 0.86rem; }
 .rule select { padding: 3px 6px; font-size: 0.82rem; }
 .rule .what { display: block; color: var(--muted); font-size: 0.76rem; line-height: 1.35; }
+.rule-group.inactive .rule { opacity: 0.45; }
+.rule-area .what { font-weight: 400; }
 .rule.changed .name::after { content: " •"; color: var(--gold); }
 .sev-must { color: var(--must); } .sev-should { color: var(--should); } .sev-advisory { color: var(--advisory); }
 .sev-off { color: var(--muted); }
@@ -109,6 +111,24 @@ details#rules-box summary { cursor: pointer; font-family: var(--caps); color: va
 .chip.sev-must[aria-pressed=true] { color: var(--must); }
 .chip.sev-should[aria-pressed=true] { color: var(--should); }
 .chip.sev-advisory[aria-pressed=true] { color: var(--advisory); }
+
+.downloads { display: flex; gap: 8px; flex-wrap: wrap; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 6px 0 14px; }
+.toolbar .filters { margin: 0; }
+.view-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
+.view-toggle button { background: var(--card); color: var(--muted); border: 0; padding: 4px 14px; font: 0.82rem var(--sans);
+                      cursor: pointer; }
+.view-toggle button[aria-pressed=true] { background: var(--gold); color: #111315; }
+.tag { font-size: 0.75rem; color: var(--gold); border: 1px solid var(--line); border-radius: 99px; padding: 1px 9px; }
+.section-small { display: block; color: var(--muted); font-size: 0.74rem; }
+td.fix { color: var(--ink); }
+td.fix .source { display: block; color: var(--muted); font-size: 0.74rem; margin-top: 2px; }
+td.act { width: 30px; text-align: right; }
+.dismiss { background: none; border: 1px solid transparent; color: var(--muted); border-radius: 6px; cursor: pointer;
+           font-size: 1rem; line-height: 1; padding: 2px 6px; }
+.dismiss:hover { border-color: var(--line); color: var(--ink); }
+tr.gone td { opacity: 0.45; }
+tr.gone td.act { opacity: 1; }
 
 .manuscript { background: var(--card); border: 1px solid var(--line); border-radius: 10px; margin: 0 0 12px; }
 .manuscript > summary { cursor: pointer; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 6px 14px;
@@ -153,4 +173,9 @@ td.section { color: var(--muted); white-space: nowrap; }
   td.sev { display: inline-block; margin-right: 8px; }
   td[data-label=Check] { display: inline; font-weight: 500; }
   td[data-label=Details] { margin-top: 2px; color: var(--muted); }
+  td.fix { margin-top: 4px; }
+  td.fix::before { content: "How to fix: "; color: var(--gold); }
+  td.act { position: absolute; right: 0; top: 6px; width: auto; }
+  tr { position: relative; padding-right: 30px; }
+  .section-small { display: inline; margin-right: 6px; }
 }

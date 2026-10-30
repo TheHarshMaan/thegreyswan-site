@@ -39,6 +39,8 @@ const $ = (id) => document.getElementById(id);
 const SEVERITIES = ["must", "should", "advisory", "off"];
 let LABELS = { must: "Must fix", should: "Should fix", advisory: "Advisory", off: "Off" };
 let RULES = [];
+let REVIEW_MODELS = { single_blind: "Single-blind", double_blind: "Double-blind", open: "Open" };
+let CITATION_STYLES = { auto: "Any (detect from the manuscript)" };
 let baseProfile = null;        // the profile as chosen or loaded, before the visitor's adjustments
 let uploadedProfile = null;    // a profile file the visitor loaded, if any
 let files = [];                // [{name, data: ArrayBuffer}]
@@ -71,6 +73,12 @@ async function onReady() {
   const cat = JSON.parse(await rpc("catalogue"));
   RULES = cat.rules;
   LABELS = cat.severity_labels;
+  REVIEW_MODELS = cat.review_models || REVIEW_MODELS;
+  $("review-model").innerHTML = Object.entries(REVIEW_MODELS)
+    .map(([id, label]) => `<option value="${id}">${escapeHtml(label)}</option>`).join("");
+  CITATION_STYLES = cat.citation_styles || CITATION_STYLES;
+  $("citation-style").innerHTML = Object.entries(CITATION_STYLES)
+    .map(([id, label]) => `<option value="${id}">${escapeHtml(label)}</option>`).join("");
 
   const select = $("profile-select");
   select.innerHTML = cat.profiles.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join("");
@@ -88,19 +96,24 @@ function buildRuleList() {
   const html = [];
   for (const r of RULES) {
     if (r.area !== area) {
+      if (area) html.push("</div>");
       area = r.area;
-      html.push(`<div class="rule-area">${escapeHtml(area)}</div>`);
+      const note = area === "Anonymisation" ? '<span class="what">Checked only when peer review is double-blind</span>' : "";
+      html.push(`<div class="rule-group" data-area="${escapeHtml(area)}"><div class="rule-area">${escapeHtml(area)}${note}</div>`);
     }
     const options = SEVERITIES.map((s) => `<option value="${s}">${escapeHtml(LABELS[s])}</option>`).join("");
     html.push(`<label class="rule" id="row-${r.id}" title="${escapeHtml(r.what)}">
       <span><span class="name">${escapeHtml(r.label)}</span><span class="what">${escapeHtml(r.what)}</span></span>
       <select data-rule="${r.id}" aria-label="${escapeHtml(r.label)}">${options}</select></label>`);
   }
+  html.push("</div>");
   $("rules-list").innerHTML = html.join("");
 }
 
 function fillForm(profile) {
   const s = profile.settings || {};
+  $("review-model").value = s.review_model || "single_blind";
+  $("citation-style").value = s.citation_style || "auto";
   $("abstract-limit").value = s.abstract_word_limit ?? 250;
   $("cutoff").value = s.data_cutoff_year ?? 2020;
   $("ignore").value = (s.extra_ignore_abbreviations || []).join(", ");
@@ -121,6 +134,8 @@ async function chooseProfile(id) {
 function currentProfile() {
   const p = structuredClone(baseProfile);
   p.settings = Object.assign({}, p.settings, {
+    review_model: $("review-model").value,
+    citation_style: $("citation-style").value,
     abstract_word_limit: parseInt($("abstract-limit").value, 10) || 250,
     data_cutoff_year: parseInt($("cutoff").value, 10) || 2020,
     extra_ignore_abbreviations: $("ignore").value.split(",").map((a) => a.trim()).filter(Boolean),
@@ -134,6 +149,8 @@ function currentProfile() {
 
 function isAdjusted() {
   const s = baseProfile.settings || {};
+  if ($("review-model").value !== (s.review_model || "single_blind")) return true;
+  if ($("citation-style").value !== (s.citation_style || "auto")) return true;
   if ((parseInt($("abstract-limit").value, 10) || 250) !== (s.abstract_word_limit ?? 250)) return true;
   if ((parseInt($("cutoff").value, 10) || 2020) !== (s.data_cutoff_year ?? 2020)) return true;
   const ignore = $("ignore").value.split(",").map((a) => a.trim()).filter(Boolean).join(",");
@@ -149,6 +166,8 @@ function markChanges() {
     const original = (baseProfile.rules || {})[sel.dataset.rule] || "should";
     $(`row-${sel.dataset.rule}`).classList.toggle("changed", sel.value !== original);
   }
+  const anon = document.querySelector('.rule-group[data-area="Anonymisation"]');
+  if (anon) anon.classList.toggle("inactive", $("review-model").value !== "double_blind");
   const adjusted = isAdjusted();
   $("save-profile").hidden = !adjusted;
   $("reset-profile").hidden = !adjusted;
@@ -171,7 +190,7 @@ $("profile-select").addEventListener("change", async (e) => {
   if (files.length) runCheck();
 });
 
-for (const id of ["abstract-limit", "cutoff", "ignore", "skip-symbols"]) {
+for (const id of ["review-model", "citation-style", "abstract-limit", "cutoff", "ignore", "skip-symbols"]) {
   $(id).addEventListener("input", settingsChanged);
   $(id).addEventListener("change", settingsChanged);
 }
@@ -217,15 +236,31 @@ $("profile-file").addEventListener("change", async (e) => {
 // ---------------------------------------------------------------------------
 // Manuscripts
 // ---------------------------------------------------------------------------
+const READABLE = [".docx", ".pdf", ".odt", ".rtf", ".tex"];
+const dismissed = new Set();          // "file name|Section|Check" marked as false alarms
+let showDismissed = false;
+let view = "author";                  // "author": what to fix and how; "editor": a terse screening log
+try { view = localStorage.getItem("gs-view") || "author"; } catch (e) { /* storage unavailable */ }
+
+function extension(name) {
+  const m = name.toLowerCase().match(/\.[a-z0-9]+$/);
+  return m ? m[0] : "";
+}
+
 async function addFiles(list) {
-  const docx = [...list].filter((f) => f.name.toLowerCase().endsWith(".docx"));
-  const skipped = list.length - docx.length;
-  if (!docx.length) {
-    setStatus("Only .docx files can be checked. In Word, use File → Save As → .docx.", "error");
+  const all = [...list];
+  const readable = all.filter((f) => READABLE.includes(extension(f.name)));
+  const old = all.filter((f) => extension(f.name) === ".doc");
+  if (!readable.length) {
+    setStatus(old.length ? "Old Word .doc files can't be read. In Word, use File → Save As → .docx."
+      : "Add Word (.docx), PDF, OpenDocument (.odt), RTF or LaTeX (.tex) files.", "error");
     return;
   }
-  files = await Promise.all(docx.map(async (f) => ({ name: f.name, data: await f.arrayBuffer() })));
-  if (skipped) setStatus(`${skipped} file(s) skipped: only .docx files can be checked.`, "done");
+  files = await Promise.all(readable.map(async (f) => ({ name: f.name, data: await f.arrayBuffer() })));
+  dismissed.clear();
+  const skipped = all.length - readable.length;
+  if (skipped) setStatus(`${skipped} file(s) skipped: ${old.length ? "old .doc files must be saved as .docx; " : ""}`
+    + "only .docx, .pdf, .odt, .rtf and .tex files can be checked.", "done");
   if (isReady) runCheck();
   else setStatus("Your files are ready; they will be checked as soon as the checker has loaded…", "busy");
 }
@@ -240,10 +275,11 @@ let running = false, again = false;
 async function runCheck() {
   if (running) { again = true; return; }
   running = true;
-  setStatus(`Checking ${files.length} manuscript(s)…`, "busy");
+  setStatus(`Checking ${files.length} file(s)…`, "busy");
   try {
     const profile = currentProfile();
-    lastRun = await rpc("check", files, JSON.stringify(profile));
+    const gone = [...dismissed].map((d) => { const i = d.indexOf("|"); return { name: d.slice(0, i), key: d.slice(i + 1) }; });
+    lastRun = await rpc("check", files, JSON.stringify(profile), JSON.stringify(gone));
     lastRun.profileName = profile.name;
     renderResults();
     setStatus("Done. Change the profile or settings and the results update by themselves.", "done");
@@ -258,57 +294,133 @@ function tally(c) {
   return `${c.must} must fix · ${c.should} should fix · ${c.advisory} advisory`;
 }
 
-function renderResults() {
-  const { results, report, profileName } = lastRun;
-  const readable = results.filter((r) => !r.error);
-  const ready = readable.filter((r) => r.verdict === "Ready").length;
-  const openAll = results.length === 1;
+function liveIssues(r) {
+  return r.issues.filter((i) => !dismissed.has(`${r.name}|${i.key}`));
+}
 
-  const parts = [`<div class="results-head"><h2>Results</h2>
-    ${report ? '<button type="button" class="button ghost" id="download-report">Download Excel report</button>' : ""}</div>
+function verdictOf(issues) {
+  return issues.some((i) => i.severity === "must" || i.severity === "should") ? "Needs revision" : "Ready";
+}
+
+function countsOf(issues) {
+  const c = { must: 0, should: 0, advisory: 0 };
+  issues.forEach((i) => { c[i.severity] += 1; });
+  return c;
+}
+
+function tagFor(info) {
+  if (!info) return "";
+  const parts = [];
+  if (info.role && info.role !== "manuscript") parts.push(info.role);
+  if (info.format && info.format !== "Word") parts.push(info.format);
+  return parts.length ? `<span class="tag">${escapeHtml(parts.join(" · "))}</span>` : "";
+}
+
+function issueRow(r, i) {
+  const id = `${r.name}|${i.key}`;
+  const isGone = dismissed.has(id);
+  const button = `<button type="button" class="dismiss" data-id="${escapeHtml(id)}"
+      title="${isGone ? "Restore" : "Dismiss as a false alarm"}" aria-label="${isGone ? "Restore" : "Dismiss"} ${escapeHtml(i.check)}">${isGone ? "↺" : "×"}</button>`;
+  const sev = `<td class="sev sev-${i.severity}" data-label="Severity">${escapeHtml(LABELS[i.severity])}</td>`;
+  if (view === "editor") {
+    return `<tr class="${isGone ? "gone" : ""}"><td class="section" data-label="Section">${escapeHtml(i.section)}</td>${sev}
+      <td data-label="Check">${escapeHtml(i.check)}</td><td data-label="Status">${escapeHtml(i.status)}</td>
+      <td data-label="Details">${escapeHtml(i.details)}</td><td class="act">${button}</td></tr>`;
+  }
+  return `<tr class="${isGone ? "gone" : ""}">${sev}
+    <td data-label="Check"><span class="section-small">${escapeHtml(i.section)}</span>${escapeHtml(i.check)}</td>
+    <td data-label="Details">${escapeHtml(i.details)}</td>
+    <td data-label="How to fix" class="fix">${escapeHtml(i.fix || "")}${i.source && i.source !== "—"
+      ? `<span class="source">${escapeHtml(i.source)}</span>` : ""}</td><td class="act">${button}</td></tr>`;
+}
+
+function renderResults() {
+  const { results, report, word, profileName } = lastRun;
+  const readable = results.filter((r) => !r.error);
+  const ready = readable.filter((r) => verdictOf(liveIssues(r)) === "Ready").length;
+  const openAll = results.length === 1;
+  const goneCount = [...dismissed].length;
+  const head = view === "editor"
+    ? "<th>Section</th><th>Severity</th><th>Check</th><th>Status</th><th>Details</th><th></th>"
+    : "<th>Severity</th><th>Check</th><th>What was found</th><th>How to fix</th><th></th>";
+
+  const parts = [`<div class="results-head"><h2>Results</h2><div class="downloads">
+      ${report ? '<button type="button" class="button ghost" id="download-report">Excel report</button>' : ""}
+      ${word ? '<button type="button" class="button ghost" id="download-word">Word report</button>' : ""}</div></div>
     <p class="muted small">Checked against: ${escapeHtml(profileName)} · ${results.length} file(s):
-      ${ready} ready, ${readable.length - ready} need revision${results.length > readable.length ? `, ${results.length - readable.length} could not be read` : ""}.</p>
-    <div class="filters" role="group" aria-label="Show severities">
-      ${["must", "should", "advisory"].map((s) =>
-        `<button type="button" class="chip sev-${s}" data-sev="${s}" aria-pressed="${shown[s]}">${escapeHtml(LABELS[s])}</button>`).join("")}
+      ${ready} ready, ${readable.length - ready} need revision${results.length > readable.length
+        ? `, ${results.length - readable.length} could not be read` : ""}.</p>
+    <div class="toolbar">
+      <div class="view-toggle" role="group" aria-label="Report view">
+        <button type="button" data-view="author" aria-pressed="${view === "author"}">Author view</button>
+        <button type="button" data-view="editor" aria-pressed="${view === "editor"}">Editor view</button>
+      </div>
+      <div class="filters" role="group" aria-label="Show severities">
+        ${["must", "should", "advisory"].map((s) =>
+          `<button type="button" class="chip sev-${s}" data-sev="${s}" aria-pressed="${shown[s]}">${escapeHtml(LABELS[s])}</button>`).join("")}
+      </div>
+      ${goneCount ? `<button type="button" class="text-button" id="toggle-dismissed">${goneCount} dismissed · ${showDismissed ? "hide" : "show"}</button>` : ""}
     </div>`];
 
   for (const r of results) {
     if (r.error) {
       parts.push(`<details class="manuscript"><summary><span class="fname">${escapeHtml(r.name)}</span>
         <span class="verdict error">${escapeHtml(r.error)}</span></summary>
-        <p class="empty">Make sure it is a valid .docx file.</p></details>`);
+        <p class="empty">Check that it is a valid .docx, .pdf, .odt, .rtf or .tex file.</p></details>`);
       continue;
     }
-    const isReadyDoc = r.verdict === "Ready";
-    const rows = r.issues.filter((i) => shown[i.severity]).map((i) => `<tr>
-        <td class="section" data-label="Section">${escapeHtml(i.section)}</td>
-        <td class="sev sev-${i.severity}" data-label="Severity">${escapeHtml(LABELS[i.severity])}</td>
-        <td data-label="Check">${escapeHtml(i.check)}</td>
-        <td data-label="Status">${escapeHtml(i.status)}</td><td data-label="Details">${escapeHtml(i.details)}</td></tr>`).join("");
+    const live = liveIssues(r);
+    const isReadyDoc = verdictOf(live) === "Ready";
+    const rank = { must: 0, should: 1, advisory: 2 };
+    let visible = r.issues.filter((i) => shown[i.severity] && (showDismissed || !dismissed.has(`${r.name}|${i.key}`)));
+    if (view === "author") {      // authors: most serious first; editors: section by section, as a screening log
+      visible = visible.map((i, n) => [i, n]).sort((a, b) => rank[a[0].severity] - rank[b[0].severity] || a[1] - b[1])
+        .map(([i]) => i);
+    }
+    const rows = visible.map((i) => issueRow(r, i)).join("");
     const body = !r.issues.length ? '<p class="empty">All checks passed.</p>'
-      : rows ? `<div class="table-wrap"><table><thead><tr><th>Section</th><th>Severity</th><th>Check</th>
-          <th>Status</th><th>Details</th></tr></thead><tbody>${rows}</tbody></table></div>`
-      : '<p class="empty muted">Nothing at the selected severities.</p>';
-    parts.push(`<details class="manuscript" ${openAll ? "open" : ""}><summary>
-        <span class="fname">${escapeHtml(r.name)}</span>
+      : rows ? `<div class="table-wrap"><table class="${view}"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`
+      : '<p class="empty muted">Nothing to show at the selected severities.</p>';
+    parts.push(`<details class="manuscript" ${openAll ? "open" : ""} data-name="${escapeHtml(r.name)}"><summary>
+        <span class="fname">${escapeHtml(r.name)}</span>${tagFor(r.info)}
         <span class="verdict ${isReadyDoc ? "ready" : "revise"}">${isReadyDoc ? "Ready" : "Needs revision"}</span>
-        ${r.issues.length ? `<span class="tally">${tally(r.counts)}</span>` : ""}</summary>${body}</details>`);
+        ${live.length ? `<span class="tally">${tally(countsOf(live))}</span>` : ""}</summary>${body}</details>`);
   }
 
   // keep open/closed panels as they were when the results refresh
-  const wasOpen = new Set([...document.querySelectorAll(".manuscript[open] .fname")].map((e) => e.textContent));
+  const wasOpen = new Set([...document.querySelectorAll(".manuscript[open]")].map((e) => e.dataset.name));
+  const hadPanels = document.querySelectorAll(".manuscript").length > 0;
   $("results").innerHTML = parts.join("");
-  if (wasOpen.size) {
-    for (const d of document.querySelectorAll(".manuscript")) {
-      d.open = wasOpen.has(d.querySelector(".fname").textContent);
-    }
+  if (hadPanels) {
+    for (const d of document.querySelectorAll(".manuscript")) d.open = wasOpen.has(d.dataset.name) || openAll;
   }
 
-  const btn = $("download-report");
-  if (btn) btn.addEventListener("click", () => download("screening_report.xlsx", report,
+  const xl = $("download-report");
+  if (xl) xl.addEventListener("click", () => download("screening_report.xlsx", report,
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+  const wd = $("download-word");
+  if (wd) wd.addEventListener("click", () => download("screening_report.docx", word,
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
   for (const chip of document.querySelectorAll(".chip")) {
     chip.addEventListener("click", () => { shown[chip.dataset.sev] = !shown[chip.dataset.sev]; renderResults(); });
+  }
+  for (const b of document.querySelectorAll(".view-toggle button")) {
+    b.addEventListener("click", () => {
+      view = b.dataset.view;
+      try { localStorage.setItem("gs-view", view); } catch (e) { /* storage unavailable */ }
+      renderResults();
+    });
+  }
+  const toggle = $("toggle-dismissed");
+  if (toggle) toggle.addEventListener("click", () => { showDismissed = !showDismissed; renderResults(); });
+  for (const b of document.querySelectorAll(".dismiss")) {
+    b.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = b.dataset.id;
+      dismissed.has(id) ? dismissed.delete(id) : dismissed.add(id);
+      renderResults();
+      clearTimeout(timer);
+      timer = setTimeout(runCheck, 400);        // rebuild the downloads without the dismissed items
+    });
   }
 }
