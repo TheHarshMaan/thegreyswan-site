@@ -1,0 +1,33 @@
+/* Reference checker: additions to the shared Grey Swan style (style.css) */
+
+.refs-layout { display: grid; grid-template-columns: 1fr; gap: 22px; }
+.input-panel { max-width: 900px; }
+.paste { margin: 12px 0 6px; }
+.paste summary { cursor: pointer; color: var(--gold); font-size: 0.9rem; }
+.paste textarea { margin: 10px 0; font-size: 0.86rem; }
+
+.progress { height: 6px; background: var(--card); border: 1px solid var(--line); border-radius: 99px; overflow: hidden; margin: 6px 0 14px; }
+.progress div { height: 100%; background: var(--gold); width: 0; transition: width 0.3s; }
+
+.counts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.count { border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; background: var(--card); font-size: 0.85rem; }
+.count b { font-size: 1.05rem; margin-right: 4px; }
+
+.reftable td.num { color: var(--muted); width: 32px; }
+.reftable td.ref { max-width: 420px; font-size: 0.84rem; color: var(--muted); }
+.reftable td.ref .clip { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.reftable td.ref .clip.open { display: block; }
+.reftable td.res { white-space: nowrap; font-weight: 600; }
+.reftable td.det { font-size: 0.86rem; }
+.reftable td.det a { word-break: break-all; }
+.reftable td.det .fix { display: block; color: var(--muted); margin-top: 4px; }
+.sev-info { color: var(--muted); } .sev-ok { color: var(--ok); }
+.pending { color: var(--muted); font-style: italic; font-weight: 400; }
+.chip.sev-ok[aria-pressed=true] { color: var(--ok); }
+.chip.sev-info[aria-pressed=true] { color: var(--ink); }
+
+@media (max-width: 600px) {
+  .reftable td.ref { max-width: none; }
+  .reftable td.num { display: inline-block; width: auto; margin-right: 6px; }
+  .reftable td.res { display: inline-block; }
+}

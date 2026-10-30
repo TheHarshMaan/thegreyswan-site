@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reference Integrity Checker | The Grey Swan Editorial</title>
+<meta name="description" content="Free reference checker for manuscripts: finds retracted papers, DOIs that don't exist or point to the wrong paper, missing DOIs and references that can't be found, using Crossref and Retraction Watch.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="refs.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <img src="grey_swan_emblem.png" alt="The Grey Swan emblem" class="emblem">
+    <div>
+      <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· Editorial</span></div>
+      <h1 class="title">Reference <em>Integrity</em> Checker</h1>
+      <nav class="tools"><a href="../checker/">Manuscript checker</a> · <span>Reference checker</span></nav>
+    </div>
+  </header>
+
+  <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
+
+  <p class="lead">Check every reference in a manuscript against Crossref and the Retraction Watch database: retracted
+    papers and expressions of concern, DOIs that don't exist or belong to a different paper, missing DOIs, and
+    references that can't be found anywhere.</p>
+
+  <div class="card">
+    <b>What leaves your computer.</b> The manuscript is read inside your browser and never uploaded. To check the
+    references, each reference's DOI or text is sent to <a href="https://www.crossref.org/" target="_blank" rel="noopener">Crossref</a>,
+    the non-profit that registers DOIs; nothing else is sent.<br>
+    <b>A screening aid, not a verdict.</b> “Couldn't be found” is a reason to look, not proof a reference is wrong:
+    books, reports and older papers often aren't in Crossref.
+  </div>
+
+  <main class="refs-layout">
+    <section class="input-panel" aria-label="References to check">
+      <div id="status" class="status"><span class="spinner"></span>
+        <span id="status-text">Preparing the checker. The first visit takes a few seconds…</span></div>
+
+      <label id="dropzone" class="dropzone">
+        <input type="file" id="file-input" accept=".docx,.pdf,.odt,.rtf,.tex,.txt" hidden>
+        <strong>Drop a manuscript here</strong>
+        <span>or click to choose: Word, PDF, OpenDocument, RTF, LaTeX or a .txt list. Its reference list is checked.</span>
+      </label>
+
+      <details class="paste" id="paste-box">
+        <summary>…or paste a reference list</summary>
+        <textarea id="paste" rows="8" placeholder="One reference per line, e.g.&#10;1. LeCun Y, Bengio Y, Hinton G. Deep learning. Nature. 2015;521:436-44. doi:10.1038/nature14539"></textarea>
+        <button type="button" class="button" id="check-paste">Check these references</button>
+      </details>
+      <p class="muted small" id="retraction-note">Loading the Retraction Watch list…</p>
+    </section>
+
+    <section aria-live="polite">
+      <div id="results"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
+    © <span class="brand">The Grey Swan Editorial</span> · Metadata from Crossref; retractions from the Retraction Watch
+    Database (Center for Scientific Integrity), via Crossref · <a href="/">thegreyswan.in</a>
+  </footer>
+</div>
+
+<noscript><p class="page">This checker needs JavaScript turned on.</p></noscript>
+<script src="refs.js"></script>
+</body>
+</html>
