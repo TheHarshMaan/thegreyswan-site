@@ -60,6 +60,33 @@ os.makedirs("/tmp/uploads")
       postMessage({ id, ok: true, result }, [report, word].filter(Boolean));
       return;
     }
+    if (fn === "refs_extract" || fn === "refs_report") {
+      // refs_extract: args [files: [{name, data}], text]; refs_report: args [resultsJson, sourceName]
+      let callArgs = args;
+      if (fn === "refs_extract") {
+        const [files, text] = args;
+        py.runPython(`
+import shutil, os
+shutil.rmtree("/tmp/uploads", ignore_errors=True)
+os.makedirs("/tmp/uploads")
+`);
+        const list = (files || []).map((f, i) => {
+          const ext = (f.name.match(/\.[a-z0-9]+$/i) || [".docx"])[0].toLowerCase();
+          py.FS.writeFile(`/tmp/uploads/${i + 1}${ext}`, new Uint8Array(f.data));
+          return { path: `${i + 1}${ext}`, name: f.name };
+        });
+        callArgs = [JSON.stringify(list), text || ""];
+      }
+      const out = call(fn, ...callArgs);
+      if (fn === "refs_report") {
+        const paths = JSON.parse(out);
+        const report = py.FS.readFile(paths.report).buffer, word = py.FS.readFile(paths.word).buffer;
+        postMessage({ id, ok: true, result: { report, word } }, [report, word]);
+        return;
+      }
+      postMessage({ id, ok: true, result: out });
+      return;
+    }
     result = call(fn, ...args);
     postMessage({ id, ok: true, result });
   } catch (err) {

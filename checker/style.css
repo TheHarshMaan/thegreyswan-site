@@ -33,6 +33,9 @@ a { color: var(--gold); }
 .eyebrow span { color: var(--muted); letter-spacing: 4px; }
 .title { font-family: var(--serif); font-weight: 500; font-size: clamp(2.2rem, 5vw, 3.6rem); line-height: 1.04; margin: 8px 0 0; }
 .title em { color: var(--gold); }
+.tools { margin-top: 8px; font-size: 0.86rem; color: var(--muted); }
+.tools a { color: var(--gold); }
+.tools span { color: var(--ink); }
 
 .ornament { display: flex; align-items: center; gap: 14px; margin: 22px 0 20px; max-width: 760px; }
 .ornament::before, .ornament::after { content: ""; flex: 1; height: 1px; background: var(--gold); opacity: 0.55; }
