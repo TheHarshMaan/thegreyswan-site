@@ -118,6 +118,7 @@
   }
 </style>
 <link rel="stylesheet" href="../assets/account.css">
+<link rel="stylesheet" href="../assets/scroll.css">
 </head>
 <body>
 
@@ -293,6 +294,26 @@
   <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · <a href="../">thegreyswan.in</a></div>
 </footer>
 
+<script>
+// The still side rails (see /assets/scroll.js): an invitation timeline drifts past on the left, a week per mark
+// with today lit; the right rail switches tabs and shows the reviewer pool at a glance
+window.GS_SCROLL = {
+  width: 1120, title: "Invite · Respond · Deliver", motif: "dates",
+  nav: [{ label: "Log invitations", tab: "log", target: ".tabs" }, { label: "Reviewers", tab: "reviewers", target: ".tabs" },
+        { label: "Find reviewers", tab: "find", target: ".tabs" }, { label: "Backup & import", tab: "backup", target: ".tabs" }],
+  reveal: "footer",
+  watch: "main",
+  readout() {
+    let d = {};
+    try { d = JSON.parse(localStorage.getItem("greyswan-reviewer-tracker-v1") || "{}"); } catch (e) { /* storage off */ }
+    const reviewers = (d.reviewers || []).length;
+    if (!reviewers) return "";
+    const waiting = (d.invites || []).filter((i) => i.outcome === "awaiting" || i.outcome === "accepted").length;
+    return `<b>${reviewers}</b><small>reviewers</small><b style="margin-top:8px">${waiting}</b><small>awaiting reply or report</small>`;
+  },
+};
+</script>
+<script src="../assets/scroll.js"></script>
 <script src="../assets/account.js"></script>
 <script>
 /* =====================================================================

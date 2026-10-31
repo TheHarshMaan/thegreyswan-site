@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="/assets/account.css">
+<link rel="stylesheet" href="/assets/scroll.css">
 </head>
 <body>
 <div class="page">
@@ -118,6 +119,26 @@
 </div>
 
 <noscript><p class="page">This checker needs JavaScript turned on.</p></noscript>
+<script>
+// The still side rails (see /assets/scroll.js): manuscript line numbers drift past a red margin rule, and the
+// right rail shows how many of the checked files are ready to submit
+window.GS_SCROLL = {
+  width: 1180, title: "Screening · Pre-submission", motif: "lines",
+  nav: [{ label: "Overview", target: ".masthead" }, { label: "Profile & files", target: ".layout" },
+        { label: "Results", target: "#results" }],
+  reveal: ".foot",
+  watch: "#results",
+  readout() {
+    const files = [...document.querySelectorAll("#results .manuscript")];
+    if (!files.length) return "";
+    const kind = (f) => f.querySelector(".verdict.ready") ? "ok" : f.querySelector(".verdict.error") ? "must" : "should";
+    const ready = files.filter((f) => kind(f) === "ok").length;
+    return `<b>${ready}/${files.length}</b><small>ready to submit</small>
+      <div class="gs-pips">${files.slice(0, 14).map((f) => `<span class="gs-pip ${kind(f)}"></span>`).join("")}</div>`;
+  },
+};
+</script>
+<script src="/assets/scroll.js"></script>
 <script src="/assets/account.js"></script>
 <script src="app.js"></script>
 </body>

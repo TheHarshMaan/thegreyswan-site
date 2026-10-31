@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/account.css">
+<link rel="stylesheet" href="../assets/scroll.css">
 <style>
   :root { --bg: #111315; --card: #1A1D20; --line: #2E2A24; --ink: #ECE8E1; --muted: #A9A49B; --gold: #C69F70;
           --serif: 'Cormorant Garamond', Georgia, serif; --caps: 'Cinzel', Georgia, serif; --sans: 'IBM Plex Sans', system-ui, sans-serif; }
@@ -131,6 +132,14 @@
 <footer>
   <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · <a href="../">thegreyswan.in</a></div>
 </footer>
+<script>
+window.GS_SCROLL = { width: 820, title: "Privacy · In plain words", motif: "",
+  nav: [{ label: "In short", target: ".summary" }, { label: "Your manuscripts", target: "main h2:nth-of-type(2)" },
+        { label: "Signing in with Google", target: "main h2:nth-of-type(5)" }, { label: "Your choices", target: "main h2:nth-of-type(7)" },
+        { label: "Cookies and hosting", target: "main h2:nth-of-type(8)" }],
+  reveal: "main h2, main ul, main p, footer" };
+</script>
+<script src="../assets/scroll.js"></script>
 <script src="../assets/account.js"></script>
 </body>
 </html>

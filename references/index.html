@@ -11,6 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="/assets/account.css">
+<link rel="stylesheet" href="/assets/scroll.css">
 <link rel="stylesheet" href="refs.css">
 </head>
 <body>
@@ -73,6 +74,28 @@
 </div>
 
 <noscript><p class="page">This checker needs JavaScript turned on.</p></noscript>
+<script>
+// The still side rails (see /assets/scroll.js): citation markers drift past on the left; the right rail fills
+// as references are checked and shows a dot for each problem found
+window.GS_SCROLL = {
+  width: 1180, title: "Crossref · Retraction Watch", motif: "cites",
+  nav: [{ label: "Overview", target: ".masthead" }, { label: "Add references", target: ".input-panel" },
+        { label: "Results", target: "#results" }],
+  reveal: ".foot",
+  watch: "#results",
+  readout() {
+    const line = document.querySelector("#results .progress div");
+    if (!line) return "";
+    const n = (sev) => +((document.querySelector(`#results .count.sev-${sev} b`) || {}).textContent || 0);
+    const pct = parseFloat(line.style.width) || 0;
+    const pips = [...Array(Math.min(n("must"), 8)).fill("must"), ...Array(Math.min(n("should"), 8)).fill("should")];
+    return `<div class="gs-meter" title="${Math.round(pct)}% checked"><i style="height:${pct}%"></i></div>
+      <b>${n("must")}</b><small>${n("must") === 1 ? "retracted" : "retracted"}</small>
+      ${pips.length ? `<div class="gs-pips">${pips.map((p) => `<span class="gs-pip ${p}"></span>`).join("")}</div>` : ""}`;
+  },
+};
+</script>
+<script src="/assets/scroll.js"></script>
 <script src="/assets/account.js"></script>
 <script src="refs.js"></script>
 </body>
