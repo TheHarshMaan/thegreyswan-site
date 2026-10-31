@@ -24,7 +24,7 @@
   "use strict";
 
   // The OAuth client ID from Google Cloud (APIs & Services -> Credentials). Safe to publish.
-  const CLIENT_ID = "PASTE_YOUR_CLIENT_ID.apps.googleusercontent.com";
+  const CLIENT_ID = "1049798066904-chb144m1k2icmuih6retpa73hgol2h6i.apps.googleusercontent.com";
   const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.appdata";
   const SCOPES = "openid email profile " + DRIVE_SCOPE;
   const DRIVE = "https://www.googleapis.com/drive/v3";
