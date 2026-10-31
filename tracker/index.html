@@ -40,6 +40,7 @@
   .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
   .brand img { width: 40px; height: 40px; border-radius: 50%; }
   .brand span { font-family: var(--caps); letter-spacing: 3px; font-size: 0.85rem; color: var(--gold); }
+  .nav-right { display: flex; align-items: center; gap: 18px; }
   .nav a.back { color: var(--muted); text-decoration: none; font-size: 0.92rem; }
 
   .intro { padding: 48px 0 24px; }
@@ -116,6 +117,7 @@
     .intro { padding-top: 32px; }
   }
 </style>
+<link rel="stylesheet" href="../assets/account.css">
 </head>
 <body>
 
@@ -125,7 +127,7 @@
       <img src="../assets/grey_swan_icon.png" alt="" width="40" height="40">
       <span>The Grey Swan</span>
     </a>
-    <a class="back" href="../">← All tools</a>
+    <div class="nav-right"><a class="back" href="../">← All tools</a><div id="gs-account"></div></div>
   </div>
 </header>
 
@@ -137,7 +139,8 @@
       how fast, and who never replies, so next time you invite the people most likely to say yes.</p>
     <div class="note" id="storage-note"><b>Your data stays on this device.</b> Everything is saved in this browser only:
       nothing is sent to a server, and nobody else can see it. Clearing your browser data deletes it, and it doesn't
-      move between devices, so <b>download a backup regularly</b> (Backup tab).</div>
+      move between devices, so <b>download a backup regularly</b> (Backup tab), or <a href="../account/">sign in with
+      Google</a> to keep it on every device automatically.</div>
   </div>
 
   <div class="tabs" role="tablist">
@@ -290,6 +293,7 @@
   <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · <a href="../">thegreyswan.in</a></div>
 </footer>
 
+<script src="../assets/account.js"></script>
 <script>
 /* =====================================================================
    The Grey Swan Reviewer Tracker
@@ -317,7 +321,7 @@ let storageWorks = true;
 function load() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) data = Object.assign({ reviewers: [], invites: [], lastBackup: null }, JSON.parse(saved));
+    data = Object.assign({ reviewers: [], invites: [], lastBackup: null }, saved ? JSON.parse(saved) : {});
   } catch (e) {
     storageWorks = false;
   }
@@ -326,6 +330,7 @@ function load() {
 function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    if (window.GSAccount) GSAccount.changed("tracker");      // signed in: sync it to the user's Google Drive
   } catch (e) {
     storageWorks = false;
     showStorageWarning();
@@ -811,6 +816,19 @@ function renderAll() {
 
 load();
 if (!storageWorks) showStorageWarning();
+
+// Signed in with Google: changes from other devices arrive here, and the note says where the data is kept
+if (window.GSAccount) {
+  GSAccount.onRemote("tracker", () => { load(); renderAll(); });
+  const note = $("storage-note"), offline = note.innerHTML;
+  GSAccount.onChange((st) => {
+    if (!storageWorks) return;
+    note.innerHTML = st.signedIn
+      ? "<b>Synced to your Google Drive.</b> Your reviewers are saved in this browser and in a private folder in your " +
+        "own Google Drive, so they're on every device where you sign in. Nobody else, including The Grey Swan, can see them."
+      : offline;
+  });
+}
 $("inv-date").value = today();
 renderAll();
 </script>

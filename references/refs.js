@@ -25,7 +25,7 @@ function rpc(fn, ...args) {
 worker.onmessage = (event) => {
   const msg = event.data;
   if (msg.type === "progress") return setStatus(msg.text, "busy");
-  if (msg.type === "ready") { isReady = true; return setStatus("Ready. Add a manuscript or paste a reference list.", "done"); }
+  if (msg.type === "ready") { isReady = true; if (!refs.length) setStatus("Ready. Add a manuscript or paste a reference list.", "done"); return; }
   if (msg.type === "failed") return setStatus(`The checker could not start: ${msg.error}. Try reloading the page.`, "error");
   const job = pending.get(msg.id);
   if (!job) return;
@@ -208,6 +208,7 @@ async function run(files, text) {
   running = false;
   const all = refs.map((r) => results[r.n]);
   const errors = all.filter((r) => r.status === "error").length;
+  if (errors < all.length) recordCheck(all);
   setStatus(errors === all.length ? "Crossref couldn't be reached. Check your internet connection and try again."
     : errors ? `Done, but ${errors} reference(s) couldn't be checked: try again later for those.` : "Done.",
     errors === all.length ? "error" : "done");
@@ -296,3 +297,58 @@ $("check-paste").addEventListener("click", () => {
   sourceName = "";
   run([], text);
 });
+
+// ---------------------------------------------------------------------------
+// Signed in with Google (see /assets/account.js): past checks are kept in the account and can be reopened
+// ---------------------------------------------------------------------------
+const ACCOUNT = window.GSAccount || null;
+const KEEP_FIELDS = ["n", "text", "status", "label", "severity", "details", "fix", "doi"];
+
+function recordCheck(all) {
+  if (!ACCOUNT || !ACCOUNT.state().signedIn) return;
+  const counts = {};
+  all.forEach((r) => { counts[r.severity] = (counts[r.severity] || 0) + 1; });
+  const entry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), date: new Date().toISOString(),
+    source: sourceName || "Pasted references", total: all.length, counts,
+    results: all.map((r) => Object.fromEntries(KEEP_FIELDS.filter((k) => r[k] !== undefined && r[k] !== null).map((k) => [k, r[k]]))),
+  };
+  const d = ACCOUNT.get("references");
+  d.history = [entry, ...(d.history || [])].slice(0, 30);
+  ACCOUNT.set("references", d);
+  history.replaceState(null, "", "#check-" + entry.id);
+  renderPast();
+}
+
+function openPast(id) {
+  const entry = ((ACCOUNT && ACCOUNT.get("references").history) || []).find((h) => h.id === id);
+  if (!entry || running) return false;
+  refs = entry.results.map((r) => ({ n: r.n, text: r.text, doi: r.doi }));
+  results = Object.fromEntries(entry.results.map((r) => [r.n, r]));
+  sourceName = entry.source === "Pasted references" ? "" : entry.source;
+  render();
+  const when = new Date(entry.date).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  setStatus(`A past check from ${when}. Retractions can happen at any time: check the file again for today's results.`, "done");
+  return true;
+}
+
+function renderPast() {
+  const box = $("past");
+  const list = ACCOUNT && ACCOUNT.state().signedIn ? (ACCOUNT.get("references").history || []).slice(0, 6) : [];
+  box.hidden = !list.length;
+  box.innerHTML = list.length ? `<h3>Your recent checks</h3><ul>${list.map((h) => `<li>
+      <button type="button" data-past="${escapeHtml(h.id)}">${escapeHtml(h.source)}</button>
+      <span class="when">${h.total} refs · ${new Date(h.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span></li>`).join("")}</ul>` : "";
+}
+
+if (ACCOUNT) {
+  $("past").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-past]");
+    if (b && openPast(b.dataset.past)) history.replaceState(null, "", "#check-" + b.dataset.past);
+  });
+  const fromLink = () => location.hash.startsWith("#check-") && openPast(location.hash.slice(7));
+  ACCOUNT.onChange(renderPast);
+  ACCOUNT.onRemote("references", () => { renderPast(); if (!refs.length) fromLink(); });
+  window.addEventListener("hashchange", fromLink);
+  fromLink();
+}

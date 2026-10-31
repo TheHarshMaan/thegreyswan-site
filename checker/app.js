@@ -47,6 +47,17 @@ let files = [];                // [{name, data: ArrayBuffer}]
 let lastRun = null;            // {results, report}
 const shown = { must: true, should: true, advisory: true };
 
+// Signed in with Google (see /assets/account.js): saved profiles, preferences and check history follow the user
+const ACCOUNT = window.GSAccount || null;
+const accountData = () => (ACCOUNT ? ACCOUNT.get("checker") : {});
+const signedIn = () => !!(ACCOUNT && ACCOUNT.state().signedIn);
+function saveAccountData(change) {
+  if (!ACCOUNT) return;
+  const d = ACCOUNT.get("checker");
+  change(d);
+  ACCOUNT.set("checker", d);
+}
+
 function setStatus(text, kind) {
   const box = $("status");
   box.className = "status" + (kind === "error" ? " error done" : kind === "done" ? " done" : "");
@@ -84,7 +95,10 @@ async function onReady() {
   select.innerHTML = cat.profiles.map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join("");
   select.disabled = false;
   buildRuleList();
-  await chooseProfile(select.value);
+  addMyProfiles();
+  const wanted = accountData().lastProfile || (ACCOUNT && ACCOUNT.get("profile").defaultProfile) || select.value;
+  select.value = [...select.options].some((o) => o.value === wanted) ? wanted : select.options[0].value;
+  await useProfile(select.value);
 
   isReady = true;
   setStatus("Ready. Choose your journal's profile, then add manuscripts.", "done");
@@ -130,6 +144,39 @@ async function chooseProfile(id) {
   fillForm(baseProfile);
 }
 
+// "my:<id>" is a profile the user saved to their account; anything else is a built-in profile
+async function useProfile(value) {
+  if (value === "__uploaded__") { baseProfile = uploadedProfile; fillForm(baseProfile); }
+  else if (value.startsWith("my:")) {
+    const mine = (accountData().profiles || []).find((p) => "my:" + p.id === value);
+    if (!mine) return chooseProfile("generic");
+    baseProfile = structuredClone(mine.profile);
+    fillForm(baseProfile);
+  } else await chooseProfile(value);
+  markChanges();
+}
+
+// The user's saved profiles, at the end of the profile list
+function addMyProfiles() {
+  const select = $("profile-select");
+  const keep = select.value;
+  select.querySelectorAll("optgroup[data-mine]").forEach((g) => g.remove());
+  const mine = accountData().profiles || [];
+  if (mine.length) {
+    const group = document.createElement("optgroup");
+    group.label = "My profiles";
+    group.dataset.mine = "1";
+    for (const p of mine) {
+      const o = document.createElement("option");
+      o.value = "my:" + p.id;
+      o.textContent = p.name;
+      group.appendChild(o);
+    }
+    select.appendChild(group);
+  }
+  if ([...select.options].some((o) => o.value === keep)) select.value = keep;
+}
+
 // The profile the visitor is checking with: the base profile plus whatever they changed
 function currentProfile() {
   const p = structuredClone(baseProfile);
@@ -171,6 +218,10 @@ function markChanges() {
   const adjusted = isAdjusted();
   $("save-profile").hidden = !adjusted;
   $("reset-profile").hidden = !adjusted;
+  // Signed in: settings can be kept in the account, to use on any device
+  const keepable = adjusted || $("profile-select").value === "__uploaded__";
+  $("keep-box").hidden = !(ACCOUNT && keepable);
+  if (!keepable) { $("keep-form").hidden = true; $("keep-profile").hidden = false; }
 }
 
 let timer = null;
@@ -181,13 +232,41 @@ function settingsChanged() {
 }
 
 $("profile-select").addEventListener("change", async (e) => {
-  if (e.target.value === "__uploaded__") {
-    baseProfile = uploadedProfile;
-    fillForm(baseProfile);
-  } else {
-    await chooseProfile(e.target.value);
-  }
+  await useProfile(e.target.value);
+  if (e.target.value !== "__uploaded__") saveAccountData((d) => { d.lastProfile = e.target.value; });
   if (files.length) runCheck();
+});
+
+$("keep-profile").addEventListener("click", async () => {
+  if (!signedIn()) {
+    $("keep-note").innerHTML = "Sign in (top right) to save profiles to your account and use them on any device.";
+    return;
+  }
+  $("keep-profile").hidden = true;
+  $("keep-form").hidden = false;
+  $("keep-name").value = (baseProfile.name || "My profile").replace(/^Your profile: /, "");
+  $("keep-name").select();
+});
+
+$("keep-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const name = $("keep-name").value.trim() || "My profile";
+  const profile = currentProfile();
+  profile.name = name;
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  saveAccountData((d) => {
+    d.profiles = [...(d.profiles || []), { id, name, profile, saved: new Date().toISOString() }];
+    d.lastProfile = "my:" + id;
+  });
+  addMyProfiles();
+  $("profile-select").value = "my:" + id;
+  baseProfile = structuredClone(profile);
+  fillForm(baseProfile);
+  markChanges();
+  $("keep-form").hidden = true;
+  $("keep-profile").hidden = false;
+  $("keep-note").innerHTML = `<span class="saved-note">Saved to your account as “${escapeHtml(name)}”.</span>`;
+  setTimeout(() => ($("keep-note").textContent = ""), 4000);
 });
 
 for (const id of ["review-model", "citation-style", "abstract-limit", "cutoff", "ignore", "skip-symbols"]) {
@@ -241,6 +320,11 @@ const dismissed = new Set();          // "file name|Section|Check" marked as fal
 let showDismissed = false;
 let view = "author";                  // "author": what to fix and how; "editor": a terse screening log
 try { view = localStorage.getItem("gs-view") || "author"; } catch (e) { /* storage unavailable */ }
+if (ACCOUNT) {
+  const prof = ACCOUNT.get("profile");
+  const byRole = { editor: "editor", office: "editor", service: "editor", reviewer: "editor", author: "author" }[prof.role];
+  view = accountData().view || prof.view || byRole || view;
+}
 
 function extension(name) {
   const m = name.toLowerCase().match(/\.[a-z0-9]+$/);
@@ -257,6 +341,7 @@ async function addFiles(list) {
     return;
   }
   files = await Promise.all(readable.map(async (f) => ({ name: f.name, data: await f.arrayBuffer() })));
+  runId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   dismissed.clear();
   const skipped = all.length - readable.length;
   if (skipped) setStatus(`${skipped} file(s) skipped: ${old.length ? "old .doc files must be saved as .docx; " : ""}`
@@ -272,6 +357,18 @@ drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); });
 
 let running = false, again = false;
+let runId = null;            // one history entry per set of files, updated as the settings change
+
+// Signed in: keep a short summary of each check (file names and results, never the files) in the account
+function recordHistory(profileName) {
+  if (!signedIn() || !runId || !lastRun) return;
+  const entry = {
+    id: runId, date: new Date().toISOString(), profile: profileName,
+    files: lastRun.results.map((r) => r.error ? { name: r.name, verdict: "Unreadable" }
+      : { name: r.name, verdict: verdictOf(liveIssues(r)), counts: countsOf(liveIssues(r)), role: (r.info || {}).role || "manuscript" }),
+  };
+  saveAccountData((d) => { d.history = [entry, ...(d.history || []).filter((h) => h.id !== runId)].slice(0, 50); });
+}
 async function runCheck() {
   if (running) { again = true; return; }
   running = true;
@@ -282,6 +379,7 @@ async function runCheck() {
     lastRun = await rpc("check", files, JSON.stringify(profile), JSON.stringify(gone));
     lastRun.profileName = profile.name;
     renderResults();
+    recordHistory(profile.name);
     setStatus("Done. Change the profile or settings and the results update by themselves.", "done");
   } catch (err) {
     setStatus(`Something went wrong while checking: ${err.message.split("\n").pop()}`, "error");
@@ -408,6 +506,7 @@ function renderResults() {
     b.addEventListener("click", () => {
       view = b.dataset.view;
       try { localStorage.setItem("gs-view", view); } catch (e) { /* storage unavailable */ }
+      saveAccountData((d) => { d.view = view; });
       renderResults();
     });
   }
@@ -423,4 +522,10 @@ function renderResults() {
       timer = setTimeout(runCheck, 400);        // rebuild the downloads without the dismissed items
     });
   }
+}
+
+// Saved profiles or preferences changed on another device
+if (ACCOUNT) {
+  ACCOUNT.onRemote("checker", () => { if (isReady) addMyProfiles(); });
+  ACCOUNT.onChange(() => { if (isReady) { addMyProfiles(); markChanges(); } });
 }

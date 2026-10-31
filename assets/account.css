@@ -1,0 +1,63 @@
+/* The Grey Swan: the account button, its menu and dialogs (used on every page) */
+#gs-account { position: relative; flex: none; font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 0.9rem; z-index: 50; }
+#gs-account button { font: inherit; cursor: pointer; }
+
+.gs-signin { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #ECE8E1;
+             border: 1px solid #C69F70; border-radius: 999px; padding: 7px 14px; min-height: 38px; }
+.gs-signin:hover { background: rgba(198, 159, 112, 0.12); }
+
+.gs-chip { display: inline-flex; align-items: center; gap: 9px; background: #1A1D20; color: #ECE8E1;
+           border: 1px solid #2E2A24; border-radius: 999px; padding: 4px 12px 4px 4px; min-height: 38px; }
+.gs-chip:hover, .gs-chip[aria-expanded="true"] { border-color: #C69F70; }
+.gs-chip img, .gs-initial { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex: none; }
+.gs-initial { display: grid; place-items: center; background: #C69F70; color: #15130F; font-weight: 500; }
+.gs-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gs-dot { width: 8px; height: 8px; border-radius: 50%; background: #8C8880; flex: none; }
+.gs-dot.ok { background: #8FC79A; }
+.gs-dot.busy { background: #E0B86A; animation: gs-pulse 1s ease-in-out infinite alternate; }
+.gs-dot.warn { background: #E8907F; }
+@keyframes gs-pulse { from { opacity: 0.35; } to { opacity: 1; } }
+
+.gs-menu { position: absolute; right: 0; top: calc(100% + 8px); width: 280px; background: #1A1D20;
+           border: 1px solid #2E2A24; border-radius: 10px; padding: 8px; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55); text-align: left; }
+.gs-menu[hidden] { display: none; }
+.gs-menu-head { padding: 8px 10px 10px; border-bottom: 1px solid #2E2A24; }
+.gs-menu-head b { display: block; color: #ECE8E1; font-weight: 500; }
+.gs-menu-head span { color: #A9A49B; font-size: 0.84rem; word-break: break-all; }
+.gs-menu-status { padding: 9px 10px; color: #A9A49B; font-size: 0.82rem; }
+.gs-menu-status.ok { color: #8FC79A; }
+.gs-menu-status.warn { color: #E8907F; }
+.gs-menu-status small { display: block; color: #A9A49B; margin-top: 3px; }
+.gs-menu-item { display: block; width: 100%; text-align: left; background: none; border: 0; color: #ECE8E1;
+                padding: 9px 10px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; }
+.gs-menu-item:hover { background: #202428; color: #ECE8E1; }
+.gs-menu .gs-btn { width: calc(100% - 4px); margin: 2px 2px 6px; }
+
+.gs-btn { background: transparent; color: #C69F70; border: 1px solid #C69F70; border-radius: 6px; padding: 10px 16px;
+          font: 500 0.92rem 'IBM Plex Sans', system-ui, sans-serif; cursor: pointer; min-height: 42px; }
+.gs-btn:hover { background: rgba(198, 159, 112, 0.1); }
+.gs-btn-gold { background: #C69F70; color: #15130F; }
+.gs-btn-gold:hover { background: #E2B885; }
+.gs-btn-danger { color: #E8907F; border-color: #E8907F; }
+.gs-btn-danger:hover { background: rgba(232, 144, 127, 0.1); }
+
+.gs-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px;
+            background: rgba(5, 6, 7, 0.72); font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.gs-modal-box { max-width: 460px; width: 100%; background: #1A1D20; border: 1px solid #2E2A24; border-radius: 12px; padding: 24px; color: #ECE8E1; }
+.gs-modal-box h3 { font: 500 1.5rem 'Cormorant Garamond', Georgia, serif; margin: 0 0 8px; }
+.gs-modal-box p { color: #A9A49B; margin: 0 0 20px; line-height: 1.55; }
+.gs-modal-buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* "Saved to your account" notes inside the tools */
+.gs-history { margin-top: 18px; }
+.gs-history h3 { font: 500 1.25rem 'Cormorant Garamond', Georgia, serif; margin: 0 0 8px; color: #ECE8E1; }
+.gs-history ul { list-style: none; margin: 0; padding: 0; }
+.gs-history li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid #2E2A24; font-size: 0.86rem; }
+.gs-history li button { background: none; border: 0; color: #C69F70; cursor: pointer; padding: 0; font: inherit; text-align: left; }
+.gs-history .when { color: #A9A49B; white-space: nowrap; }
+
+@media (max-width: 520px) {
+  .gs-name { display: none; }
+  .gs-chip { padding-right: 8px; }
+  .gs-menu { width: min(280px, calc(100vw - 32px)); }
+}

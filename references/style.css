@@ -27,6 +27,7 @@ a { color: var(--gold); }
 
 /* Header */
 .masthead { display: flex; align-items: center; gap: 28px; }
+.masthead-account { margin-left: auto; align-self: flex-start; }
 .emblem { height: 150px; width: auto; flex: none; }
 .eyebrow { font-family: var(--caps); color: var(--gold); font-size: 0.95rem; letter-spacing: 5px; text-transform: uppercase; }
 .eyebrow a { color: var(--gold); text-decoration: none; }
@@ -182,3 +183,9 @@ td.section { color: var(--muted); white-space: nowrap; }
   tr { position: relative; padding-right: 30px; }
   .section-small { display: inline; margin-right: 6px; }
 }
+
+/* Saving journal profiles to the signed-in account */
+.keep-profile { display: flex; gap: 8px; margin-top: 8px; }
+.keep-profile input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+                      color: var(--ink); font: inherit; padding: 7px 9px; }
+.saved-note { color: var(--ok); }
