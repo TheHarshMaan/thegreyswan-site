@@ -45,6 +45,9 @@ html.gs-rails .gs-rail { display: flex; }
 .gs-motif.cites .gs-motif-item { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 0.95rem; }
 .gs-motif.cites .gs-motif-item:nth-child(odd) { text-align: right; padding-right: calc(50% + 16px); }
 .gs-motif.cites .gs-motif-item:nth-child(even) { text-align: left; padding-left: calc(50% + 16px); }
+.gs-motif.ids .gs-motif-item { font-variant-numeric: tabular-nums; font-size: 0.62rem; letter-spacing: 0.5px; }
+.gs-motif.ids .gs-motif-item:nth-child(odd) { text-align: right; padding-right: calc(50% + 14px); }
+.gs-motif.ids .gs-motif-item:nth-child(even) { text-align: left; padding-left: calc(50% + 14px); }
 .gs-motif.dates .gs-motif-item { text-align: left; padding-left: calc(50% + 12px); font-size: 0.66rem; text-transform: uppercase; }
 .gs-motif.dates .gs-motif-item::before { content: ""; position: absolute; left: calc(50% - 3px); top: 50%; width: 5px; height: 5px;
                                          margin-top: -2.5px; border-radius: 50%; background: rgba(198, 159, 112, 0.6); }

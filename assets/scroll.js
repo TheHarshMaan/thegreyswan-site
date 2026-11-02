@@ -35,6 +35,11 @@
       for (let i = 1; i <= count; i++) out.push(String(i * 5));
     } else if (kind === "cites") {                       // citation markers, as they appear in a manuscript
       for (let i = 1; i <= count; i++) out.push(i % 4 === 0 ? `[${i}–${i + 2}]` : i % 7 === 0 ? `[${i}, ${i + 5}]` : `[${i}]`);
+    } else if (kind === "ids") {                         // ORCID-style researcher identifiers
+      let seed = 7;
+      const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+      const block = () => String(Math.floor(rnd() * 10000)).padStart(4, "0");
+      for (let i = 0; i < count; i++) out.push(`000${Math.floor(rnd() * 3)}-${block()}`);
     } else if (kind === "dates") {                       // an invitation timeline, a week apart, around today
       const day = 86400000, now = Date.now();
       for (let i = 0; i < count; i++) {

@@ -95,6 +95,7 @@
   h2 { font-size: clamp(2rem, 4.5vw, 2.9rem); margin: 10px 0 14px; }
   .section-head p { color: var(--muted); margin: 0; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid + .grid { margin-top: 20px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 24px; }
   .card h3 { font-size: 1.45rem; color: var(--ink); margin-bottom: 8px; }
   .card p { color: var(--muted); margin: 0; font-size: 0.96rem; }
@@ -203,6 +204,7 @@
     <li><a href="#checker"><span>Screening tool</span></a></li>
     <li><a href="#tracker"><span>Reviewer tracker</span></a></li>
     <li><a href="#references"><span>Reference integrity</span></a></li>
+    <li><a href="#researchers"><span>Researcher check</span></a></li>
     <li><a href="#about"><span>About</span></a></li>
     <li><a href="#contact"><span>Contact</span></a></li>
   </ul>
@@ -220,6 +222,7 @@
         <li><a href="#checker">GS Screening Tool</a></li>
         <li><a href="#tracker">Reviewer tracker</a></li>
         <li><a href="#references">Reference Integrity</a></li>
+        <li><a href="#researchers">Researcher Check</a></li>
         <li><a href="#about">About</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
@@ -328,6 +331,33 @@
       </div>
     </div>
   </section>
+  <section id="researchers" style="border-top:1px solid var(--line)">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Free tool · New</div>
+        <h2>The <em>Researcher</em> Check</h2>
+        <p>Paper mills invent authors and suggest reviewers who are really the authors themselves. Check a manuscript's
+          authors and suggested reviewers against open research databases in minutes, with the evidence for every
+          finding.</p>
+      </div>
+      <div class="grid">
+        <div class="card"><h3>Who they are</h3><p>A matching researcher profile and publication record, an ORCID iD that is valid and really theirs, and help choosing between researchers with the same name.</p></div>
+        <div class="card"><h3>Where they are</h3><p>Email domains checked against the stated institution: free webmail, another institution's domain, or a look-alike such as oxfrod.ac.uk.</p></div>
+        <div class="card"><h3>Independent reviewers</h3><p>Suggested reviewers who have published with the authors, or share their institution, are flagged with the shared paper as evidence.</p></div>
+      </div>
+      <div class="grid">
+        <div class="card"><h3>Reviewers from the network</h3><p>For a reviewer who checks out, find conflict-free candidates among their co-authors, ranked by subject fit, and add them to your Reviewer Tracker.</p></div>
+        <div class="card"><h3>Queries ready to send</h3><p>Every flag comes with a polite query for the authors and the verifying links, ready to paste into your screening comments.</p></div>
+        <div class="card"><h3>Reports</h3><p>Download the findings, queries and evidence as Excel or Word, for your editorial records.</p></div>
+      </div>
+      <div class="note"><b>It flags; it never accuses.</b> A free email address or a short publication record is a reason
+        to check, not evidence of misconduct. Names and ORCID iDs are looked up in OpenAlex, ROR and ORCID; email
+        addresses are compared in your browser and never sent.</div>
+      <div class="buttons" style="justify-content:center;margin-top:32px">
+        <a class="btn btn-gold" href="researchers/">Check researchers</a>
+      </div>
+    </div>
+  </section>
   <section id="about" style="border-top:1px solid var(--line)">
     <div class="wrap about">
       <div class="about-logo"><img src="assets/the_grey_swan_logo.png" alt="The Grey Swan logo" width="320" height="320"></div>
@@ -342,7 +372,7 @@
           and trackers anyone can use, so authors can submit with confidence and editorial teams can spend their time on
           what matters.</p>
         <div class="stats">
-          <div class="stat"><b>3</b><span>free tools</span></div>
+          <div class="stat"><b>4</b><span>free tools</span></div>
           <div class="stat"><b>0</b><span>manuscripts stored</span></div>
         </div>
       </div>

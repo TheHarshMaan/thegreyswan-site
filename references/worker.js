@@ -87,6 +87,34 @@ os.makedirs("/tmp/uploads")
       postMessage({ id, ok: true, result: out });
       return;
     }
+    if (fn === "ids_extract") {
+      // args: [files: [{name, data}]]
+      py.runPython(`
+import shutil, os
+shutil.rmtree("/tmp/uploads", ignore_errors=True)
+os.makedirs("/tmp/uploads")
+`);
+      const list = (args[0] || []).map((f, i) => {
+        const ext = (f.name.match(/\.[a-z0-9]+$/i) || [".docx"])[0].toLowerCase();
+        py.FS.writeFile(`/tmp/uploads/${i + 1}${ext}`, new Uint8Array(f.data));
+        return { path: `${i + 1}${ext}`, name: f.name };
+      });
+      postMessage({ id, ok: true, result: call("ids_extract", JSON.stringify(list)) });
+      return;
+    }
+    if (fn === "ids_check" || fn === "ids_network") {
+      // Python looks people up itself (through the browser's fetch) and reports progress as it goes
+      const progress = (done, total, who) => postMessage({ type: "ids-progress", done, total, who });
+      const out = await (fn === "ids_check" ? call(fn, ...args, progress) : call(fn, ...args));
+      postMessage({ id, ok: true, result: out });
+      return;
+    }
+    if (fn === "ids_report") {
+      const paths = JSON.parse(call(fn, ...args));
+      const report = py.FS.readFile(paths.report).buffer, word = py.FS.readFile(paths.word).buffer;
+      postMessage({ id, ok: true, result: { report, word } }, [report, word]);
+      return;
+    }
     result = call(fn, ...args);
     postMessage({ id, ok: true, result });
   } catch (err) {

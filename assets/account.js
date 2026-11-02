@@ -37,6 +37,8 @@
     checker:    { key: "gs-checker",                    file: "checker.json",    label: "Manuscript checker" },
     references: { key: "gs-references",                 file: "references.json", label: "Reference checks" },
   };
+  const PAUSED_NOTE = "Google sign-ins last an hour. Your work is still saved on this device; click anywhere to resume syncing.";
+  const RENEW_EARLY = 10 * 60 * 1000;    // renew the Google pass on a click when less than this is left
   const ACCOUNT_KEY = "gs-account";      // {user, token, expires, owner}
   const BASE_KEY = "gs-sync-base:";      // + store: the copy last agreed with Drive
   const LAST_SYNC_KEY = "gs-last-sync";
@@ -148,15 +150,18 @@
   }
 
   // Must be called from a click (browsers only allow the Google window to open after one)
-  async function signIn() {
+  async function signIn(quiet) {
     try {
       await loadGis();
-    } catch (e) { setStatus(account ? "reconnect" : "error", e.message); return false; }
+    } catch (e) { setStatus(account ? "reconnect" : "error", quiet ? PAUSED_NOTE : e.message); return false; }
     const resp = await new Promise((resolve, reject) => {
       pendingSignIn = { resolve, reject };
       const hint = account && account.user && account.user.email;
       getTokenClient().requestAccessToken(Object.assign({ prompt: account ? "" : "select_account" }, hint ? { login_hint: hint } : {}));
-    }).catch((e) => { setStatus(account ? "reconnect" : "idle", e.message); return null; });
+    }).catch((e) => {
+      if (!(quiet && token())) setStatus(account ? "reconnect" : "idle", quiet ? PAUSED_NOTE : e.message);
+      return null;
+    });
     if (!resp) return false;
 
     if (!google.accounts.oauth2.hasGrantedAllScopes(resp, DRIVE_SCOPE)) {
@@ -280,7 +285,7 @@
   async function syncAll() {
     if (!account) return;
     if (syncing) { again = true; return syncing; }
-    if (!token()) { setStatus("reconnect", "Your sign-in has expired. Reconnect to sync."); return; }
+    if (!token()) { setStatus("reconnect", PAUSED_NOTE); return; }
     if (!navigator.onLine) { setStatus("offline", "You're offline. Changes are saved here and will sync when you're back online."); return; }
     syncing = (async () => {
       setStatus("syncing");
@@ -290,7 +295,7 @@
         store.write(LAST_SYNC_KEY, new Date().toISOString());
         setStatus("synced");
       } catch (e) {
-        if (e.reconnect) setStatus("reconnect", "Your sign-in has expired. Reconnect to sync.");
+        if (e.reconnect) setStatus("reconnect", PAUSED_NOTE);
         else setStatus("error", "Couldn't sync just now: " + e.message + ". Your changes are saved in this browser.");
       }
     })();
@@ -375,7 +380,7 @@
   }
   const STATUS_TEXT = {
     idle: "", pending: "Saving…", syncing: "Syncing…", synced: "Saved to your Google Drive",
-    offline: "Offline: saved here", reconnect: "Sign-in expired: reconnect to sync", error: "Not synced",
+    offline: "Offline: saved here", reconnect: "Sync paused", renewing: "Resuming sync…", error: "Not synced",
   };
   function accountUrl() {
     const here = document.currentScript || document.querySelector('script[src*="account.js"]');
@@ -395,15 +400,15 @@
     const first = escapeHtml((get("profile").displayName || u.name || u.email).split(" ")[0]);
     const avatar = u.picture ? `<img src="${escapeHtml(u.picture)}" alt="" referrerpolicy="no-referrer">`
       : `<span class="gs-initial">${first.slice(0, 1)}</span>`;
-    const dot = { synced: "ok", syncing: "busy", pending: "busy", reconnect: "warn", offline: "warn", error: "warn" }[status] || "";
+    const dot = { synced: "ok", syncing: "busy", pending: "busy", renewing: "busy", reconnect: "paused", offline: "paused", error: "warn" }[status] || "";
     const line = status === "synced" ? `${STATUS_TEXT.synced} · ${ago(store.read(LAST_SYNC_KEY))}` : (STATUS_TEXT[status] || "");
     mount.innerHTML = `
       <button type="button" class="gs-chip" data-gs="menu" aria-haspopup="true" aria-expanded="${menuOpen}">
         ${avatar}<span class="gs-name">${first}</span><span class="gs-dot ${dot}" title="${escapeHtml(line)}"></span></button>
       <div class="gs-menu" ${menuOpen ? "" : "hidden"} role="menu">
         <div class="gs-menu-head"><b>${escapeHtml(u.name)}</b><span>${escapeHtml(u.email)}</span></div>
-        <div class="gs-menu-status ${dot}">${escapeHtml(line)}${message && status !== "synced" ? `<small>${escapeHtml(message)}</small>` : ""}</div>
-        ${status === "reconnect" ? '<button type="button" class="gs-btn gs-btn-gold" data-gs="signin">Reconnect</button>'
+        <div class="gs-menu-status ${dot}">${escapeHtml(line)}${message && status !== "synced" && message !== line ? `<small>${escapeHtml(message)}</small>` : ""}</div>
+        ${status === "reconnect" ? '<button type="button" class="gs-btn gs-btn-gold" data-gs="signin">Resume sync</button>'
           : '<button type="button" class="gs-menu-item" data-gs="sync">Sync now</button>'}
         <a class="gs-menu-item" href="${ACCOUNT_URL}">My account</a>
         <button type="button" class="gs-menu-item" data-gs="signout">Sign out</button>
@@ -423,6 +428,22 @@
     if (what === "signout") { menuOpen = false; renderChip(); await signOut(); }
   });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && menuOpen) { menuOpen = false; renderChip(); } });
+
+  // Google's pass lasts an hour. Renew it on the next ordinary click (browsers only let Google's window open
+  // after one): if it has run out, or will within 10 minutes. Google closes its window by itself.
+  let renewing = false, lastTry = 0;
+  async function renewOnClick(e) {
+    if (!account || renewing || e.button !== 0) return;
+    if (account.token && account.expires - Date.now() > RENEW_EARLY) return;
+    if (e.target.closest("input, textarea, select, [contenteditable='true'], [data-gs], a[href]")) return;
+    if (Date.now() - lastTry < 2 * 60 * 1000) return;          // the user closed Google's window: don't nag
+    renewing = true; lastTry = Date.now();
+    if (!token()) setStatus("renewing");
+    const ok = await signIn(true);
+    renewing = false;
+    if (ok) lastTry = 0;
+  }
+  document.addEventListener("click", renewOnClick, true);
 
   // Pick up changes made on other devices when coming back to the page, and every few minutes
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && account && token()) syncAll(); });
@@ -446,7 +467,7 @@
   function start() {
     renderChip();
     if (account) {
-      if (token()) syncAll(); else setStatus("reconnect", "Your sign-in has expired. Reconnect to sync.");
+      if (token()) syncAll(); else setStatus("reconnect", PAUSED_NOTE);
     }
   }
   document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", start) : start();

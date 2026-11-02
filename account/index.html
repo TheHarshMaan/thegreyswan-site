@@ -246,11 +246,11 @@ window.GS_SCROLL = { width: 980, title: "Your work · Every device", motif: "", 
       : `<span class="initial">${esc((prof.displayName || u.name).slice(0, 1))}</span>`) +
       `<div><b>${esc(prof.displayName || u.name)}</b><span>${esc(u.email)} · signed in with Google</span></div>`;
     const line = $("sync-line");
-    line.className = "sync-line " + ({ synced: "ok", reconnect: "warn", error: "warn", offline: "warn" }[state.status] || "");
+    line.className = "sync-line " + ({ synced: "ok", error: "warn" }[state.status] || "");
     line.textContent = state.status === "synced" ? `Everything is saved to your Google Drive. Last synced ${when(state.lastSync)}.`
       : state.status === "syncing" || state.status === "pending" ? "Syncing…"
       : state.message || "";
-    $("sync-now").textContent = state.status === "reconnect" ? "Reconnect" : "Sync now";
+    $("sync-now").textContent = state.status === "reconnect" ? "Resume sync" : "Sync now";
     $("sync-now").dataset.gs = state.status === "reconnect" ? "signin" : "";
     renderData();
   }

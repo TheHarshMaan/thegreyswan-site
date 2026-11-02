@@ -16,6 +16,7 @@
 .gs-dot.ok { background: #8FC79A; }
 .gs-dot.busy { background: #E0B86A; animation: gs-pulse 1s ease-in-out infinite alternate; }
 .gs-dot.warn { background: #E8907F; }
+.gs-dot.paused { background: #E0B86A; }
 @keyframes gs-pulse { from { opacity: 0.35; } to { opacity: 1; } }
 
 .gs-menu { position: absolute; right: 0; top: calc(100% + 8px); width: 280px; background: #1A1D20;
@@ -27,6 +28,7 @@
 .gs-menu-status { padding: 9px 10px; color: #A9A49B; font-size: 0.82rem; }
 .gs-menu-status.ok { color: #8FC79A; }
 .gs-menu-status.warn { color: #E8907F; }
+.gs-menu-status.paused { color: #E0B86A; }
 .gs-menu-status small { display: block; color: #A9A49B; margin-top: 3px; }
 .gs-menu-item { display: block; width: 100%; text-align: left; background: none; border: 0; color: #ECE8E1;
                 padding: 9px 10px; border-radius: 6px; text-decoration: none; font-size: 0.9rem; }
