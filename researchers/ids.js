@@ -4,7 +4,7 @@
 
 // OpenAlex needs an API key for real use (free, openalex.org/settings/api); visitors can add their own in Settings.
 // ROR gives a higher allowance with a free client ID (ror.org/api-client-id). Both are safe to publish.
-const SITE_OPENALEX_KEY = "";
+const SITE_OPENALEX_KEY = "4IJ0aOZRezYQLJvuMOIeSR";
 const ROR_CLIENT_ID = "";
 
 const params = new URLSearchParams(location.search);
