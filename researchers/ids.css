@@ -1,4 +1,4 @@
-/* Researcher Check: additions to the shared Grey Swan style (style.css) */
+/* Cygnus: additions to the shared Grey Swan style (style.css) */
 
 .ids-layout { display: grid; grid-template-columns: 1fr; gap: 26px; margin-top: 8px; }
 .step { font-family: var(--serif); font-weight: 500; font-size: 1.6rem; margin: 26px 0 12px; display: flex; align-items: center; gap: 12px; }
@@ -99,3 +99,45 @@ table.findings .lim { display: block; color: var(--muted); font-style: italic; f
   .net-table td { display: block; border-top: 0; padding: 2px 6px; }
   .net-table tr { display: block; border-top: 1px solid var(--line); padding: 8px 0; }
 }
+.net-hint { margin-left: auto; font-size: 0.78rem; color: var(--gold); }
+
+/* Cygnus: the co-author network as the swan constellation */
+.cygnus { margin: 12px 0 16px; }
+.cy-sky { width: 100%; display: block; }
+.cy-bg { fill: #0D0F15; stroke: var(--line); }
+.cy-dust { fill: var(--ink); opacity: 0.45; }
+.cy-lines path { stroke: var(--gold); stroke-width: 1.2; fill: none; stroke-linecap: round; opacity: 0.75; }
+.cy-empty { fill: var(--muted); opacity: 0.5; }
+.cy-shore { fill: none; stroke: var(--must); stroke-width: 0.7; stroke-dasharray: 3 4; opacity: 0.7; }
+.cy-shore-lab { fill: var(--must); font: 12px var(--sans); }
+.cy-word { fill: var(--gold); font: 500 14px var(--caps); letter-spacing: 3px; }
+.cy-sub { fill: var(--muted); font: 12px var(--sans); }
+.cy-star .lab { fill: var(--ink); font: 12px var(--sans); }
+.cy-star .lab.faint { fill: var(--muted); font-size: 11px; }
+.cy-star .seedlab { fill: #E2B885; font-weight: 500; }
+.cy-star .halo { opacity: 0.13; }
+.cy-star.seed .core, .cy-star.seed .halo { fill: #E2B885; }
+.cy-star.named .core, .cy-star.named .halo { fill: #E2B885; }
+.cy-star.field .core, .cy-star.field .halo { fill: #8C8880; }
+.cy-star.shore .core, .cy-star.shore .halo { fill: var(--must); }
+.cy-star .ring { fill: none; stroke: var(--should); stroke-width: 1; stroke-dasharray: 2 2; }
+.cy-star[data-cy] { cursor: pointer; outline: none; }
+.cy-star[data-cy]:hover .core, .cy-star[data-cy]:focus .core, .cy-star.on .core { stroke: #FCDE5A; stroke-width: 2; }
+.cy-star.on .halo { opacity: 0.3; }
+.cy-bar { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--muted); margin-top: 8px; }
+.cy-bar label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.cy-card { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-top: 8px; min-height: 96px; font-size: 0.86rem; }
+.cy-card .cy-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.cy-card .tags { margin: 6px 0 4px; }
+.cy-act { margin-top: 8px; }
+.net-table tr.lit td { background: rgba(198, 159, 112, 0.08); }
+@media (prefers-reduced-motion: no-preference) {
+  .cygnus:not(.calm) .cy-star { opacity: 0; animation: cy-rise 0.8s ease-out forwards; }
+  .cygnus:not(.calm) .cy-lines path { stroke-dasharray: 400; stroke-dashoffset: 400; animation: cy-draw 1.6s ease-out 0.9s forwards; }
+  .cy-dust { animation: cy-twinkle 2.4s ease-in-out infinite; }
+  @keyframes cy-rise { to { opacity: 1; } }
+  @keyframes cy-draw { to { stroke-dashoffset: 0; } }
+  @keyframes cy-twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+}
+@media (max-width: 600px) { .cy-star .lab:not(.seedlab), .cy-word, .cy-sub { display: none; } }
+.masthead .subtitle { font-family: var(--caps); color: var(--muted); font-size: 0.82rem; letter-spacing: 2px; text-transform: uppercase; margin: -2px 0 6px; }
