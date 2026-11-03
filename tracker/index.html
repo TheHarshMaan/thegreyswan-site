@@ -315,6 +315,7 @@ window.GS_SCROLL = {
 </script>
 <script src="../assets/scroll.js"></script>
 <script src="../assets/account.js"></script>
+<script src="../assets/feedback.js"></script>
 <script>
 /* =====================================================================
    The Grey Swan Reviewer Tracker
@@ -455,6 +456,7 @@ $("invite-form").addEventListener("submit", (event) => {
   data.invites.push({ id: newId(), reviewerId: reviewer.id, manuscript: $("inv-ms").value.trim(),
                       invited: $("inv-date").value || today(), outcome: "awaiting", reported: null });
   save();
+  if (window.GS_EVENT) window.GS_EVENT("tracker-invite-logged");
 
   $("invite-msg").textContent = `Saved: ${name} invited${$("inv-ms").value ? " for " + $("inv-ms").value : ""}.`;
   // Keep the manuscript ID and date, clear the reviewer, so several reviewers can be logged for one paper
@@ -773,6 +775,7 @@ $("up-csv").addEventListener("change", async (event) => {
   save();
   renderAll();
   $("import-msg").textContent = `Imported: ${added} new reviewer(s), ${updated} updated.`;
+  if (window.GS_EVENT) window.GS_EVENT("tracker-import");
 });
 
 function renderBackupNote() {
@@ -789,6 +792,7 @@ $("clear-all").addEventListener("click", () => {
 });
 
 $("load-demo").addEventListener("click", () => {
+  if (window.GS_EVENT) window.GS_EVENT("tracker-example-data");
   if (data.reviewers.length && !confirm("Add example reviewers to your current data?")) return;
   // Invented people at invented institutions, for demonstration only
   const people = [

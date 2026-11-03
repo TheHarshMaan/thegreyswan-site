@@ -69,6 +69,7 @@ function escapeHtml(text) {
 }
 
 function download(name, data, type) {
+  if (window.GS_EVENT) window.GS_EVENT("checker-report");
   const url = URL.createObjectURL(new Blob([data], { type }));
   const a = Object.assign(document.createElement("a"), { href: url, download: name });
   document.body.appendChild(a);
@@ -370,6 +371,7 @@ function recordHistory(profileName) {
   saveAccountData((d) => { d.history = [entry, ...(d.history || []).filter((h) => h.id !== runId)].slice(0, 50); });
 }
 async function runCheck() {
+  if (window.GS_EVENT) window.GS_EVENT("checker-run");
   if (running) { again = true; return; }
   running = true;
   setStatus(`Checking ${files.length} file(s)…`, "busy");

@@ -55,6 +55,7 @@ function linkify(text) {
 }
 const withoutNumber = (text) => text.replace(/^\s*\[?\d+[.)\]]?\s+/, "");
 function download(name, data, type) {
+  if (window.GS_EVENT) window.GS_EVENT("references-report");
   const url = URL.createObjectURL(new Blob([data], { type }));
   const a = Object.assign(document.createElement("a"), { href: url, download: name });
   document.body.appendChild(a); a.click(); a.remove();
@@ -168,6 +169,7 @@ const shown = { must: true, should: true, advisory: true, info: true, ok: true }
 let refs = [], results = {}, sourceName = "", running = false, sortBySeverity = false;
 
 async function run(files, text) {
+  if (window.GS_EVENT) window.GS_EVENT("references-run");
   if (running) return;
   if (!isReady) { setStatus("Still loading the checker; try again in a moment.", "busy"); return; }
   running = true;

@@ -1,0 +1,33 @@
+/* The Grey Swan: feedback button and form (assets/feedback.js) */
+.gs-fb-open { position: fixed; right: 20px; bottom: 20px; z-index: 60; background: #1A1D20; color: #C69F70;
+  border: 1px solid #C69F70; border-radius: 99px; padding: 8px 18px; font: 500 0.85rem 'IBM Plex Sans', system-ui, sans-serif;
+  letter-spacing: 0.5px; cursor: pointer; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45); }
+.gs-fb-open:hover, .gs-fb-open[aria-expanded=true] { background: #C69F70; color: #111315; }
+.gs-fb-open:focus-visible, .gs-fb button:focus-visible, .gs-fb textarea:focus-visible { outline: 2px solid #E2B885; outline-offset: 2px; }
+
+.gs-fb { position: fixed; right: 20px; bottom: 68px; z-index: 61; width: min(400px, calc(100vw - 40px));
+  max-height: calc(100vh - 100px); overflow-y: auto; background: #1A1D20; color: #ECE8E1; border: 1px solid #3A352D;
+  border-radius: 12px; padding: 16px 18px; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  font: 0.88rem/1.5 'IBM Plex Sans', system-ui, sans-serif; }
+.gs-fb[hidden] { display: none; }
+.gs-fb-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.gs-fb h2 { margin: 0; font: 500 1.35rem 'Cormorant Garamond', Georgia, serif; color: #ECE8E1; }
+.gs-fb-x { background: none; border: 0; color: #A9A49B; font-size: 1.4rem; line-height: 1; cursor: pointer; padding: 2px 6px; }
+.gs-fb-x:hover { color: #ECE8E1; }
+.gs-fb-kind { border: 0; margin: 0 0 10px; padding: 0; display: grid; gap: 4px; }
+.gs-fb-kind legend { color: #A9A49B; font-size: 0.8rem; margin-bottom: 4px; padding: 0; }
+.gs-fb-kind label, .gs-fb-check { display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
+.gs-fb input[type=radio], .gs-fb input[type=checkbox] { accent-color: #C69F70; }
+.gs-fb-field { display: block; color: #A9A49B; font-size: 0.8rem; }
+.gs-fb textarea { display: block; width: 100%; box-sizing: border-box; margin: 4px 0 8px; background: #111315; color: #ECE8E1;
+  border: 1px solid #3A352D; border-radius: 8px; padding: 8px 10px; font: 0.88rem/1.45 'IBM Plex Sans', system-ui, sans-serif; resize: vertical; }
+.gs-fb-check { font-size: 0.8rem; color: #A9A49B; margin-bottom: 12px; }
+.gs-fb-send { display: flex; flex-wrap: wrap; gap: 8px; }
+.gs-fb-btn { background: none; color: #C69F70; border: 1px solid #C69F70; border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  font: 500 0.82rem 'IBM Plex Sans', system-ui, sans-serif; }
+.gs-fb-btn.primary { background: #C69F70; color: #111315; }
+.gs-fb-btn:hover { filter: brightness(1.1); }
+.gs-fb-note { margin: 10px 0 0; font-size: 0.78rem; color: #A9A49B; }
+.gs-fb-note a { color: #C69F70; }
+.gs-fb-status { margin: 6px 0 0; font-size: 0.8rem; color: #8FC79A; min-height: 1em; }
+@media print { .gs-fb-open, .gs-fb { display: none !important; } }

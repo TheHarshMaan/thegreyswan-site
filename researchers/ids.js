@@ -55,6 +55,7 @@ function setStatus(text, kind) {
   $("status-text").textContent = text;
 }
 function download(name, data, type) {
+  if (window.GS_EVENT) window.GS_EVENT("cygnus-report");
   const url = URL.createObjectURL(new Blob([data], { type }));
   const a = Object.assign(document.createElement("a"), { href: url, download: name });
   document.body.appendChild(a); a.click(); a.remove();
@@ -207,6 +208,7 @@ function session() {
 
 async function run(keepOpen) {
   if (running) return;
+  if (window.GS_EVENT) window.GS_EVENT("cygnus-run");
   running = true;
   updateRun();
   const open = keepOpen ? new Set([...document.querySelectorAll(".person[open]")].map((d) => d.dataset.id)) : null;
@@ -429,6 +431,7 @@ $("results").addEventListener("click", async (e) => {
     const id = t.dataset.network;
     t.disabled = true;
     t.textContent = "Looking at their co-authors…";
+    if (window.GS_EVENT) window.GS_EVENT("cygnus-network");
     try {
       networks[id] = JSON.parse(await rpc("ids_network", JSON.stringify(session()), id, keys()));
       const r = lastOut.results.find((x) => x.id === id);
@@ -452,6 +455,7 @@ $("results").addEventListener("click", async (e) => {
           `${c.shared_with_seed} shared paper(s). OpenAlex: ${c.url}${c.orcid ? ` · ORCID: https://orcid.org/${c.orcid}` : ""}. Email not known yet.` });
       try { localStorage.setItem(TRACKER_KEY, JSON.stringify(data)); } catch (err) { t.textContent = "Couldn't save"; return; }
       if (ACCOUNT) ACCOUNT.changed("tracker");
+      if (window.GS_EVENT) window.GS_EVENT("cygnus-add-to-tracker");
     }
     document.querySelectorAll(`[data-track="${CSS.escape(t.dataset.track)}"]`).forEach((b) => (b.outerHTML = '<span class="added">Added to your tracker</span>'));
     renderTracker();
