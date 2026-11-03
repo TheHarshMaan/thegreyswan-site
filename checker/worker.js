@@ -87,6 +87,31 @@ os.makedirs("/tmp/uploads")
       postMessage({ id, ok: true, result: out });
       return;
     }
+    if (fn === "rf_extract") {
+      py.runPython(`
+import shutil, os
+shutil.rmtree("/tmp/uploads", ignore_errors=True)
+os.makedirs("/tmp/uploads")
+`);
+      const list = (args[0] || []).map((f, i) => {
+        const ext = (f.name.match(/\.[a-z0-9]+$/i) || [".docx"])[0].toLowerCase();
+        py.FS.writeFile(`/tmp/uploads/${i + 1}${ext}`, new Uint8Array(f.data));
+        return { path: `${i + 1}${ext}`, name: f.name };
+      });
+      postMessage({ id, ok: true, result: call("rf_extract", JSON.stringify(list)) });
+      return;
+    }
+    if (fn === "rf_find") {
+      const progress = (step, total, text) => postMessage({ type: "rf-progress", step, total, text });
+      postMessage({ id, ok: true, result: await call(fn, ...args, progress) });
+      return;
+    }
+    if (fn === "rf_report") {
+      const paths = JSON.parse(call(fn, ...args));
+      const report = py.FS.readFile(paths.report).buffer, word = py.FS.readFile(paths.word).buffer;
+      postMessage({ id, ok: true, result: { report, word } }, [report, word]);
+      return;
+    }
     if (fn === "ids_extract") {
       // args: [files: [{name, data}]]
       py.runPython(`

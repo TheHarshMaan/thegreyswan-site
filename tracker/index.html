@@ -116,6 +116,7 @@
     .cols, .row, .filters { grid-template-columns: 1fr; }
     .intro { padding-top: 32px; }
   }
+  @media (max-width: 640px) { .nav a.tool-link { display: none; } }
 </style>
 <link rel="stylesheet" href="../assets/account.css">
 <link rel="stylesheet" href="../assets/scroll.css">
@@ -128,7 +129,7 @@
       <img src="../assets/grey_swan_icon.png" alt="" width="40" height="40">
       <span>The Grey Swan</span>
     </a>
-    <div class="nav-right"><a class="back" href="../researchers/">Check reviewers with Cygnus</a><a class="back" href="../">← All tools</a><div id="gs-account"></div></div>
+    <div class="nav-right"><a class="back tool-link" href="../reviewers/">Reviewer Finder</a><a class="back tool-link" href="../researchers/">Cygnus</a><a class="back" href="../">← All tools</a><div id="gs-account"></div></div>
   </div>
 </header>
 

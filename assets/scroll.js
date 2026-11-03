@@ -4,7 +4,7 @@
      window.GS_SCROLL = {
        width: 1180,                         // width of the page's content column, in px
        title: "Screening · Pre-submission", // vertical text on the left rail
-       motif: "lines" | "cites" | "dates",  // what drifts past on the left rail
+       motif: "lines" | "cites" | "ids" | "dates" | "stars",  // what drifts past on the left rail
        nav: [{ label, target: "#css-selector" } or { label, tab: "tab-name", target }],
        reveal: ".card, .note",              // things that fade up as they come into view
        readout(el) { ... },                 // optional: fill the live readout on the right rail
@@ -40,6 +40,13 @@
       const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
       const block = () => String(Math.floor(rnd() * 10000)).padStart(4, "0");
       for (let i = 0; i < count; i++) out.push(`000${Math.floor(rnd() * 3)}-${block()}`);
+    } else if (kind === "stars") {                       // a field of stars, some brighter, at scattered places
+      let seed = 11;
+      const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+      for (let i = 0; i < count; i++) {
+        const r = rnd();
+        out.push({ text: r > 0.82 ? "✦" : r > 0.55 ? "✧" : "·", cls: `s${Math.floor(rnd() * 5)}` });
+      }
     } else if (kind === "dates") {                       // an invitation timeline, a week apart, around today
       const day = 86400000, now = Date.now();
       for (let i = 0; i < count; i++) {
@@ -59,7 +66,7 @@
   left.innerHTML = `<div class="gs-line"></div><div class="gs-progress"></div>
     ${items.length ? `<div class="gs-motif ${esc(C.motif)}"><div class="gs-motif-track">${items.map((it, i) => {
       const o = typeof it === "string" ? { text: it } : it;
-      return `<div class="gs-motif-item${o.today ? " today" : ""}" style="top:${i * STEP}px">${esc(o.text)}</div>`;
+      return `<div class="gs-motif-item${o.today ? " today" : ""}${o.cls ? " " + o.cls : ""}" style="top:${i * STEP}px">${esc(o.text)}</div>`;
     }).join("")}</div></div>` : ""}
     ${mark("top")}${mark("bottom")}
     ${C.title ? `<div class="gs-title">${esc(C.title)}</div>` : ""}`;
