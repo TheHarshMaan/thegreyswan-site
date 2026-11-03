@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cygnus: researcher identity and independence check | The Grey Swan Editorial</title>
-<meta name="description" content="Cygnus, a free researcher check for journals: verify authors' and suggested reviewers' profiles, ORCID iDs, email domains and affiliations, spot conflicts of interest, and find conflict-free reviewers in a reviewer's co-author network. Uses OpenAlex, ROR and ORCID.">
+<title>Cygnus: researcher identity and overlap check | The Grey Swan Editorial</title>
+<meta name="description" content="Cygnus, a free researcher check for journals: verify authors' and suggested reviewers' profiles, ORCID iDs, email domains and affiliations, spot potential overlaps with the authors, and find further reviewers in a reviewer's co-author network. Uses OpenAlex, ROR and ORCID.">
 <link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@
     <div>
       <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· Editorial</span></div>
       <h1 class="title"><em>Cygnus</em></h1>
-      <div class="subtitle">Researcher identity and independence check</div>
+      <div class="subtitle">Researcher identity and overlap check</div>
       <nav class="tools"><a href="../checker/">Manuscript checker</a> · <a href="../references/">Reference checker</a> ·
         <span>Cygnus</span> · <a href="../reviewers/">Reviewer finder</a> · <a href="../tracker/">Reviewer tracker</a></nav>
     </div>
@@ -35,7 +35,7 @@
   <p class="lead">Check a manuscript's authors and suggested reviewers against open research databases: whether each
     researcher's profile, ORCID iD, email domain and affiliation fit together, whether their work fits the
     manuscript, and whether suggested reviewers have published with the authors. For reviewers who check out, find
-    conflict-free candidates among their co-authors.</p>
+    candidates among their co-authors, with any overlap with the authors flagged.</p>
 
   <div class="card">
     <b>It flags; it never accuses.</b> A free email address, a short publication record or no profile at all is a
@@ -129,7 +129,7 @@
 // The still side rails (see /assets/scroll.js): ORCID-style identifiers drift past on the left; the right rail
 // shows a dot for each person checked, coloured by result
 window.GS_SCROLL = {
-  width: 1180, title: "Identity · Affiliation · Independence", motif: "ids",
+  width: 1180, title: "Identity · Affiliation · Overlap", motif: "ids",
   nav: [{ label: "Overview", target: ".masthead" }, { label: "Who to check", target: ".ids-input" },
         { label: "Results", target: "#results" }],
   reveal: ".foot",

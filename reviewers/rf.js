@@ -1,5 +1,5 @@
 // The Grey Swan Editorial: Reviewer Finder (website)
-// Python (worker.js + revfind.py) reads the manuscript, searches OpenAlex through the browser, checks independence and
+// Python (worker.js + revfind.py) reads the manuscript, searches OpenAlex through the browser, looks for overlap and
 // ranks the candidates; this page collects the manuscript and people, filters and orders the candidates live, and
 // keeps the shortlist, invitation notes and the Reviewer Tracker.
 
@@ -68,10 +68,11 @@ function stored(key, fallback = "") { try { return localStorage.getItem(key) ?? 
 function keys() {
   return JSON.stringify({ openalex: stored("gs-openalex-key").trim() || SITE_OPENALEX_KEY, ror: ROR_CLIENT_ID });
 }
+const yearsLabel = () => { const y = lastOut ? +lastOut.retrieved.slice(0, 4) : new Date().getFullYear(); return `${y - 2}–${y}`; };
 const doiUrl = (d) => (d ? (d.startsWith("http") ? d : `https://doi.org/${d}`) : "");
 const ROLE_TEXT = { corresponding: "corresponding author", first: "first author", last: "last author", middle: "co-author" };
 const SENIORITY = { early: "Early career", mid: "Mid career", senior: "Senior" };
-const VERDICT = { green: "Consistent", amber: "Quick check", red: "Verify before proceeding" };
+const VERDICT = { green: "No issues found", amber: "Points to check", red: "Important points to check" };
 let uid = 0;
 const newPid = () => `n${Date.now().toString(36)}${uid++}`;
 
@@ -156,7 +157,7 @@ async function useFiles(list) {
       out.references.length ? `${out.references.length} reference DOIs` : ""].filter(Boolean);
     setStatus(bits.length ? `Found ${bits.join(", ")}. Check them, then find reviewers.` : "Nothing could be read from that file. Type the title and keywords instead.",
       bits.length ? "done" : "error");
-    if (!out.authors.length && bits.length) setStatus(`Found ${bits.join(", ")}, but no authors: add them so anyone linked to them can be set aside.`, "error");
+    if (!out.authors.length && bits.length) setStatus(`Found ${bits.join(", ")}, but no authors: add them so overlaps with them can be looked for.`, "error");
   } catch (err) {
     setStatus(`Couldn't read that file: ${err.message.split("\n").pop()}`, "error");
   }
@@ -226,7 +227,7 @@ function session() {
 async function run() {
   if (running) return;
   if (!people.some((p) => p.role === "author" && p.name.trim()) &&
-      !confirm("No authors have been added, so nobody can be set aside for working with them. Search anyway?")) return;
+      !confirm("No authors have been added, so overlaps with them (shared papers, the same institution) can't be looked for. Search anyway?")) return;
   countEvent(seeds.length ? "reviewers-more-like-this" : "reviewers-run");
   running = true;
   updateRun();
@@ -238,7 +239,7 @@ async function run() {
     for (const s of shortlist) { const c = byId(s.id); if (c && c.tracker && c.tracker.this_manuscript) s.logged = true; }
     renderResults();
     const n = lastOut.candidates.length, m = lastOut.conflicted.length;
-    setStatus(n ? `Found ${n} candidates${m ? `; ${m} set aside as not independent` : ""}. Pick your shortlist below.`
+    setStatus(n ? `Found ${n} candidates${m ? `; ${m} with a potential overlap with the authors, listed separately` : ""}. Pick your shortlist below.`
       : "No candidates found. Try broader keywords, or papers from the last 8 years in Search settings.", n ? "done" : "error");
     if (!seeds.length) $("results").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
@@ -328,7 +329,7 @@ function autofill() {
   const pick = visible().filter((c) => !c.flags.some((f) => f.level === "concern") && !(c.tracker && (c.tracker.pending_since || c.tracker.dead || c.tracker.this_manuscript))
     && !shortlist.some((s) => s.id === c.id));
   let p = needed() - shortlist.filter((s) => s.role === "primary").length, a = alternates() - shortlist.filter((s) => s.role === "alternate").length;
-  // First pass: only people independent of everyone already chosen (no shared institution, no papers together);
+  // First pass: only people with no detected overlap with anyone already chosen (no shared institution or papers);
   // second pass: anyone left, if the first couldn't fill the places
   const linked = (c) => shortlist.some((s) => {
     const o = byId(s.id);
@@ -404,7 +405,7 @@ function renderShortlist() {
     ${list.length ? `<div class="sl-mix"><span>${countries.length} ${countries.length === 1 ? "country" : "countries"}${countries.length ? ` (${esc(countries.join(", "))})` : ""}</span>
         <span>${stages.map(esc).join(", ")}</span>
         <span>${new Set(list.map((x) => x.c.institution_key).filter(Boolean)).size} institutions</span></div>` : ""}
-    ${checks.length ? `<ul class="sl-checks">${checks.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : list.length ? '<p class="sl-ok">No shared institutions or co-authorship within the shortlist.</p>' : ""}
+    ${checks.length ? `<ul class="sl-checks">${checks.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : list.length ? '<p class="sl-ok">No shared institution or publication detected within the shortlist (OpenAlex data).</p>' : ""}
     ${list.length ? `<details class="sl-invite" ${prim.length ? "open" : ""}><summary>Invitations</summary>
       <div class="sl-fields">
         <label class="field">Manuscript ID <input id="sl-ms" value="${esc(stored("gs-rf-ms"))}" placeholder="e.g. JOU-26-0142"></label>
@@ -448,7 +449,7 @@ function candCard(c, n) {
       <div class="c-who">
         <a class="c-name" href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.name)}</a>
         <span class="c-inst">${esc([c.institution || "Institution not known", c.country].filter(Boolean).join(" · "))}</span>
-        <span class="c-meta">${esc(SENIORITY[c.seniority])} · ${c.recent_works} paper${c.recent_works === 1 ? "" : "s"} in the last 3 years · h-index ${c.h_index}${c.tracker ? " · in your tracker" : ""}${c.tracker && c.tracker.this_manuscript ? ` · <b class="invited">already invited for this manuscript (${esc(c.tracker.this_manuscript === "awaiting" ? "awaiting reply" : c.tracker.this_manuscript)})</b>` : ""}</span>
+        <span class="c-meta">${esc(SENIORITY[c.seniority])} · ${c.recent_works} paper${c.recent_works === 1 ? "" : "s"} in ${yearsLabel()} · h-index ${c.h_index}${c.tracker ? " · in your tracker" : ""}${c.tracker && c.tracker.this_manuscript ? ` · <b class="invited">already invited for this manuscript (${esc(c.tracker.this_manuscript === "awaiting" ? "awaiting reply" : c.tracker.this_manuscript)})</b>` : ""}</span>
       </div>
       <div class="c-chips">
         <span class="chip fit-${c.fit_label.toLowerCase()}" title="How closely their recent work matches the manuscript">${c.fit_label} fit</span>
@@ -465,7 +466,7 @@ function candCard(c, n) {
       <ul class="c-outlook">${c.outlook_why.map(([sign, t]) => `<li class="${sign === "+" ? "up" : "down"}"><span aria-hidden="true">${sign === "+" ? "▲" : "▼"}</span> ${esc(t)}</li>`).join("")}</ul>
     </div>
     ${c.flags.length || c.pair_notes.length ? `<div class="c-flags">${c.flags.map((f) => `<span class="flag ${f.level}">${esc(f.text)}</span>`).join("")}${c.pair_notes.map((t) => `<span class="flag pair">${esc(t)}</span>`).join("")}</div>` : ""}
-    ${c.pulse && window.PulseView ? `<div class="c-pulse">${PulseView.line(c.pulse)}</div>` : ""}
+    ${c.pulse && window.PulseView ? `<div class="c-pulse">${PulseView.line(c.pulse, { checkId: c.id })}</div>` : ""}
     <div class="c-foot">
       <span class="contact">${contactLinks(c)}</span>
       <span class="c-actions">
@@ -500,12 +501,12 @@ function renderResults() {
     <div class="results-head"><h2>Reviewers</h2><div class="downloads">
       <button type="button" class="button ghost" id="dl-xlsx">Excel report</button>
       <button type="button" class="button ghost" id="dl-docx">Word report</button></div></div>
-    <p class="muted small">Searched ${esc(out.retrieved)} · papers since ${m.since} · independence checked against the authors' papers since ${m.independence_since}
+    <p class="muted small">Searched ${esc(out.retrieved)} · papers since ${m.since} · overlap with the authors looked for in OpenAlex from ${m.independence_since} (finding none doesn't confirm independence)
       · authors: ${authorsNote}</p>
     ${out.warnings.length ? `<div class="warnings">${out.warnings.map((w) => `<p>${esc(w)}</p>`).join("")}</div>` : ""}
     <div class="counts">
       <span class="count"><b>${out.candidates.length}</b>candidates</span>
-      <span class="count v-red"><b>${out.conflicted.length}</b>set aside</span>
+      <span class="count"><b>${out.conflicted.length}</b>potential overlaps</span>
       <span class="count"><b>${out.candidates.filter((c) => c.tracker).length}</b>in your tracker</span>
       <span class="count"><b>${out.candidates.filter((c) => c.outlook === "High").length}</b>high outlook</span>
       ${sug.length ? `<span class="count ${sug.some((r) => r.verdict === "red") ? "v-red" : ""}"><b>${sug.length}</b>suggested by authors</span>` : ""}
@@ -527,7 +528,7 @@ function renderResults() {
     <p class="muted small" id="cand-count"></p>
     <div id="candidates" class="cands"></div>
     ${out.tracker_extra.length ? `<details class="box"><summary><h4>From your tracker, without a research profile (${out.tracker_extra.length})</h4></summary>
-      <p class="muted small">Their keywords fit, but OpenAlex has no profile to check them against: confirm independence yourself.</p>
+      <p class="muted small">Their keywords fit, but OpenAlex has no profile to check them against: check for overlap with the authors yourself.</p>
       <ul>${out.tracker_extra.map((t) => `<li><b>${esc(t.name)}</b> <span class="muted">${esc([t.affiliation, t.keywords.slice(0, 4).join(", ")].filter(Boolean).join(" · "))}</span>
         ${t.email ? ` · <a href="mailto:${esc(t.email)}">${esc(t.email)}</a>` : ""}${t.invited ? ` · accepted ${t.accepted} of ${t.invited}` : ""}
         ${t.warnings.map((w) => `<span class="flag check">${esc(w)}</span>`).join("")}</li>`).join("")}</ul></details>` : ""}
@@ -536,17 +537,18 @@ function renderResults() {
         <span class="muted">${esc([r.email, r.affiliation].filter(Boolean).join(" · "))}</span>
         ${r.findings.filter((f) => f.status === "concern" || f.status === "check").slice(0, 3).map((f) => `<span class="flag ${f.status}">${esc(f.check)}: ${esc(f.label)}. ${esc(f.detail)}</span>`).join("")}</li>`).join("")}</ul>
       <p class="muted small">Open <a href="../researchers/">Cygnus</a> for the full evidence and the queries for the authors.</p></details>` : ""}
-    ${out.conflicted.length ? `<details class="box"><summary><h4>Set aside: not independent of the authors (${out.conflicted.length})</h4></summary>
+    ${out.conflicted.length ? `<details class="box"><summary><h4>Potential overlap with the authors (${out.conflicted.length}), kept out of the ranking</h4></summary>
+      <p class="muted small">What OpenAlex shows linking each person to an author. Check the evidence: a shared paper or institution isn't always a competing interest, and someone not listed here isn't confirmed to be independent.</p>
       <ul class="aside">${out.conflicted.map((c) => `<li><a href="${esc(c.url)}" target="_blank" rel="noopener"><b>${esc(c.name)}</b></a>
         <span class="muted">${esc([c.institution, c.country].filter(Boolean).join(", "))} · ${c.fit_label} fit</span>
-        ${c.conflicts.map((r) => `<span class="flag concern">${esc(r.text)}${r.paper ? `: ${r.doi ? `<a href="${esc(doiUrl(r.doi))}" target="_blank" rel="noopener">${esc(r.paper)}</a>` : esc(r.paper)}` : ""}</span>`).join("")}</li>`).join("")}</ul></details>` : ""}
+        ${c.conflicts.map((r) => `<span class="flag overlap">${esc(r.text)}${r.paper ? `: ${r.doi ? `<a href="${esc(doiUrl(r.doi))}" target="_blank" rel="noopener">${esc(r.paper)}</a>` : esc(r.paper)}` : ""}</span>`).join("")}</li>`).join("")}</ul></details>` : ""}
     <details class="box"><summary><h4>How these were found</h4></summary>
       <ul class="method">
         <li>Searches: ${m.queries.map((q) => `<code>${esc(q)}</code>`).join(" ")}</li>
         <li>Research topics: ${esc(m.topics.join(", ") || "none")}</li>
         <li>References with a DOI: ${m.references_with_doi} (${m.references_found} found in OpenAlex)</li>
         <li>${m.considered} researchers considered, ${m.profiles} profiles read${m.low_fit ? `, ${m.low_fit} left out because their work doesn't match` : ""}${m.seeds.length ? `, networks of ${m.seeds.length} reviewer(s) explored` : ""}</li>
-        <li>Ranking: fit 60% (how closely their recent work matches the manuscript), outlook 25% (your tracker history first, then career stage, recent activity and open invitations), activity 15% (papers in the last 3 years). Anyone linked to the authors is set aside, not ranked.</li>
+        <li>Ranking: fit 60% (how closely their recent work matches the manuscript), outlook 25% (your tracker history first, then career stage, recent activity and open invitations), activity 15% (papers in ${yearsLabel()}). Public reviewing records are shown but never counted. Anyone with a potential overlap with the authors is listed separately and kept out of the ranking; finding no overlap doesn't confirm independence.</li>
         <li>${out.requests} database requests.</li></ul></details>`;
   $("f-sort").value = filters.sort;
   $("f-out").value = filters.outlook;
@@ -636,6 +638,16 @@ $("results").addEventListener("click", async (e) => {
     c.tracker = { tracker_id: r.id, invited: 0, accepted: 0 };
     countEvent("reviewers-add-to-tracker");
     t.outerHTML = '<span class="added">Added to your tracker</span>';
+    return;
+  }
+  if (act === "pulse-check" && c) {
+    t.disabled = true;
+    t.textContent = "Checking ORCID…";
+    try {
+      c.pulse = JSON.parse(await rpc("rf_pulse", c.orcid, c.name, "ORCID iD on their OpenAlex profile", keys()));
+      countEvent("reviewers-pulse-check");
+    } catch (err) { t.textContent = "Couldn't check"; return; }
+    renderCandidates();
     return;
   }
   if (act === "more" && c) {

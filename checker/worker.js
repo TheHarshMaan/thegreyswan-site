@@ -101,6 +101,10 @@ os.makedirs("/tmp/uploads")
       postMessage({ id, ok: true, result: call("rf_extract", JSON.stringify(list)) });
       return;
     }
+    if (fn === "rf_pulse") {
+      postMessage({ id, ok: true, result: await call(fn, ...args) });
+      return;
+    }
     if (fn === "rf_find") {
       const progress = (step, total, text) => postMessage({ type: "rf-progress", step, total, text });
       postMessage({ id, ok: true, result: await call(fn, ...args, progress) });

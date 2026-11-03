@@ -84,7 +84,8 @@ table.people tr.role-suggested td.name input { border-color: var(--should); }
 .c-outlook li.up span { color: var(--ok); } .c-outlook li.down span { color: var(--must); }
 .c-flags { margin: 8px 0 0 42px; display: flex; flex-direction: column; gap: 2px; }
 .flag { display: block; font-size: 0.8rem; }
-.flag.concern { color: var(--must); } .flag.check { color: var(--should); } .flag.pair { color: var(--advisory); }
+.flag.concern { color: var(--should); } .flag.check { color: var(--should); } .flag.pair { color: var(--advisory); }
+.flag.overlap { color: var(--ink); opacity: 0.9; } .flag.overlap a { color: var(--gold); }
 .c-foot { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; margin: 10px 0 0 42px;
   padding-top: 10px; border-top: 1px solid var(--line); }
 .contact { font-size: 0.8rem; color: var(--muted); }

@@ -1,4 +1,4 @@
-// The Grey Swan Editorial: Cygnus, the researcher identity and independence check (website)
+// The Grey Swan Editorial: Cygnus, the researcher identity and overlap check (website)
 // Python (worker.js + idcheck.py) reads the files, looks people up in OpenAlex, ROR and ORCID through the browser,
 // and decides each verdict; this page collects who to check and shows the results.
 
@@ -66,7 +66,7 @@ function keys() {
   try { own = localStorage.getItem("gs-openalex-key") || ""; } catch (e) { /* storage off */ }
   return JSON.stringify({ openalex: own.trim() || SITE_OPENALEX_KEY, ror: ROR_CLIENT_ID });
 }
-const VERDICT = { green: "Consistent", amber: "Quick check", red: "Verify before proceeding" };
+const VERDICT = { green: "No issues found", amber: "Points to check", red: "Important points to check" };
 const STATUS = { ok: "OK", check: "Check", concern: "Concern", info: "Note", unavailable: "Couldn't check" };
 let uid = 0;
 const newPid = () => `n${Date.now().toString(36)}${uid++}`;
@@ -219,7 +219,7 @@ async function run(keepOpen) {
     renderResults(open);
     const unavailable = lastOut.results.filter((r) => r.findings.some((f) => f.status === "unavailable")).length;
     setStatus(unavailable ? `Done, but ${unavailable} lookup(s) didn't get an answer. If this keeps happening, OpenAlex's daily allowance may be used up: add your own free key in Settings.`
-      : `Done: ${lastOut.counts.green} consistent, ${lastOut.counts.amber} quick check, ${lastOut.counts.red} to verify.`, unavailable ? "error" : "done");
+      : `Done: ${lastOut.counts.green} with no issues found, ${lastOut.counts.amber} with points to check, ${lastOut.counts.red} with important points to check.`, unavailable ? "error" : "done");
     if (!keepOpen) $("results").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
     setStatus(`Something went wrong: ${err.message.split("\n").pop()}`, "error");
@@ -317,7 +317,7 @@ function cygnusHtml(r, net) {
     ["Delta Cygni", "Kappa Cygni"], ["Sadr", "Gienah"], ["Gienah", "Zeta Cygni"]].map(([a, b]) => line(N[a], N[b])).join("");
   const star = (s, i) => {
     const c = s.c, cls = s.kind + (c.flags.some((f) => f.level === "check") ? " checkit" : "");
-    const what = [c.name, c.institution, c.conflicted ? "linked to the authors" : `fit ${c.matches.length ? c.matches.join(", ") : "partial"}`].filter(Boolean).join(", ");
+    const what = [c.name, c.institution, c.conflicted ? "potential overlap with the authors" : `fit ${c.matches.length ? c.matches.join(", ") : "partial"}`].filter(Boolean).join(", ");
     return `<g class="cy-star ${cls}" tabindex="0" role="button" data-cy="${esc(c.id)}" style="animation-delay:${(0.15 + i * 0.1).toFixed(2)}s" aria-label="${esc(what)}">
       <circle class="halo" cx="${s.x}" cy="${s.y}" r="${(s.r * 2.3).toFixed(1)}"/>
       ${cls.includes("checkit") ? `<circle class="ring" cx="${s.x}" cy="${s.y}" r="${(s.r + 4).toFixed(1)}"/>` : ""}
@@ -393,12 +393,12 @@ function renderResults(open) {
       ${all.length ? '<button type="button" class="button ghost" id="copy-all">Copy all queries</button>' : ""}</div></div>
     <p class="muted small">Checked ${out.retrieved} · co-authorship since ${new Date(out.retrieved).getFullYear() - out.lookback_years}${out.manuscript.title ? ` · ${esc(out.manuscript.title)}` : ""}</p>
     <div class="counts">
-      <span class="count v-red"><b>${out.counts.red}</b>verify before proceeding</span>
-      <span class="count v-amber"><b>${out.counts.amber}</b>quick check</span>
-      <span class="count v-green"><b>${out.counts.green}</b>consistent</span></div>`];
+      <span class="count v-red"><b>${out.counts.red}</b>important points to check</span>
+      <span class="count v-amber"><b>${out.counts.amber}</b>points to check</span>
+      <span class="count v-green"><b>${out.counts.green}</b>no issues found</span></div>`];
   if (!out.results.some((r) => r.role === "reviewer")) {
     html.push('<p class="muted small">To find more reviewers, add at least one suggested or trusted reviewer (Role: Suggested reviewer) and check again: ' +
-      "their co-author network opens from their card. Authors' own co-authors aren't independent, so the network isn't offered for them.</p>");
+      "their co-author network opens from their card. Authors' own co-authors would overlap with them, so the network isn't offered for them.</p>");
   }
   const order = { red: 0, amber: 1, green: 2 };
   const sorted = [...out.results].sort((a, b) => (a.role === b.role ? 0 : a.role === "author" ? -1 : 1) || order[a.verdict] - order[b.verdict]);

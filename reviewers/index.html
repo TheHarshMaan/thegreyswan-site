@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reviewer Finder: independent peer reviewers for any manuscript | The Grey Swan Editorial</title>
-<meta name="description" content="Free reviewer finder for journal editors: independent, active peer reviewers for a manuscript, ranked by fit and likelihood to accept, with conflicts of interest set aside and every reason shown. Built on OpenAlex.">
+<title>Reviewer Finder: peer reviewers for any manuscript | The Grey Swan Editorial</title>
+<meta name="description" content="Free reviewer finder for journal editors: active peer reviewers for a manuscript, ranked by fit and likelihood to accept, with potential overlaps of interest set aside and every reason shown. Built on OpenAlex.">
 <link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,9 +31,9 @@
 
   <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
 
-  <p class="lead">Independent, active reviewers for a manuscript, ranked by how closely their recent work fits and how
-    likely they are to say yes. Anyone who has published with the authors or works at their institution is set aside,
-    your own reviewers' history counts, and every suggestion shows its reasons.</p>
+  <p class="lead">Active reviewers for a manuscript, ranked by how closely their recent work fits and how likely they
+    are to say yes. Potential overlaps with the authors (a shared paper, the same institution) are listed separately
+    with the evidence, your own reviewers' history counts, and every suggestion shows its reasons.</p>
 
   <div class="card">
     <b>It suggests; you decide.</b> Candidates come from <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a>,
@@ -67,7 +67,7 @@
       </details>
 
       <h2 class="step"><span>II</span> Authors and exclusions</h2>
-      <p class="muted small">The authors are needed to set aside anyone who isn't independent of them. Suggested
+      <p class="muted small">The authors are needed to look for overlaps with them (shared papers, the same institution). Suggested
         reviewers named by the authors are checked by <a href="../researchers/">Cygnus</a>. Add anyone the editor or
         authors asked to exclude.</p>
       <div class="add-ways">
@@ -95,7 +95,7 @@
         <details class="settings">
           <summary>Search settings</summary>
           <div class="settings-grid">
-            <label class="field">Independence look-back
+            <label class="field">Overlap look-back
               <select id="lookback"><option value="3">3 years</option><option value="5" selected>5 years</option><option value="10">10 years</option></select></label>
             <label class="field">Papers from the last
               <select id="recent"><option value="3">3 years</option><option value="5" selected>5 years</option><option value="8">8 years</option></select></label>
@@ -130,7 +130,7 @@
 // The still side rails (see /assets/scroll.js): a field of stars drifts past on the left; the right rail shows the
 // shortlist filling up, reviewers needed against reviewers chosen
 window.GS_SCROLL = {
-  width: 1180, title: "Fit · Independence · Response", motif: "stars",
+  width: 1180, title: "Fit · Overlap · Response", motif: "stars",
   nav: [{ label: "Overview", target: ".masthead" }, { label: "Manuscript", target: ".rf-input" },
         { label: "Shortlist", target: "#shortlist" }, { label: "Candidates", target: "#candidates" }],
   reveal: ".foot",
