@@ -258,6 +258,7 @@ function personCard(r, isOpen) {
           : `<button type="button" class="button ghost small" data-pick="${esc(r.id)}" data-cand="${esc(c.id)}">${r.profile && c.id === r.profile.id ? "Confirm this one" : "Use this profile"}</button>`}</div>`).join("")}
       </div></div>`);
   }
+  if (r.pulse && window.PulseView) parts.push(PulseView.panel(r.pulse));
   if (r.evidence.length || r.recent_works.length) {
     parts.push(`<div class="box"><h4>Evidence</h4><ul>${r.evidence.map((e) => `<li><a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(e.label)}</a></li>`).join("")}
       ${r.recent_works.map((w) => `<li>${esc(w.title)} (${w.year}${w.venue ? `, ${esc(w.venue)}` : ""})${w.doi ? ` <a href="${esc(w.doi)}" target="_blank" rel="noopener">DOI</a>` : ""}</li>`).join("")}</ul></div>`);

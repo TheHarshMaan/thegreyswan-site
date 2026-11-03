@@ -465,6 +465,7 @@ function candCard(c, n) {
       <ul class="c-outlook">${c.outlook_why.map(([sign, t]) => `<li class="${sign === "+" ? "up" : "down"}"><span aria-hidden="true">${sign === "+" ? "▲" : "▼"}</span> ${esc(t)}</li>`).join("")}</ul>
     </div>
     ${c.flags.length || c.pair_notes.length ? `<div class="c-flags">${c.flags.map((f) => `<span class="flag ${f.level}">${esc(f.text)}</span>`).join("")}${c.pair_notes.map((t) => `<span class="flag pair">${esc(t)}</span>`).join("")}</div>` : ""}
+    ${c.pulse && window.PulseView ? `<div class="c-pulse">${PulseView.line(c.pulse)}</div>` : ""}
     <div class="c-foot">
       <span class="contact">${contactLinks(c)}</span>
       <span class="c-actions">
