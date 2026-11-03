@@ -8,8 +8,7 @@
 // GOATCOUNTER_CODE is set, and never counted on this computer's own test server (localhost).
 (function () {
   "use strict";
-  const GOATCOUNTER_CODE = "<script data-goatcounter="https://thegreyswan.goatcounter.com/count"
-        async src="//gc.zgo.at/count.js"></script>";               // e.g. "thegreyswan" for https://thegreyswan.goatcounter.com
+  const GOATCOUNTER_CODE = "thegreyswan";        // https://thegreyswan.goatcounter.com
   const FEEDBACK_EMAIL = "harsh@thegreyswan.in";
 
   const here = document.currentScript && document.currentScript.src;
