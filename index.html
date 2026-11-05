@@ -66,6 +66,19 @@
   .nav ul { display: flex; gap: 28px; list-style: none; margin: 0; padding: 0; }
   .nav ul a { color: var(--muted); text-decoration: none; font-size: 0.92rem; }
   .nav ul a:hover { color: var(--ink); }
+  .nav ul { align-items: center; }
+  .more { position: relative; }
+  .more-btn { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 0.92rem;
+              color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+  .more-btn:hover, .more-btn[aria-expanded="true"] { color: var(--ink); }
+  .more-btn:focus-visible, .more-menu a:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+  .nav ul.more-menu { position: absolute; right: -14px; top: calc(100% + 14px); display: block; min-width: 200px;
+              margin: 0; padding: 8px 0; list-style: none; background: var(--card); border: 1px solid var(--line);
+              border-radius: 8px; box-shadow: 0 12px 32px rgba(0,0,0,0.45); }
+  .nav ul.more-menu[hidden] { display: none; }
+  .more-menu a { display: block; padding: 8px 18px; white-space: nowrap; }
+  .more-menu a:hover { background: rgba(198,159,112,0.08); }
+  .more-menu .sep { height: 1px; margin: 6px 0; background: var(--line); }
 
   /* Hero */
   .hero { display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: center; padding-top: 72px; padding-bottom: 64px; }
@@ -220,13 +233,20 @@
     </a>
     <nav aria-label="Main">
       <ul>
-        <li><a href="#checker">GS Screening Tool</a></li>
-        <li><a href="#tracker">Reviewer tracker</a></li>
-        <li><a href="#references">Reference Integrity</a></li>
-        <li><a href="#researchers">Cygnus</a></li>
+        <li><a href="#checker">Screening Tool</a></li>
         <li><a href="#reviewers">Reviewer Finder</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li class="more">
+          <button type="button" class="more-btn" aria-expanded="false" aria-controls="more-menu">More
+            <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 3.5 5 7l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+          <ul class="more-menu" id="more-menu" hidden>
+            <li><a href="#tracker">Reviewer Tracker</a></li>
+            <li><a href="#references">Reference Integrity</a></li>
+            <li><a href="#researchers">Cygnus</a></li>
+            <li class="sep" role="separator"></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </li>
       </ul>
     </nav>
     <div id="gs-account"></div>
@@ -439,7 +459,7 @@
 </main>
 
 <footer>
-  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · thegreyswan.in · Open source (AGPL-3.0) · <a href="https://github.com/TheHarshMaan/manuscript-checker">Source code</a> · <a href="privacy/">Privacy</a></div>
+  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · thegreyswan.in · Open source (AGPL-3.0) · <a href="https://github.com/TheHarshMaan/manuscript-checker">Source code</a> · <a href="#contact">Contact</a> · <a href="privacy/">Privacy</a></div>
 </footer>
 </div>
 
@@ -477,5 +497,17 @@
 </script>
 <script src="assets/account.js"></script>
 <script src="assets/feedback.js"></script>
+<script>
+(function () {
+  // The "More" menu in the top bar: opens on click, closes on a choice, a click elsewhere, or Escape
+  var btn = document.querySelector(".more-btn"), menu = document.getElementById("more-menu");
+  if (!btn || !menu) return;
+  function set(open) { menu.hidden = !open; btn.setAttribute("aria-expanded", open ? "true" : "false"); }
+  btn.addEventListener("click", function (e) { e.stopPropagation(); set(menu.hidden); });
+  menu.addEventListener("click", function (e) { if (e.target.closest("a")) set(false); });
+  document.addEventListener("click", function (e) { if (!menu.hidden && !e.target.closest(".more")) set(false); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !menu.hidden) { set(false); btn.focus(); } });
+})();
+</script>
 </body>
 </html>
