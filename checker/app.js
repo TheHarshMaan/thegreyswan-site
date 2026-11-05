@@ -399,6 +399,7 @@ function liveIssues(r) {
 }
 
 function verdictOf(issues) {
+  if (issues.some((i) => i.rule === "extraction_failed")) return "Unable to screen";   // nothing was checked
   return issues.some((i) => i.severity === "must" || i.severity === "should") ? "Needs revision" : "Ready";
 }
 
@@ -470,7 +471,7 @@ function renderResults() {
       continue;
     }
     const live = liveIssues(r);
-    const isReadyDoc = verdictOf(live) === "Ready";
+    const v = verdictOf(live), isReadyDoc = v === "Ready";
     const rank = { must: 0, should: 1, advisory: 2 };
     let visible = r.issues.filter((i) => shown[i.severity] && (showDismissed || !dismissed.has(`${r.name}|${i.key}`)));
     if (view === "author") {      // authors: most serious first; editors: section by section, as a screening log
@@ -483,7 +484,7 @@ function renderResults() {
       : '<p class="empty muted">Nothing to show at the selected severities.</p>';
     parts.push(`<details class="manuscript" ${openAll ? "open" : ""} data-name="${escapeHtml(r.name)}"><summary>
         <span class="fname">${escapeHtml(r.name)}</span>${tagFor(r.info)}
-        <span class="verdict ${isReadyDoc ? "ready" : "revise"}">${isReadyDoc ? "Ready" : "Needs revision"}</span>
+        <span class="verdict ${isReadyDoc ? "ready" : v === "Unable to screen" ? "error" : "revise"}">${v}</span>
         ${live.length ? `<span class="tally">${tally(countsOf(live))}</span>` : ""}</summary>${body}</details>`);
   }
 
