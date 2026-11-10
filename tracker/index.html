@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reviewer Tracker | The Grey Swan Editorial</title>
+<title>Invitations: track reviewer invitations | The Grey Swan Editorial</title>
 <meta name="description" content="A free, private reviewer tracker for journal editors and peer review teams. Log invitations, track who responds and delivers, and find reliable reviewers by expertise. Your data stays in your browser.">
 <link rel="canonical" href="https://thegreyswan.in/tracker/">
 <link rel="icon" type="image/png" href="../assets/favicon.png">
@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#111315">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="The Grey Swan Editorial">
-<meta property="og:title" content="Reviewer Tracker | The Grey Swan Editorial">
+<meta property="og:title" content="Invitations | The Grey Swan Editorial">
 <meta property="og:description" content="Track which reviewers respond and deliver. Free, private, no sign-up.">
 <meta property="og:url" content="https://thegreyswan.in/tracker/">
 <meta property="og:image" content="https://thegreyswan.in/assets/og-image.jpg">
@@ -119,6 +119,7 @@
   @media (max-width: 640px) { .nav a.tool-link { display: none; } }
 </style>
 <link rel="stylesheet" href="../assets/account.css">
+<link rel="stylesheet" href="../assets/workspace.css">
 <link rel="stylesheet" href="../assets/scroll.css">
 </head>
 <body>
@@ -129,14 +130,15 @@
       <img src="../assets/grey_swan_icon.png" alt="" width="40" height="40">
       <span>The Grey Swan</span>
     </a>
-    <div class="nav-right"><a class="back tool-link" href="../reviewers/">Reviewer Finder</a><a class="back tool-link" href="../researchers/">Cygnus</a><a class="back" href="../">← All tools</a><div id="gs-account"></div></div>
+    <div class="nav-right"><a class="back tool-link" href="../checker/">For authors</a><a class="back tool-link" href="../reviewers/">For editors</a><a class="back tool-link" href="../cygnus/">Cygnus Program</a><a class="back" href="../">Home</a><div id="gs-account"></div></div>
   </div>
 </header>
 
 <main class="wrap">
+  <nav class="workspace-tabs" aria-label="Editor workspace"><a href="../reviewers/">Find reviewers</a><a href="../researchers/">Check a person</a><a href="../tracker/" aria-current="page">Invitations</a></nav>
   <div class="intro">
-    <div class="eyebrow">Free tool</div>
-    <h1>Reviewer <em>Tracker</em></h1>
+    <div class="eyebrow">For editors</div>
+    <h1>Your <em>invitations</em></h1>
     <p class="lead">Log every reviewer invitation and its outcome. The tracker works out who accepts, who delivers,
       how fast, and who never replies, so next time you invite the people most likely to say yes.</p>
     <div class="note" id="storage-note"><b>Your data stays on this device.</b> Everything is saved in this browser only:
@@ -714,7 +716,7 @@ $("up-json").addEventListener("change", async (event) => {
     renderAll();
     $("import-msg").textContent = "Backup restored.";
   } catch (e) {
-    $("import-msg").textContent = "That file isn't a Reviewer Tracker backup.";
+    $("import-msg").textContent = "That file isn't an Invitations backup.";
   } finally {
     event.target.value = "";
   }
