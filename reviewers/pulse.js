@@ -1,4 +1,4 @@
-// The Grey Swan Editorial: Reviewer Pulse view, shared by Cygnus and the Reviewer Finder.
+// The Grey Swan Editorial: Reviewer Pulse view, shared by Check a person and Find reviewers.
 // Shows public peer-review records (from ORCID) as evidence: what was found, where it came from, when it was checked,
 // and what it doesn't establish. Never a score, never a verdict.
 (function () {

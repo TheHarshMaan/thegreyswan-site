@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<script>document.documentElement.classList.add("js")</script>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cygnus Program: a reviewer network | The Grey Swan</title>
+<meta name="description" content="Join the Cygnus Program: verified researchers who commit to a few peer reviews a year, deliver on time, and get recognised for it. Training, certificates and free manuscript screening for members.">
+<link rel="canonical" href="https://thegreyswan.in/cygnus/">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta name="theme-color" content="#111315">
+
+<!-- Link previews (LinkedIn, WhatsApp, X) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Grey Swan">
+<meta property="og:title" content="The Cygnus Program | The Grey Swan">
+<meta property="og:description" content="A network of reviewers editors can count on. Join as a reviewer or partner as a university.">
+<meta property="og:url" content="https://thegreyswan.in/cygnus/">
+<meta property="og:image" content="https://thegreyswan.in/assets/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+
+<!-- Tells Google what this site and tool are -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #111315; --card: #1A1D20; --line: #2E2A24;
+    --ink: #ECE8E1; --muted: #A9A49B; --gold: #C69F70; --gold-bright: #E2B885;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --caps: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    --sans: 'IBM Plex Sans', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+         font-size: 17px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  a { color: var(--gold); }
+  a:hover { color: var(--gold-bright); }
+  img { max-width: 100%; height: auto; display: block; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header { border-bottom: 1px solid var(--line); }
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+  .brand img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+  .brand span { font-family: var(--caps); letter-spacing: 3px; font-size: 0.85rem; color: var(--gold); }
+  .nav nav { margin-left: auto; }
+  .nav ul { display: flex; gap: 28px; list-style: none; margin: 0; padding: 0; }
+  .nav ul a { color: var(--muted); text-decoration: none; font-size: 0.92rem; }
+  .nav ul a:hover { color: var(--ink); }
+  .nav ul { align-items: center; }
+  .more { position: relative; }
+  .more-btn { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 0.92rem;
+              color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+  .more-btn:hover, .more-btn[aria-expanded="true"] { color: var(--ink); }
+  .more-btn:focus-visible, .more-menu a:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+  .nav ul.more-menu { position: absolute; right: -14px; top: calc(100% + 14px); display: block; min-width: 200px;
+              margin: 0; padding: 8px 0; list-style: none; background: var(--card); border: 1px solid var(--line);
+              border-radius: 8px; box-shadow: 0 12px 32px rgba(0,0,0,0.45); }
+  .nav ul.more-menu[hidden] { display: none; }
+  .more-menu a { display: block; padding: 8px 18px; white-space: nowrap; }
+  .more-menu a:hover { background: rgba(198,159,112,0.08); }
+  .more-menu .sep { height: 1px; margin: 6px 0; background: var(--line); }
+
+  /* Hero */
+  .hero { display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: center; padding-top: 72px; padding-bottom: 64px; }
+  .eyebrow { font-family: var(--caps); color: var(--gold); letter-spacing: 5px; font-size: 0.85rem; text-transform: uppercase; }
+  .eyebrow span { color: var(--muted); }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; line-height: 1.08; margin: 0; }
+  h1 { font-size: clamp(2.6rem, 6vw, 4.2rem); margin: 14px 0 20px; }
+  h1 em, h2 em { color: var(--gold); }
+  .lead { color: var(--muted); font-size: 1.1rem; max-width: 560px; margin: 0 0 32px; }
+  .buttons { display: flex; flex-wrap: wrap; gap: 14px; }
+  .btn { display: inline-block; padding: 14px 26px; border-radius: 6px; text-decoration: none; font-weight: 500;
+         font-size: 0.98rem; min-height: 48px; }
+  .btn-gold { background: var(--gold); color: #15130F; }
+  .btn-gold:hover { background: var(--gold-bright); color: #15130F; }
+  .btn-line { border: 1px solid var(--gold); color: var(--gold); }
+  .btn-line:hover { background: rgba(198, 159, 112, 0.1); }
+  .hero-art img { margin: 0 auto; max-height: 420px; width: auto; }
+
+  /* Ornament divider */
+  .ornament { display: flex; align-items: center; gap: 14px; margin: 0 auto; max-width: 520px; }
+  .ornament::before, .ornament::after { content: ""; flex: 1; height: 1px; background: var(--gold); opacity: 0.5; }
+  .ornament svg { width: 14px; height: 14px; flex: none; }
+
+  /* Sections */
+  section { padding: 72px 0; }
+  .section-head { text-align: center; max-width: 720px; margin: 0 auto 44px; }
+  h2 { font-size: clamp(2rem, 4.5vw, 2.9rem); margin: 10px 0 14px; }
+  .section-head p { color: var(--muted); margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid + .grid { margin-top: 20px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 24px; }
+  .card h3 { font-size: 1.45rem; color: var(--ink); margin-bottom: 8px; }
+  .card p { color: var(--muted); margin: 0; font-size: 0.96rem; }
+  .steps { counter-reset: step; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .step { counter-increment: step; padding: 24px; border-top: 1px solid var(--gold); }
+  .step::before { content: counter(step, upper-roman); font-family: var(--caps); color: var(--gold); font-size: 1.1rem; letter-spacing: 2px; }
+  .step h3 { font-size: 1.4rem; margin: 10px 0 6px; }
+  .step p { color: var(--muted); margin: 0; font-size: 0.96rem; }
+  .note { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px;
+          color: var(--muted); font-size: 0.95rem; margin-top: 32px; }
+  .note b { color: var(--ink); font-weight: 500; }
+
+  .about { display: grid; grid-template-columns: 1fr 1.6fr; gap: 48px; align-items: center; }
+  .stats { display: flex; gap: 36px; flex-wrap: wrap; margin-top: 24px; }
+  .stat b { display: block; font-family: var(--serif); font-size: 2.6rem; color: var(--gold); font-weight: 500; line-height: 1; }
+  .stat span { color: var(--muted); font-size: 0.9rem; }
+  .about p { color: var(--muted); }
+  .about-logo img { max-width: 320px; margin: 0 auto; }
+
+  .soon li { margin-bottom: 8px; color: var(--muted); }
+  .soon li b { color: var(--ink); font-weight: 500; }
+
+  .contact { text-align: center; }
+  footer { border-top: 1px solid var(--line); padding: 28px 0; color: var(--muted); font-size: 0.88rem; text-align: center; }
+  footer .name { font-family: var(--caps); color: var(--gold); letter-spacing: 2px; }
+
+  /* ---------- Still side rails + scrolling centre page ---------- */
+  body { background: #0B0C0E; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse 50% 60% at 0% 50%, rgba(198,159,112,0.07), transparent 70%),
+                radial-gradient(ellipse 50% 60% at 100% 50%, rgba(198,159,112,0.07), transparent 70%); }
+  .page { max-width: 1180px; margin: 0 auto; background: var(--bg);
+          border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+          box-shadow: 0 0 80px rgba(0,0,0,0.6); }
+  header { position: sticky; top: 0; z-index: 20; background: rgba(17,19,21,0.86);
+           -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+
+  .rail { position: fixed; top: 0; bottom: 0; width: calc((100vw - 1180px) / 2); z-index: 10;
+          display: none; align-items: center; justify-content: center; pointer-events: none; }
+  .rail-left { left: 0; }
+  .rail-right { right: 0; }
+  .rail-line { position: absolute; top: 12vh; bottom: 12vh; left: 50%; width: 1px;
+               background: linear-gradient(to bottom, transparent, rgba(198,159,112,0.45), transparent); }
+  .rail-text { position: relative; writing-mode: vertical-rl; transform: rotate(180deg);
+               font-family: var(--caps); color: var(--gold); letter-spacing: 8px; font-size: 0.78rem;
+               background: #0B0C0E; padding: 18px 0; opacity: 0.85; }
+  .rail-mark { position: absolute; width: 12px; height: 12px; left: calc(50% - 6px); }
+  .rail-mark.top { top: calc(12vh - 6px); } .rail-mark.bottom { bottom: calc(12vh - 6px); }
+  .progress { position: absolute; left: 50%; top: 12vh; width: 1px; background: var(--gold-bright);
+              height: 0; transform-origin: top; }
+  .rail-nav { position: relative; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;
+              gap: 22px; pointer-events: auto; }
+  .rail-nav a { display: flex; align-items: center; justify-content: center; position: relative;
+                width: 16px; height: 16px; text-decoration: none; }
+  .rail-nav a::before { content: ""; width: 7px; height: 7px; transform: rotate(45deg);
+                        border: 1px solid var(--gold); background: #0B0C0E; transition: all .3s; }
+  .rail-nav a.active::before { background: var(--gold-bright); box-shadow: 0 0 12px rgba(226,184,133,0.7);
+                               width: 10px; height: 10px; }
+  .rail-nav span { position: absolute; right: 26px; white-space: nowrap; font-size: 0.78rem; color: var(--muted);
+                   opacity: 0; transform: translateX(6px); transition: all .25s; }
+  .rail-nav a:hover span, .rail-nav a.active span { opacity: 1; transform: none; }
+  .rail-nav a.active span { color: var(--gold); }
+  @media (min-width: 1360px) { .rail { display: flex; } }
+
+  section, main { scroll-margin-top: 76px; }
+
+  /* Gentle fade-up as sections come into view */
+  .js .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+  .js .reveal.in { opacity: 1; transform: none; }
+  .hero-art img { will-change: transform; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .js .reveal { opacity: 1; transform: none; transition: none; }
+  }
+
+  @media (max-width: 860px) {
+    .hero, .about { grid-template-columns: 1fr; gap: 32px; }
+    .hero { padding-top: 40px; padding-bottom: 48px; text-align: left; }
+    .hero-art { order: -1; }
+    .hero-art img { max-height: 260px; }
+    .grid, .steps { grid-template-columns: 1fr; }
+    .nav ul { gap: 16px; }
+    .about-logo { order: -1; }
+    section { padding: 52px 0; }
+  }
+  @media (max-width: 520px) {
+    .nav ul { display: none; }
+    .eyebrow { letter-spacing: 3px; font-size: 0.75rem; }
+    .btn { width: 100%; text-align: center; }
+  }
+
+  /* Homepage: two doors, the Cygnus band and the trust strip */
+  .hero-doors { text-align: center; padding-top: 80px; padding-bottom: 28px; }
+  .hero-doors h1 { margin: 0 auto; max-width: 880px; }
+  .hero-doors .lead { margin: 22px auto 0; max-width: 640px; }
+  .doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 28px; padding-bottom: 64px; }
+  .door { display: flex; flex-direction: column; gap: 16px; background: var(--card); border: 1px solid var(--line);
+          border-radius: 14px; padding: 36px; color: var(--ink); text-decoration: none; transition: border-color .2s; }
+  .door:hover { border-color: var(--gold); color: var(--ink); }
+  .door:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .door-who { display: flex; align-items: center; gap: 12px; font-family: var(--caps); letter-spacing: 4px;
+              font-size: 0.8rem; text-transform: uppercase; color: var(--gold); }
+  .door-who svg { width: 36px; height: 36px; fill: none; stroke: var(--gold); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+  .door h2 { font-family: var(--serif); font-weight: 600; font-size: 2.4rem; margin: 0; }
+  .door p { color: var(--muted); line-height: 1.65; margin: 0; }
+  .door ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.95rem; }
+  .door li::before { content: "\2726"; color: var(--gold); margin-right: 10px; }
+  .door .btn { margin-top: auto; align-self: flex-start; }
+  .cygnus-band-wrap { padding: 0 0 56px; }
+  .cygnus-band { border: 1px solid #6B5A44; border-radius: 14px; padding: 34px 38px; display: flex; flex-wrap: wrap;
+                 gap: 24px; align-items: center; justify-content: space-between; }
+  .cygnus-band > div:first-child { flex: 1 1 480px; }
+  .cygnus-band h2 { font-family: var(--serif); font-weight: 500; font-size: 2.2rem; margin: 6px 0 0; }
+  .cygnus-band p { color: var(--muted); line-height: 1.6; margin: 10px 0 0; max-width: 620px; }
+  .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; text-align: center;
+           border-top: 1px solid var(--line); padding-top: 32px; padding-bottom: 40px; }
+  .trust b { display: block; font-family: var(--serif); font-size: 1.8rem; font-weight: 500; color: var(--gold-bright); }
+  .trust span { font-size: 0.88rem; color: var(--muted); }
+  .ws-head { font-family: var(--caps); letter-spacing: 3px; font-size: 0.85rem; text-transform: uppercase; color: var(--gold);
+             font-weight: 400; margin: 36px 0 14px; }
+  @media (max-width: 520px) { .door { padding: 26px; } .door h2 { font-size: 2rem; } .cygnus-band { padding: 26px; } }
+
+  /* The Cygnus Program page */
+  .cy-hero { display: flex; flex-wrap: wrap; gap: 44px; align-items: center; padding-top: 64px; padding-bottom: 48px; }
+  .cy-hero > div:first-child { flex: 999 1 520px; min-width: 0; }
+  .cy-hero .lead { margin-top: 20px; max-width: 600px; }
+  .cy-hero .buttons { margin-top: 28px; }
+  .cy-art { flex: 1 1 260px; max-width: 360px; }
+  .cy-art svg { width: 100%; height: auto; display: block; }
+  main section { padding: 28px 0; }
+  .cy-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 24px; }
+  .cy-box { background: var(--card, #191B1E); border: 1px solid var(--line, #2A2C30); border-radius: 14px; padding: 30px; min-width: 0; }
+  .cy-box h2, .cy-box h3, .cy-rules h2 { margin: 0 0 16px; }
+  .cy-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; line-height: 1.55; }
+  .cy-list span { color: var(--muted, #A9A49B); }
+  .cy-tag { font-size: 0.75rem; color: var(--gold-bright, #E2B885) !important; border: 1px dashed var(--gold, #C69F70); border-radius: 6px; padding: 1px 6px; font-family: inherit; font-weight: 400; vertical-align: middle; }
+  .cy-label { font-size: 0.75rem; letter-spacing: 1.5px; color: var(--muted, #A9A49B); margin: 0 0 10px; text-transform: uppercase; }
+  .cy-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .cy-stats b { display: block; font-size: 1.7rem; font-weight: 500; color: var(--gold-bright, #E2B885); }
+  .cy-stats span, .cy-small { font-size: 0.88rem; color: var(--muted, #A9A49B); }
+  .cy-rules { display: flex; flex-wrap: wrap; gap: 36px; }
+  .cy-rules > div { flex: 1 1 280px; max-width: 360px; }
+  .cy-rules ol { flex: 999 1 480px; min-width: 0; margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 10px; line-height: 1.55; }
+  .cy-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px; margin-top: 18px; }
+  .cy-form label { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; }
+  .cy-form .full { grid-column: 1 / -1; }
+  .cy-form input:not([type=checkbox]), .cy-form select, .cy-form textarea { background: #111315; color: inherit; border: 1px solid #3A352D; border-radius: 8px; padding: 11px 12px; font: inherit; font-size: 0.95rem; }
+  .cy-form input:focus-visible, .cy-form select:focus-visible, .cy-form textarea:focus-visible { outline: 2px solid #C69F70; outline-offset: 1px; }
+  .cy-check { flex-direction: row !important; align-items: flex-start; gap: 10px !important; line-height: 1.5; }
+  .cy-check input { margin-top: 4px; accent-color: #C69F70; }
+  .cy-error { color: #F2A39A; font-size: 0.9rem; min-height: 1.2em; margin: 0; }
+  .cy-send { display: flex; flex-wrap: wrap; gap: 10px; }
+  .cy-send button { cursor: pointer; font: inherit; }
+  .cy-send button.btn-line { background: transparent; }
+  .cy-send button.btn-line:hover { background: rgba(198, 159, 112, 0.1); }
+  .cy-done { color: var(--muted, #A9A49B); font-size: 0.9rem; margin: 0; }
+  nav a[aria-current="page"] { color: var(--gold-bright, #E2B885); }
+</style>
+<link rel="stylesheet" href="/assets/account.css">
+</head>
+<body>
+
+<div class="page">
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="/" aria-label="The Grey Swan, home">
+      <img src="/assets/grey_swan_icon.png" alt="" width="40" height="40">
+      <span>The Grey Swan</span>
+    </a>
+    <nav aria-label="Main">
+      <ul>
+        <li><a href="/#authors">For authors</a></li>
+        <li><a href="/#editors">For editors</a></li>
+        <li><a href="/cygnus/" aria-current="page">Cygnus Program</a></li>
+        <li><a href="/#about">About</a></li>
+      </ul>
+    </nav>
+    <div id="gs-account"></div>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap cy-hero">
+    <div>
+      <div class="eyebrow">The Cygnus Program</div>
+      <h1>A network of reviewers editors can <em>count on</em></h1>
+      <p class="lead">Verified researchers who commit to a few reviews a year, deliver on time, and get recognised for it.
+        The first cohort is forming now with partner universities in India.</p>
+      <div class="buttons">
+        <a class="btn btn-gold" href="#apply">Apply to join</a>
+        <a class="btn btn-line" href="#universities">Partner as a university</a>
+      </div>
+    </div>
+    <div class="cy-art" aria-hidden="true">
+      <svg viewBox="0 0 300 300">
+        <g stroke="#C69F70" stroke-opacity="0.45" stroke-width="1.2" fill="none">
+          <path d="M150 40 L150 120 L150 190 L150 262"/>
+          <path d="M60 110 L105 118 L150 120 L195 118 L240 110"/>
+          <path d="M150 120 L118 168 M150 120 L182 168"/>
+        </g>
+        <g fill="#E2B885">
+          <circle cx="150" cy="40" r="6"/><circle cx="150" cy="120" r="5"/><circle cx="150" cy="190" r="4"/>
+          <circle cx="150" cy="262" r="5"/><circle cx="60" cy="110" r="4.5"/><circle cx="105" cy="118" r="3.5"/>
+          <circle cx="195" cy="118" r="3.5"/><circle cx="240" cy="110" r="4.5"/><circle cx="118" cy="168" r="3"/>
+          <circle cx="182" cy="168" r="3"/>
+        </g>
+        <g fill="#C69F70" fill-opacity="0.35">
+          <circle cx="40" cy="40" r="1.6"/><circle cx="262" cy="64" r="1.4"/><circle cx="230" cy="236" r="1.8"/>
+          <circle cx="58" cy="224" r="1.4"/><circle cx="210" cy="30" r="1.2"/><circle cx="90" cy="270" r="1.2"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap cy-two">
+      <div class="cy-box">
+        <h2>What members get</h2>
+        <ul class="cy-list">
+          <li><b>Training.</b> <span>Free peer-review training and a mentored first review.</span></li>
+          <li><b>Certificates.</b> <span>A verified record of every completed review, for appraisal and promotion files.</span></li>
+          <li><b>Recognition.</b> <span>An opt-in public profile showing your reviews and on-time record.</span></li>
+          <li><b>Free manuscript screening.</b> <span>For your own submissions, kept entirely separate from your reviewing.</span></li>
+          <li><b>Paid reviews</b> <span class="cy-tag">as partners join</span> <span>Reviews arranged with publisher partners are paid.</span></li>
+        </ul>
+      </div>
+      <div class="cy-box">
+        <h2>What we ask</h2>
+        <ul class="cy-list">
+          <li><b>Set your capacity.</b> <span>Say how many reviews you can take, say one or two a month, and when you're away.</span></li>
+          <li><b>Reply within 48 hours.</b> <span>Yes or no, so editors never wait on silence.</span></li>
+          <li><b>Deliver on time.</b> <span>Within the time agreed when you accept.</span></li>
+          <li><b>Declare conflicts.</b> <span>Turn down any paper where you know the authors or the work.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">How it will look</div>
+        <h2>Two faces: one public, one <em>yours</em></h2>
+        <p class="cy-small">An illustration with invented names and numbers. These pages open when the first cohort starts.</p>
+      </div>
+      <div class="cy-two">
+        <div class="cy-box">
+          <p class="cy-label">Public · Institution page</p>
+          <h3>Example Medical College</h3>
+          <div class="cy-stats">
+            <div><b>18</b><span>Cygnus members</span></div>
+            <div><b>46</b><span>Reviews completed</span></div>
+            <div><b>94%</b><span>Delivered on time</span></div>
+          </div>
+          <p class="cy-small">Subjects: microbiology · paediatrics · public health · pharmacology</p>
+          <p class="cy-small">6 members show a public profile. Others are counted but not named.</p>
+        </div>
+        <div class="cy-box">
+          <p class="cy-label">Private · Your dashboard</p>
+          <h3>Dr A. Example <span class="cy-tag">Verified member</span></h3>
+          <ul class="cy-list">
+            <li><span>Available for reviews this month</span></li>
+            <li><b>Capacity:</b> <span>2 per month · 1 in progress</span></li>
+            <li><b>Reliability:</b> <span>4 of 4 delivered on time · replies in 1 day on average</span></li>
+            <li><b>New request:</b> <span>neonatal infection cohort · reply within 48 hours · 10 days to review</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap cy-rules">
+      <div>
+        <h2>Built to be <em>trusted</em></h2>
+        <p class="cy-small">The rules that keep the network independent, published so editors and members can hold us to them.</p>
+      </div>
+      <ol>
+        <li>We never suggest reviewers for a manuscript we have screened or helped prepare.</li>
+        <li>Members never review papers from their own institution or from co-authors; overlap is checked before every match.</li>
+        <li>Every member is verified by institutional email, ORCID and publication record.</li>
+        <li>Editors invite through their own systems and make every decision.</li>
+        <li>Your reliability record helps editors choose reviewers. It never affects how your own papers are handled.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="apply">
+    <div class="wrap">
+      <div class="cy-box">
+        <div class="eyebrow">Apply to join</div>
+        <h2>Join the first cohort</h2>
+        <p class="cy-small">This form doesn't send or store anything. It writes an email to the program team for you to send
+          from your own account, so we can reply and verify your institutional address.</p>
+        <form id="cy-form" class="cy-form" novalidate>
+          <label>Full name<input name="name" autocomplete="name" required></label>
+          <label>Institution<input name="institution" autocomplete="organization" required></label>
+          <label>Department<input name="department"></label>
+          <label>Institutional email<input name="email" type="email" autocomplete="email" required></label>
+          <label>ORCID iD<input name="orcid" placeholder="0000-0000-0000-0000" required></label>
+          <label>Reviews you could take
+            <select name="capacity">
+              <option>1 a month</option><option selected>1 or 2 a month</option><option>3 or more a month</option>
+              <option>A few a year</option>
+            </select>
+          </label>
+          <label class="full">Subjects you can review<textarea name="subjects" rows="2" placeholder="e.g. clinical microbiology, antimicrobial resistance" required></textarea></label>
+          <label class="full cy-check"><input type="checkbox" name="agree" required> I can reply to review requests within
+            48 hours and will declare conflicts of interest.</label>
+          <label class="full cy-check"><input type="checkbox" name="consent" required> I agree that The Grey Swan may check
+            my public ORCID and publication record to verify my application.</label>
+          <p class="full cy-error" id="cy-error" role="alert"></p>
+          <div class="full cy-send">
+            <button type="submit" class="btn btn-gold" data-send="mail">Open in my email app</button>
+            <button type="submit" class="btn btn-line" data-send="gmail">Send with Gmail</button>
+            <button type="submit" class="btn btn-line" data-send="copy">Copy the email</button>
+          </div>
+          <p class="full cy-done" id="cy-done" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section id="universities">
+    <div class="wrap">
+      <div class="cygnus-band">
+        <div>
+          <div class="eyebrow">For universities</div>
+          <h2>Put your researchers <em>on the map</em></h2>
+          <p>Free peer-review workshops, verified reviewer profiles for your faculty and scholars, and an institution page
+            showing your contribution to peer review.</p>
+        </div>
+        <div class="buttons">
+          <a class="btn btn-gold" id="cy-partner" href="mailto:harsh@thegreyswan.in?subject=Cygnus%20Program%3A%20university%20partnership">Become a partner</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · thegreyswan.in · Open source (AGPL-3.0) · <a href="https://github.com/TheHarshMaan/manuscript-checker">Source code</a> · <a href="/#contact">Contact</a> · <a href="/privacy/">Privacy</a></div>
+</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var TO = "harsh@thegreyswan.in";
+  var WEBMAIL = /@(gmail|googlemail|yahoo|ymail|hotmail|outlook|live|msn|icloud|me|aol|proton|protonmail|rediffmail|zoho)\./i;
+  var form = document.getElementById("cy-form"), err = document.getElementById("cy-error"), done = document.getElementById("cy-done");
+  var how = "mail";
+  form.querySelectorAll("[data-send]").forEach(function (b) { b.addEventListener("click", function () { how = b.dataset.send; }); });
+
+  function orcidOk(v) {
+    var m = v.replace(/^https?:\/\/(www\.)?orcid\.org\//i, "").trim();
+    if (!/^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/i.test(m)) return null;
+    var d = m.replace(/-/g, ""), total = 0;
+    for (var i = 0; i < 15; i++) total = (total + +d[i]) * 2;
+    var c = (12 - total % 11) % 11, check = c === 10 ? "X" : String(c);
+    return check === d[15].toUpperCase() ? m.toUpperCase() : null;
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    err.textContent = ""; done.textContent = "";
+    var f = form.elements, v = function (n) { return f[n].value.trim(); };
+    var missing = ["name", "institution", "email", "orcid", "subjects"].filter(function (n) { return !v(n); });
+    if (missing.length) { err.textContent = "Please fill in every required field."; f[missing[0]].focus(); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v("email"))) { err.textContent = "That email address doesn't look right."; f.email.focus(); return; }
+    var orcid = orcidOk(v("orcid"));
+    if (!orcid) { err.textContent = "That ORCID iD doesn't look right. It has 16 characters, like 0000-0002-1825-0097."; f.orcid.focus(); return; }
+    if (!f.agree.checked || !f.consent.checked) { err.textContent = "Please tick both boxes to apply."; return; }
+    var note = WEBMAIL.test(v("email")) ? "\nNote: this is a personal address; I can verify with my institutional email on request.\n" : "";
+    if (note) done.textContent = "Tip: an institutional email address makes verification faster. ";
+    var subject = "Cygnus Program application: " + v("name");
+    var body = "Name: " + v("name") + "\nInstitution: " + v("institution") + "\nDepartment: " + (v("department") || "-") +
+      "\nInstitutional email: " + v("email") + "\nORCID: https://orcid.org/" + orcid + "\nCapacity: " + f.capacity.value +
+      "\nSubjects: " + v("subjects") + "\n" + note +
+      "\nI can reply to review requests within 48 hours and will declare conflicts of interest." +
+      "\nI agree that The Grey Swan may check my public ORCID and publication record to verify this application.\n";
+    if (window.GS_EVENT) window.GS_EVENT("cygnus-apply-" + how);
+    if (how === "mail") {
+      location.href = "mailto:" + TO + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+      done.textContent += "Your email app should open now. If nothing happened, use Gmail or Copy instead.";
+    } else if (how === "gmail") {
+      window.open("https://mail.google.com/mail/?view=cm&fs=1&to=" + encodeURIComponent(TO) + "&su=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(body), "_blank", "noopener");
+      done.textContent += "Gmail opened in a new tab, ready to send.";
+    } else {
+      try { await navigator.clipboard.writeText("To: " + TO + "\nSubject: " + subject + "\n\n" + body);
+        done.textContent += "Copied. Paste it into an email to " + TO + "."; }
+      catch (x) { done.textContent += "Couldn't copy. Please write to " + TO + "."; }
+    }
+  });
+  document.getElementById("cy-partner").addEventListener("click", function () { if (window.GS_EVENT) window.GS_EVENT("cygnus-partner"); });
+})();
+</script>
+<script src="/assets/account.js"></script>
+<script src="/assets/feedback.js"></script>
+</body>
+</html>

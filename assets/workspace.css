@@ -1,0 +1,8 @@
+/* The editor workspace: one tab bar across Find reviewers, Check a person and Invitations */
+.workspace-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line, #2E2A24); margin: 4px 0 24px; }
+.workspace-tabs a { padding: 12px 18px; font-size: 0.95rem; color: var(--muted, #A9A49B); text-decoration: none;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.workspace-tabs a:hover { color: var(--ink, #ECE8E1); }
+.workspace-tabs a[aria-current="page"] { color: var(--gold-bright, #E2B885); border-bottom-color: var(--gold, #C69F70); }
+.workspace-tabs a:focus-visible { outline: 1px solid var(--gold, #C69F70); outline-offset: 2px; }
+@media (max-width: 520px) { .workspace-tabs a { padding: 10px 12px; font-size: 0.9rem; } }

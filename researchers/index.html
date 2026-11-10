@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cygnus: researcher identity and overlap check | The Grey Swan Editorial</title>
-<meta name="description" content="Cygnus, a free researcher check for journals: verify authors' and suggested reviewers' profiles, ORCID iDs, email domains and affiliations, spot potential overlaps with the authors, and find further reviewers in a reviewer's co-author network. Uses OpenAlex, ROR and ORCID.">
+<title>Check a person: researcher identity and overlap check | The Grey Swan Editorial</title>
+<meta name="description" content="A free researcher check for journals: verify authors' and suggested reviewers' profiles, ORCID iDs, email domains and affiliations, spot potential overlaps with the authors, and find further reviewers in a reviewer's co-author network. Uses OpenAlex, ROR and ORCID.">
 <link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="ids.css">
 <link rel="stylesheet" href="pulse.css">
 <link rel="stylesheet" href="/assets/account.css">
+<link rel="stylesheet" href="/assets/workspace.css">
 <link rel="stylesheet" href="/assets/scroll.css">
 </head>
 <body>
@@ -21,14 +22,15 @@
   <header class="masthead">
     <img src="grey_swan_emblem.png" alt="The Grey Swan emblem" class="emblem">
     <div>
-      <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· Editorial</span></div>
-      <h1 class="title"><em>Cygnus</em></h1>
+      <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· For editors</span></div>
+      <h1 class="title">Check a <em>person</em></h1>
       <div class="subtitle">Researcher identity and overlap check</div>
-      <nav class="tools"><a href="../checker/">Manuscript checker</a> · <a href="../references/">Reference checker</a> ·
-        <span>Cygnus</span> · <a href="../reviewers/">Reviewer finder</a> · <a href="../tracker/">Reviewer tracker</a></nav>
+      <nav class="tools"><a href="/">Home</a> · <a href="../checker/">For authors</a> · <span>For editors</span> · <a href="/cygnus/">Cygnus Program</a></nav>
     </div>
     <div id="gs-account" class="masthead-account"></div>
   </header>
+
+  <nav class="workspace-tabs" aria-label="Editor workspace"><a href="../reviewers/">Find reviewers</a><a href="../researchers/" aria-current="page">Check a person</a><a href="../tracker/">Invitations</a></nav>
 
   <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
 
@@ -72,7 +74,7 @@
           </div>
         </details>
         <details class="paste" id="tracker-box" hidden>
-          <summary>…or add reviewers from your Reviewer Tracker</summary>
+          <summary>…or add reviewers from your Invitations list</summary>
           <input type="search" id="tracker-search" placeholder="Search name, affiliation or keyword" aria-label="Search the tracker">
           <div id="tracker-list" class="tracker-list"></div>
         </details>

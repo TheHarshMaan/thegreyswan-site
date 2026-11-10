@@ -382,6 +382,7 @@ async function runCheck() {
     lastRun.profileName = profile.name;
     renderResults();
     recordHistory(profile.name);
+    checkReferences();
     setStatus("Done. Change the profile or settings and the results update by themselves.", "done");
   } catch (err) {
     setStatus(`Something went wrong while checking: ${err.message.split("\n").pop()}`, "error");
@@ -502,7 +503,7 @@ function renderResults() {
   const wd = $("download-word");
   if (wd) wd.addEventListener("click", () => download("screening_report.docx", word,
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
-  for (const chip of document.querySelectorAll(".chip")) {
+  for (const chip of $("results").querySelectorAll(".chip")) {
     chip.addEventListener("click", () => { shown[chip.dataset.sev] = !shown[chip.dataset.sev]; renderResults(); });
   }
   for (const b of document.querySelectorAll(".view-toggle button")) {
@@ -532,3 +533,38 @@ if (ACCOUNT) {
   ACCOUNT.onRemote("checker", () => { if (isReady) addMyProfiles(); });
   ACCOUNT.onChange(() => { if (isReady) { addMyProfiles(); markChanges(); } });
 }
+
+// ---------------------------------------------------------------------------
+// References: verified against Crossref and Retraction Watch in the same report (refcore.js)
+// ---------------------------------------------------------------------------
+let refRunId = null;
+const refChecker = window.GSRefCheck ? GSRefCheck({
+  rpc, root: $("refs-results"), note: $("retraction-note"),
+  status: (text, kind) => {
+    const line = $("refs-status");
+    line.textContent = text;
+    line.className = "refs-status" + (kind === "error" ? " error" : "");
+  },
+}) : null;
+
+// The manuscript among the files checked: the first one read as a manuscript (not a cover letter or title page)
+function manuscriptFile() {
+  if (!lastRun) return null;
+  const readable = lastRun.results.filter((r) => !r.error);
+  const main = readable.find((r) => !r.info || !r.info.role || r.info.role === "manuscript") || readable[0];
+  return main ? files.find((f) => f.name === main.name) || null : null;
+}
+
+// Once per set of files (changing the profile re-screens, but the references stay the same)
+function checkReferences() {
+  if (!refChecker) return;
+  const box = $("refs-section");
+  if (!$("verify-refs").checked) { box.hidden = true; return; }
+  box.hidden = false;
+  if (refRunId === runId || refChecker.isRunning()) return;
+  const file = manuscriptFile();
+  if (!file) { box.hidden = true; return; }
+  refRunId = runId;
+  refChecker.run([file], "", file.name);
+}
+if ($("verify-refs")) $("verify-refs").addEventListener("change", () => { if (lastRun) checkReferences(); else $("refs-section").hidden = true; });

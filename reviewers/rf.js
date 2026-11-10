@@ -367,7 +367,7 @@ function addToTracker(c, msId, logInvite) {
   if (!r) {
     r = { id: newTid(), name: c.name, email: c.email || "", affiliation: c.institution, keywords: [...new Set([...c.matches, ...c.fields])].slice(0, 6),
           dead: false, source: "reviewer-finder",
-          notes: `Found via Reviewer Finder (${today()})${msId ? ` for ${msId}` : ""}. OpenAlex: ${c.url}` +
+          notes: `Found via Find reviewers (${today()})${msId ? ` for ${msId}` : ""}. OpenAlex: ${c.url}` +
                  `${c.orcid ? ` · ORCID: https://orcid.org/${c.orcid}` : ""}${c.contact_paper ? ` · Email in: ${doiUrl(c.contact_paper.doi)}` : ""}.` +
                  `${c.email ? "" : " Email not known yet."}` };
     data.reviewers.push(r);
@@ -532,11 +532,11 @@ function renderResults() {
       <ul>${out.tracker_extra.map((t) => `<li><b>${esc(t.name)}</b> <span class="muted">${esc([t.affiliation, t.keywords.slice(0, 4).join(", ")].filter(Boolean).join(" · "))}</span>
         ${t.email ? ` · <a href="mailto:${esc(t.email)}">${esc(t.email)}</a>` : ""}${t.invited ? ` · accepted ${t.accepted} of ${t.invited}` : ""}
         ${t.warnings.map((w) => `<span class="flag check">${esc(w)}</span>`).join("")}</li>`).join("")}</ul></details>` : ""}
-    ${sug.length ? `<details class="box" ${sug.some((r) => r.verdict !== "green") ? "open" : ""}><summary><h4>Reviewers suggested by the authors (${sug.length}), checked by Cygnus</h4></summary>
+    ${sug.length ? `<details class="box" ${sug.some((r) => r.verdict !== "green") ? "open" : ""}><summary><h4>Reviewers suggested by the authors (${sug.length}), checked for identity and overlap</h4></summary>
       <ul class="sug">${sug.map((r) => `<li><span class="pill v-${r.verdict}">${VERDICT[r.verdict]}</span> <b>${esc(r.name)}</b>
         <span class="muted">${esc([r.email, r.affiliation].filter(Boolean).join(" · "))}</span>
         ${r.findings.filter((f) => f.status === "concern" || f.status === "check").slice(0, 3).map((f) => `<span class="flag ${f.status}">${esc(f.check)}: ${esc(f.label)}. ${esc(f.detail)}</span>`).join("")}</li>`).join("")}</ul>
-      <p class="muted small">Open <a href="../researchers/">Cygnus</a> for the full evidence and the queries for the authors.</p></details>` : ""}
+      <p class="muted small">Open <a href="../researchers/">Check a person</a> for the full evidence and the queries for the authors.</p></details>` : ""}
     ${out.conflicted.length ? `<details class="box"><summary><h4>Potential overlap with the authors (${out.conflicted.length}), kept out of the ranking</h4></summary>
       <p class="muted small">What OpenAlex shows linking each person to an author. Check the evidence: a shared paper or institution isn't always a competing interest, and someone not listed here isn't confirmed to be independent.</p>
       <ul class="aside">${out.conflicted.map((c) => `<li><a href="${esc(c.url)}" target="_blank" rel="noopener"><b>${esc(c.name)}</b></a>

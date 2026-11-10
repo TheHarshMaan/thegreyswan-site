@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reviewer Finder: peer reviewers for any manuscript | The Grey Swan Editorial</title>
+<title>Find reviewers: peer reviewers for any manuscript | The Grey Swan Editorial</title>
 <meta name="description" content="Free reviewer finder for journal editors: active peer reviewers for a manuscript, ranked by fit and likelihood to accept, with potential overlaps of interest set aside and every reason shown. Built on OpenAlex.">
 <link rel="icon" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="rf.css">
 <link rel="stylesheet" href="pulse.css">
 <link rel="stylesheet" href="/assets/account.css">
+<link rel="stylesheet" href="/assets/workspace.css">
 <link rel="stylesheet" href="/assets/scroll.css">
 </head>
 <body>
@@ -21,13 +22,14 @@
   <header class="masthead">
     <img src="grey_swan_emblem.png" alt="The Grey Swan emblem" class="emblem">
     <div>
-      <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· Editorial</span></div>
-      <h1 class="title">Reviewer <em>Finder</em></h1>
-      <nav class="tools"><a href="../checker/">Manuscript checker</a> · <a href="../references/">Reference checker</a> ·
-        <a href="../researchers/">Cygnus</a> · <span>Reviewer finder</span> · <a href="../tracker/">Reviewer tracker</a></nav>
+      <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· For editors</span></div>
+      <h1 class="title">Find <em>reviewers</em></h1>
+      <nav class="tools"><a href="/">Home</a> · <a href="../checker/">For authors</a> · <span>For editors</span> · <a href="/cygnus/">Cygnus Program</a></nav>
     </div>
     <div id="gs-account" class="masthead-account"></div>
   </header>
+
+  <nav class="workspace-tabs" aria-label="Editor workspace"><a href="../reviewers/" aria-current="page">Find reviewers</a><a href="../researchers/">Check a person</a><a href="../tracker/">Invitations</a></nav>
 
   <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
 
@@ -40,7 +42,7 @@
     which doesn't hold every researcher, email address or unpublished link. Check each person before inviting.<br>
     <b>What leaves your computer.</b> The manuscript is read inside your browser. Its title, keywords, key terms from the
     abstract, reference DOIs and the authors' names go to OpenAlex (and ORCID and ROR, for the authors) to search.
-    Your Reviewer Tracker stays in this browser.
+    Your Invitations list stays in this browser.
   </div>
 
   <main class="rf-layout">
@@ -68,7 +70,7 @@
 
       <h2 class="step"><span>II</span> Authors and exclusions</h2>
       <p class="muted small">The authors are needed to look for overlaps with them (shared papers, the same institution). Suggested
-        reviewers named by the authors are checked by <a href="../researchers/">Cygnus</a>. Add anyone the editor or
+        reviewers named by the authors are checked as in <a href="../researchers/">Check a person</a>. Add anyone the editor or
         authors asked to exclude.</p>
       <div class="add-ways">
         <details class="paste" id="paste-box">
@@ -104,7 +106,7 @@
             <label class="field">Your OpenAlex API key (optional)
               <input id="oa-key" autocomplete="off" spellcheck="false" placeholder="Free from openalex.org/settings/api"></label>
           </div>
-          <p class="muted small">The key is kept in this browser only, and shared with Cygnus. Add one if searches stop
+          <p class="muted small">The key is kept in this browser only, and shared with Check a person. Add one if searches stop
             with a "daily limit" message.</p>
         </details>
       </div>
@@ -125,7 +127,7 @@
   </footer>
 </div>
 
-<noscript><p class="page">The Reviewer Finder needs JavaScript turned on.</p></noscript>
+<noscript><p class="page">Find reviewers needs JavaScript turned on.</p></noscript>
 <script>
 // The still side rails (see /assets/scroll.js): a field of stars drifts past on the left; the right rail shows the
 // shortlist filling up, reviewers needed against reviewers chosen

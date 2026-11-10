@@ -39,8 +39,8 @@
     document.head.appendChild(css);
   }
 
-  const PAGES = { "/checker/": "GS Screening Tool", "/references/": "Reference Integrity", "/researchers/": "Cygnus",
-                  "/tracker/": "Reviewer Tracker", "/account/": "Account", "/privacy/": "Privacy page", "/": "Home page" };
+  const PAGES = { "/checker/": "Check your manuscript", "/references/": "Reference check", "/researchers/": "Check a person",
+                  "/reviewers/": "Find reviewers", "/tracker/": "Invitations", "/cygnus/": "Cygnus Program", "/account/": "Account", "/privacy/": "Privacy page", "/": "Home page" };
   function pageName() {
     const p = location.pathname.replace(/index\.html$/, "");
     const key = Object.keys(PAGES).find((k) => k !== "/" && p.endsWith(k)) || "/";

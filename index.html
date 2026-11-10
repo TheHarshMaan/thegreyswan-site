@@ -66,6 +66,19 @@
   .nav ul { display: flex; gap: 28px; list-style: none; margin: 0; padding: 0; }
   .nav ul a { color: var(--muted); text-decoration: none; font-size: 0.92rem; }
   .nav ul a:hover { color: var(--ink); }
+  .nav ul { align-items: center; }
+  .more { position: relative; }
+  .more-btn { background: none; border: 0; padding: 0; cursor: pointer; font: inherit; font-size: 0.92rem;
+              color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+  .more-btn:hover, .more-btn[aria-expanded="true"] { color: var(--ink); }
+  .more-btn:focus-visible, .more-menu a:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+  .nav ul.more-menu { position: absolute; right: -14px; top: calc(100% + 14px); display: block; min-width: 200px;
+              margin: 0; padding: 8px 0; list-style: none; background: var(--card); border: 1px solid var(--line);
+              border-radius: 8px; box-shadow: 0 12px 32px rgba(0,0,0,0.45); }
+  .nav ul.more-menu[hidden] { display: none; }
+  .more-menu a { display: block; padding: 8px 18px; white-space: nowrap; }
+  .more-menu a:hover { background: rgba(198,159,112,0.08); }
+  .more-menu .sep { height: 1px; margin: 6px 0; background: var(--line); }
 
   /* Hero */
   .hero { display: grid; grid-template-columns: 1.25fr 1fr; gap: 48px; align-items: center; padding-top: 72px; padding-bottom: 64px; }
@@ -186,6 +199,37 @@
     .eyebrow { letter-spacing: 3px; font-size: 0.75rem; }
     .btn { width: 100%; text-align: center; }
   }
+
+  /* Homepage: two doors, the Cygnus band and the trust strip */
+  .hero-doors { text-align: center; padding-top: 80px; padding-bottom: 28px; }
+  .hero-doors h1 { margin: 0 auto; max-width: 880px; }
+  .hero-doors .lead { margin: 22px auto 0; max-width: 640px; }
+  .doors { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 28px; padding-bottom: 64px; }
+  .door { display: flex; flex-direction: column; gap: 16px; background: var(--card); border: 1px solid var(--line);
+          border-radius: 14px; padding: 36px; color: var(--ink); text-decoration: none; transition: border-color .2s; }
+  .door:hover { border-color: var(--gold); color: var(--ink); }
+  .door:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .door-who { display: flex; align-items: center; gap: 12px; font-family: var(--caps); letter-spacing: 4px;
+              font-size: 0.8rem; text-transform: uppercase; color: var(--gold); }
+  .door-who svg { width: 36px; height: 36px; fill: none; stroke: var(--gold); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+  .door h2 { font-family: var(--serif); font-weight: 600; font-size: 2.4rem; margin: 0; }
+  .door p { color: var(--muted); line-height: 1.65; margin: 0; }
+  .door ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.95rem; }
+  .door li::before { content: "\2726"; color: var(--gold); margin-right: 10px; }
+  .door .btn { margin-top: auto; align-self: flex-start; }
+  .cygnus-band-wrap { padding: 0 0 56px; }
+  .cygnus-band { border: 1px solid #6B5A44; border-radius: 14px; padding: 34px 38px; display: flex; flex-wrap: wrap;
+                 gap: 24px; align-items: center; justify-content: space-between; }
+  .cygnus-band > div:first-child { flex: 1 1 480px; }
+  .cygnus-band h2 { font-family: var(--serif); font-weight: 500; font-size: 2.2rem; margin: 6px 0 0; }
+  .cygnus-band p { color: var(--muted); line-height: 1.6; margin: 10px 0 0; max-width: 620px; }
+  .trust { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; text-align: center;
+           border-top: 1px solid var(--line); padding-top: 32px; padding-bottom: 40px; }
+  .trust b { display: block; font-family: var(--serif); font-size: 1.8rem; font-weight: 500; color: var(--gold-bright); }
+  .trust span { font-size: 0.88rem; color: var(--muted); }
+  .ws-head { font-family: var(--caps); letter-spacing: 3px; font-size: 0.85rem; text-transform: uppercase; color: var(--gold);
+             font-weight: 400; margin: 36px 0 14px; }
+  @media (max-width: 520px) { .door { padding: 26px; } .door h2 { font-size: 2rem; } .cygnus-band { padding: 26px; } }
 </style>
 <link rel="stylesheet" href="assets/account.css">
 </head>
@@ -201,11 +245,9 @@
   <svg class="rail-mark top" viewBox="0 0 20 20"><path d="M10 0C10.8 6.5 13.5 9.2 20 10C13.5 10.8 10.8 13.5 10 20C9.2 13.5 6.5 10.8 0 10C6.5 9.2 9.2 6.5 10 0Z" fill="#C69F70"/></svg><svg class="rail-mark bottom" viewBox="0 0 20 20"><path d="M10 0C10.8 6.5 13.5 9.2 20 10C13.5 10.8 10.8 13.5 10 20C9.2 13.5 6.5 10.8 0 10C6.5 9.2 9.2 6.5 10 0Z" fill="#C69F70"/></svg>
   <ul class="rail-nav" aria-label="Sections">
     <li><a href="#top"><span>Home</span></a></li>
-    <li><a href="#checker"><span>Screening tool</span></a></li>
-    <li><a href="#tracker"><span>Reviewer tracker</span></a></li>
-    <li><a href="#references"><span>Reference integrity</span></a></li>
-    <li><a href="#researchers"><span>Cygnus</span></a></li>
-    <li><a href="#reviewers"><span>Reviewer finder</span></a></li>
+    <li><a href="#authors"><span>For authors</span></a></li>
+    <li><a href="#editors"><span>For editors</span></a></li>
+    <li><a href="#cygnus"><span>Cygnus Program</span></a></li>
     <li><a href="#about"><span>About</span></a></li>
     <li><a href="#contact"><span>Contact</span></a></li>
   </ul>
@@ -220,13 +262,10 @@
     </a>
     <nav aria-label="Main">
       <ul>
-        <li><a href="#checker">GS Screening Tool</a></li>
-        <li><a href="#tracker">Reviewer tracker</a></li>
-        <li><a href="#references">Reference Integrity</a></li>
-        <li><a href="#researchers">Cygnus</a></li>
-        <li><a href="#reviewers">Reviewer Finder</a></li>
+        <li><a href="#authors">For authors</a></li>
+        <li><a href="#editors">For editors</a></li>
+        <li><a href="cygnus/">Cygnus Program</a></li>
         <li><a href="#about">About</a></li>
-        <li><a href="#contact">Contact</a></li>
       </ul>
     </nav>
     <div id="gs-account"></div>
@@ -234,162 +273,132 @@
 </header>
 
 <main id="top">
-  <div class="wrap hero">
-    <div>
-      <div class="eyebrow">The Grey Swan <span>· </span></div>
-      <h1>Smart publishing tools for <em>authors</em> and <em>publishers</em></h1>
-      <p class="lead">Check your manuscript the way a journal screening desk would, before you submit. Catch the missing
-        ethics details, undefined abbreviations and uncited figures that send papers back to authors.</p>
-      <div class="buttons">
-        <a class="btn btn-gold" href="checker/">Try the GS Screening Tool</a>
-        <a class="btn btn-line" href="tracker/">Open the Reviewer Tracker</a>
-        <a class="btn btn-line" href="references/">Check References</a>
-        <a class="btn btn-line" href="researchers/">Check Researchers with Cygnus</a>
-        <a class="btn btn-line" href="reviewers/">Find Reviewers</a>
-      </div>
-    </div>
-    <div class="hero-art">
-      <img src="assets/grey_swan_emblem.png" alt="The Grey Swan emblem: a crowned swan beneath a gilded arch" width="400" height="420">
-    </div>
+  <div class="wrap hero-doors">
+    <div class="eyebrow">The Grey Swan <span>· Editorial</span></div>
+    <h1>Get through the screening desk. <em>Get reviewed.</em></h1>
+    <p class="lead">Free tools for both sides of peer review. Pick yours. Your manuscripts never leave your browser.</p>
   </div>
 
-  <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0C10.8 6.5 13.5 9.2 20 10C13.5 10.8 10.8 13.5 10 20C9.2 13.5 6.5 10.8 0 10C6.5 9.2 9.2 6.5 10 0Z" fill="#C69F70"/></svg></div>
+  <div class="wrap doors" role="list">
+    <a class="door" href="checker/" role="listitem">
+      <span class="door-who"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 15 2 2 4-4"/></svg>I'm an author</span>
+      <h2>Check your manuscript</h2>
+      <p>See what a journal would send back before peer review: ethics and consent details, uncited figures, undefined
+        abbreviations, missing declarations and problem references, in one report.</p>
+      <ul>
+        <li>Word, PDF, LaTeX, ODT and RTF</li>
+        <li>95+ screening checks plus reference verification</li>
+        <li>Runs entirely in your browser</li>
+      </ul>
+      <span class="btn btn-gold">Check a manuscript →</span>
+    </a>
+    <a class="door" href="reviewers/" role="listitem">
+      <span class="door-who"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.8-3.2 3-5 5.5-5s4.7 1.8 5.5 5"/><circle cx="17.5" cy="10.5" r="2.5"/><path d="M16 15.2c2.6-.6 4.6 1 5 3.8"/></svg>I'm an editor</span>
+      <h2>Find reviewers</h2>
+      <p>Ranked, independent reviewer suggestions for any manuscript, with overlap and identity checks, public reviewing
+        records, and a private record of who you've invited.</p>
+      <ul>
+        <li>Find reviewers: matched on real publications, not keywords</li>
+        <li>Check a person: identity and links to the authors</li>
+        <li>Invitations: who you invited and who replied, kept on your computer</li>
+      </ul>
+      <span class="btn btn-gold">Find reviewers →</span>
+    </a>
+  </div>
 
-  <section id="checker">
+  <section id="cygnus" class="cygnus-band-wrap">
+    <div class="wrap">
+      <div class="cygnus-band">
+        <div>
+          <div class="eyebrow">The Cygnus Program</div>
+          <h2>Join a network of reviewers editors can <em>count on</em></h2>
+          <p>Verified researchers who commit to a few reviews a year, deliver on time, and get recognised for it. The first
+            cohort is forming now with partner universities in India.</p>
+        </div>
+        <div class="buttons">
+          <a class="btn btn-gold" href="cygnus/">Join the program</a>
+          <a class="btn btn-line" href="cygnus/#universities">For universities</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap trust">
+    <div><b>Free</b><span>No sign-up needed to use either tool</span></div>
+    <div><b>Private</b><span>Manuscripts are read in your browser, never uploaded</span></div>
+    <div><b>Open data</b><span>OpenAlex, ORCID and Crossref, cited in every result</span></div>
+    <div><b>Open source</b><span>Every check is public on GitHub</span></div>
+  </div>
+
+  <section id="authors" style="border-top:1px solid var(--line)">
     <div class="wrap">
       <div class="section-head">
-        <div class="eyebrow">Free tool</div>
-        <h2>The Manuscript <em>Pre-Submission</em> Checker</h2>
-        <p>Upload a manuscript (Word, PDF, RTF or LaTeX) and get a clear, colour-coded report in seconds. It recognises research articles,
-          case reports, reviews and letters, and applies the right rules to each.</p>
+        <div class="eyebrow">For authors</div>
+        <h2>Check your <em>manuscript</em></h2>
+        <p>Upload a manuscript (Word, PDF, RTF or LaTeX) and get one clear report in minutes: the checks a journal
+          screening desk runs, then every reference verified. It recognises research articles, case reports, reviews and
+          letters, and applies the right rules to each.</p>
       </div>
-
       <div class="grid">
         <div class="card"><h3>Structure</h3><p>IMRaD sections, abstract length and keywords, adjusted for case reports, reviews and letters.</p></div>
         <div class="card"><h3>Abbreviations</h3><p>Used before definition, never defined, defined twice or never used again, in the abstract and the main text.</p></div>
         <div class="card"><h3>Figures &amp; tables</h3><p>Every figure and table cited, in numerical order, with matching legends.</p></div>
         <div class="card"><h3>Ethics &amp; consent</h3><p>Committee name, approval number and date; written, verbal or waived consent; consent for minors.</p></div>
         <div class="card"><h3>Study details</h3><p>Sample size, study period, inclusion and exclusion criteria, questionnaires, and trial or PROSPERO registration where required.</p></div>
-        <div class="card"><h3>Declarations &amp; references</h3><p>Conflict of interest, funding, author contributions, data availability, and citations that match the reference list.</p></div>
+        <div class="card"><h3>Declarations</h3><p>Conflict of interest, funding, author contributions, data availability and AI-use statements, worded for your target journal.</p></div>
+        <div class="card"><h3>Retractions &amp; corrections</h3><p>References that have been retracted, corrected or given an expression of concern, checked against Retraction Watch, updated daily.</p></div>
+        <div class="card"><h3>DOIs that work</h3><p>Each DOI exists and points to the paper cited; missing DOIs are found, and titles, authors and years compared.</p></div>
+        <div class="card"><h3>Reports</h3><p>Every finding with how to fix it, sorted by severity, and downloads in Excel and Word.</p></div>
       </div>
-
-      <div class="steps" style="margin-top:48px">
-        <div class="step"><h3>Upload</h3><p>Drop in one or more manuscripts.</p></div>
-        <div class="step"><h3>Check</h3><p>Every rule runs in seconds, tuned on a labelled test set of manuscripts.</p></div>
-        <div class="step"><h3>Fix</h3><p>See each issue by section, and download the full report as Excel.</p></div>
-      </div>
-
-     <div class="note"><b>Private by design.</b> Files are checked inside your browser and never uploaded; nothing
-  is stored. <b>A screening aid, not a verdict:</b> the checker flags issues for a person to review and does not judge the science.</div>
-
+      <div class="note"><b>Private by design.</b> Files are checked inside your browser and never uploaded. Only the DOIs and
+        reference titles are sent to Crossref to verify them. <b>A screening aid, not a verdict:</b> it flags issues for a
+        person to review and does not judge the science.</div>
       <div class="buttons" style="justify-content:center;margin-top:32px">
         <a class="btn btn-gold" href="checker/">Check a manuscript now</a>
-        <a class="btn btn-line" href="references/">Check References</a>
+        <a class="btn btn-line" href="references/">Check a reference list only</a>
       </div>
     </div>
   </section>
 
-  <section id="tracker" style="border-top:1px solid var(--line)">
+  <section id="editors" style="border-top:1px solid var(--line)">
     <div class="wrap">
       <div class="section-head">
-        <div class="eyebrow">Free tool · New</div>
-        <h2>The <em>Reviewer</em> Tracker</h2>
-        <p>Finding reviewers who say yes is the slowest part of peer review. Log each invitation and its outcome, and the
-          tracker shows who accepts, who delivers, how fast, and who never replies.</p>
+        <div class="eyebrow">For editors</div>
+        <h2>One workspace for <em>finding reviewers</em></h2>
+        <p>Three tabs, one job: reviewers who fit the paper, have no ties to the authors, and say yes.</p>
       </div>
+
+      <h3 class="ws-head">Find reviewers</h3>
+      <div class="grid">
+        <div class="card"><h3>Found five ways</h3><p>Recent papers on the same subject, leading work in its research topics, the authors the manuscript cites, your own invitation history, and the co-authors of reviewers who have said yes before.</p></div>
+        <div class="card"><h3>Overlaps kept apart</h3><p>Anyone who appears on papers with the authors, shares their institution or is on the exclusion list is listed separately with the evidence and kept out of the ranking.</p></div>
+        <div class="card"><h3>Shortlist and invitations</h3><p>Reviewers and alternates with every reason shown, a mix of countries and career stages, a personal invitation note for each, and Excel and Word reports.</p></div>
+      </div>
+
+      <h3 class="ws-head">Check a person</h3>
+      <div class="grid">
+        <div class="card"><h3>Who and where they are</h3><p>A matching researcher profile, an ORCID iD that is really theirs, and an email domain that fits the stated institution.</p></div>
+        <div class="card"><h3>Overlap with the authors</h3><p>Shared papers or institutions with the authors, flagged with the evidence and a polite query ready to send.</p></div>
+        <div class="card"><h3>The Cygnus map</h3><p>For a reviewer who checks out, their co-authors drawn as the swan constellation: the best-fitting candidates shine brightest.</p></div>
+      </div>
+
+      <h3 class="ws-head">Invitations</h3>
       <div class="grid">
         <div class="card"><h3>Log in seconds</h3><p>Name, email, keywords and manuscript ID. Update each invitation as replies and reports arrive.</p></div>
-        <div class="card"><h3>See who delivers</h3><p>Acceptance rate, reports submitted and average turnaround, with each reviewer marked reliable, mixed or unresponsive.</p></div>
-        <div class="card"><h3>Find the right people</h3><p>Enter a manuscript's keywords and get reviewers ranked by expertise and reliability, with recent invites marked.</p></div>
+        <div class="card"><h3>See who delivers</h3><p>Acceptance rate, reports submitted and turnaround, with each reviewer marked reliable, mixed or unresponsive.</p></div>
+        <div class="card"><h3>Feeds the Finder</h3><p>Past declines, open invitations and response times show on every candidate, so you don't ask the same people twice.</p></div>
       </div>
-      <div class="note"><b>Your data never leaves your device.</b> Reviewer details are saved in your own browser, not on a server.
-        Download a backup or export to Excel any time.</div>
-      <div class="buttons" style="justify-content:center;margin-top:32px">
-        <a class="btn btn-gold" href="tracker/">Open the Reviewer Tracker</a>
-      </div>
-    </div>
-  </section>
-  <section id="references" style="border-top:1px solid var(--line)">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow">Free tool · New</div>
-        <h2>The <em>Reference</em> Integrity Checker</h2>
-        <p>A retracted paper in the reference list is easy to miss and hard to explain later. Paste a reference list or
-          upload a manuscript, and every reference is checked against Crossref and the Retraction Watch database.</p>
-      </div>
-      <div class="grid">
-        <div class="card"><h3>Retractions &amp; corrections</h3><p>Flags references that have been retracted, corrected or given an expression of concern, with the date and a link to the notice.</p></div>
-        <div class="card"><h3>DOIs that work</h3><p>Checks that each DOI exists and points to the paper cited, and finds the DOI for references that don't give one.</p></div>
-        <div class="card"><h3>Details that match</h3><p>Compares title, authors and year with the published record, so typos and mix-ups stand out.</p></div>
-      </div>
-      <div class="grid">
-        <div class="card"><h3>Upload or paste</h3><p>Word, PDF, RTF, LaTeX or plain text, or paste the reference list straight in.</p></div>
-        <div class="card"><h3>Updated daily</h3><p>The list of retracted papers is rebuilt every morning from the Retraction Watch database, which now covers more than 60,000 papers.</p></div>
-        <div class="card"><h3>Download the report</h3><p>See every reference with its status and how to fix it, then download the results as Excel or Word.</p></div>
-      </div>
-      <div class="note"><b>Your manuscript stays on your device.</b> The file is read inside your browser. Only the
-        DOIs and reference titles are sent to Crossref to look them up. <b>A screening aid, not a verdict:</b> check
-        each flagged reference against the notice before acting on it.</div>
-      <div class="buttons" style="justify-content:center;margin-top:32px">
-        <a class="btn btn-gold" href="references/">Check references</a>
-      </div>
-    </div>
-  </section>
-  <section id="researchers" style="border-top:1px solid var(--line)">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow">Free tool · New</div>
-        <h2><em>Cygnus</em></h2>
-        <div class="eyebrow" style="margin-top:6px">Researcher identity and overlap check</div>
-        <p>Paper mills invent authors and suggest reviewers who are really the authors themselves. Check a manuscript's
-          authors and suggested reviewers against open research databases in minutes, with the evidence for every
-          finding.</p>
-      </div>
-      <div class="grid">
-        <div class="card"><h3>Who they are</h3><p>A matching researcher profile and publication record, an ORCID iD that is valid and really theirs, and help choosing between researchers with the same name.</p></div>
-        <div class="card"><h3>Where they are</h3><p>Email domains checked against the stated institution: free webmail, another institution's domain, or a look-alike such as oxfrod.ac.uk.</p></div>
-        <div class="card"><h3>Overlap with the authors</h3><p>Suggested reviewers who appear on papers with the authors, or share their institution, are flagged with the shared paper as evidence.</p></div>
-      </div>
-      <div class="grid">
-        <div class="card"><h3>Reviewers in the stars</h3><p>For a reviewer who checks out, their co-authors are drawn as the swan constellation: the best-fitting candidates are its brightest stars, and anyone linked to the authors sits apart on the authors' shore. Add any of them to your Reviewer Tracker.</p></div>
-        <div class="card"><h3>Queries ready to send</h3><p>Every flag comes with a polite query for the authors and the verifying links, ready to paste into your screening comments.</p></div>
-        <div class="card"><h3>Reports</h3><p>Download the findings, queries and evidence as Excel or Word, for your editorial records.</p></div>
-      </div>
-      <div class="note"><b>It flags; it never accuses.</b> A free email address or a short publication record is a reason
-        to check, not evidence of misconduct. Names and ORCID iDs are looked up in OpenAlex, ROR and ORCID; email
-        addresses are compared in your browser and never sent.</div>
-      <div class="buttons" style="justify-content:center;margin-top:32px">
-        <a class="btn btn-gold" href="researchers/">Open Cygnus</a>
-      </div>
-    </div>
-  </section>
-  <section id="reviewers" style="border-top:1px solid var(--line)">
-    <div class="wrap">
-      <div class="section-head">
-        <div class="eyebrow">Free tool · New</div>
-        <h2>Reviewer <em>Finder</em></h2>
-        <p>Active reviewers for any manuscript, ranked by how closely their work fits and how likely they
-          are to say yes. Drop the manuscript in; get a shortlist with alternates, the reasons for every name, and
-          invitations ready to send.</p>
-      </div>
-      <div class="grid">
-        <div class="card"><h3>Found five ways</h3><p>Recent papers on the same subject, leading work in its research topics, the authors the manuscript cites, your own Reviewer Tracker, and the co-authors of reviewers who have said yes to you before.</p></div>
-        <div class="card"><h3>Overlaps flagged</h3><p>Anyone who appears on papers with the authors, shares their institution or is on the exclusion list is listed separately with the evidence and kept out of the ranking. Colleagues and co-authors within your shortlist are marked too.</p></div>
-        <div class="card"><h3>Likely to say yes</h3><p>Your tracker's history comes first: who accepted, who completed, who has an invitation still open. Then career stage, recent activity and how close the paper is to their own work.</p></div>
-      </div>
-      <div class="grid">
-        <div class="card"><h3>Every reason shown</h3><p>Matching papers, the keywords they share, where each person was found and what raised or lowered their outlook. Retractions and inactivity are flagged.</p></div>
-        <div class="card"><h3>Shortlist and alternates</h3><p>Pick reviewers and ordered alternates, check the mix of countries, institutions and career stages, and fill the list automatically with people who have no detected overlap with each other.</p></div>
-        <div class="card"><h3>Invitations and records</h3><p>A personal invitation note for each person, their email or the paper where it's printed, one click to log the invitation in your tracker, and Excel and Word reports.</p></div>
-      </div>
-      <div class="note"><b>It suggests; you decide.</b> Built on OpenAlex, the open research database. The manuscript is
-        read in your browser; only its title, keywords, key terms, reference DOIs and the authors' names are used to
-        search. Your tracker never leaves your browser.</div>
+      <div class="note"><b>It suggests; you decide.</b> Built on OpenAlex, ORCID and ROR. The manuscript is read in your
+        browser; only its title, keywords, key terms, reference DOIs and the authors' names are used to search. Your
+        invitation history never leaves your browser.</div>
       <div class="buttons" style="justify-content:center;margin-top:32px">
         <a class="btn btn-gold" href="reviewers/">Find reviewers</a>
+        <a class="btn btn-line" href="researchers/">Check a person</a>
+        <a class="btn btn-line" href="tracker/">Invitations</a>
       </div>
     </div>
   </section>
+
   <section id="about" style="border-top:1px solid var(--line)">
     <div class="wrap about">
       <div class="about-logo"><img src="assets/the_grey_swan_logo.png" alt="The Grey Swan logo" width="320" height="320"></div>
@@ -401,10 +410,9 @@
           reviewers who assess them.</p>
         <p>The same avoidable problems came up again and again: missing ethics details, undefined abbreviations, uncited
           figures, and reviewer invitations that went unanswered for weeks. These tools turn that experience into checks
-          and trackers anyone can use, so authors can submit with confidence and editorial teams can spend their time on
-          what matters.</p>
+          anyone can use, so authors can submit with confidence and editorial teams can spend their time on what matters.</p>
         <div class="stats">
-          <div class="stat"><b>5</b><span>free tools</span></div>
+          <div class="stat"><b>2</b><span>free workspaces</span></div>
           <div class="stat"><b>0</b><span>manuscripts stored</span></div>
         </div>
       </div>
@@ -418,9 +426,9 @@
         <h2>On the <em>roadmap</em></h2>
       </div>
       <ul class="soon" style="max-width:640px;margin:0 auto">
-        <li><b>AI review (opt-in)</b>: deeper checks of ethics, consent and consistency between abstract and results</li>
+        <li><b>The Cygnus Program</b>: the first cohort of verified reviewers, with partner universities</li>
+        <li><b>Model wording</b>: example statements for every declaration the checker asks for</li>
         <li><b>Journal profiles</b>: ready-made settings for more journals and publishers</li>
-        <li><b>More publishing tools</b>: built from the problems editorial teams meet every day</li>
       </ul>
     </div>
   </section>
@@ -429,8 +437,8 @@
     <div class="wrap">
       <div class="eyebrow">Contact</div>
       <h2>Work with <em>The Grey Swan</em></h2>
-      <p style="color:var(--muted);max-width:620px;margin:0 auto 28px">Pre-submission screening for authors, screening support for
-        journals, or feedback on the checker: get in touch.</p>
+      <p style="color:var(--muted);max-width:620px;margin:0 auto 28px">Pre-submission screening for authors, reviewer support
+        for journals, partnering in the Cygnus Program, or feedback on the tools: get in touch.</p>
       <div class="buttons" style="justify-content:center">
         <a class="btn btn-gold" href="mailto:harsh@thegreyswan.in?subject=The%20Grey%20Swan%20">Get in touch</a>
       </div>
@@ -439,7 +447,7 @@
 </main>
 
 <footer>
-  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · thegreyswan.in · Open source (AGPL-3.0) · <a href="https://github.com/TheHarshMaan/manuscript-checker">Source code</a> · <a href="privacy/">Privacy</a></div>
+  <div class="wrap">© 2026 <span class="name">The Grey Swan Editorial</span> · thegreyswan.in · Open source (AGPL-3.0) · <a href="https://github.com/TheHarshMaan/manuscript-checker">Source code</a> · <a href="#contact">Contact</a> · <a href="privacy/">Privacy</a></div>
 </footer>
 </div>
 

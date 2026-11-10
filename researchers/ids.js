@@ -1,4 +1,4 @@
-// The Grey Swan Editorial: Cygnus, the researcher identity and overlap check (website)
+// The Grey Swan Editorial: Check a person, the researcher identity and overlap check (website)
 // Python (worker.js + idcheck.py) reads the files, looks people up in OpenAlex, ROR and ORCID through the browser,
 // and decides each verdict; this page collects who to check and shows the results.
 
@@ -325,7 +325,7 @@ function cygnusHtml(r, net) {
   };
   const seedName = cyShowNames ? "Sadr" : r.name;
   return `<div class="cygnus" data-seed="${esc(r.id)}">
-    <svg class="cy-sky" viewBox="0 0 680 430" role="group" aria-label="Cygnus: reviewer candidates around ${esc(r.name)}">
+    <svg class="cy-sky" viewBox="0 0 680 430" role="group" aria-label="Cygnus map: reviewer candidates around ${esc(r.name)}">
       <rect class="cy-bg" x="0" y="0" width="680" height="430" rx="12"/>
       ${CY_DUST.map(([x, y], i) => `<circle class="cy-dust" cx="${x}" cy="${y}" r="${(0.8 + (i % 3) * 0.2).toFixed(1)}" style="animation-delay:${(i * 0.37 % 2.4).toFixed(2)}s"/>`).join("")}
       <g class="cy-lines">${shape}</g>
@@ -452,7 +452,7 @@ $("results").addEventListener("click", async (e) => {
     if (!data.reviewers.some((x) => x.name.toLowerCase() === c.name.toLowerCase())) {
       data.reviewers.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), name: c.name, email: "",
         affiliation: c.institution, keywords: [...new Set([...c.matches, ...c.fields])].slice(0, 6), dead: false,
-        source: "network", notes: `Found via Cygnus – co-author network of ${net.seed_name} (${new Date().toISOString().slice(0, 10)}). ` +
+        source: "network", notes: `Found via the Cygnus map – co-author network of ${net.seed_name} (${new Date().toISOString().slice(0, 10)}). ` +
           `${c.shared_with_seed} shared paper(s). OpenAlex: ${c.url}${c.orcid ? ` · ORCID: https://orcid.org/${c.orcid}` : ""}. Email not known yet.` });
       try { localStorage.setItem(TRACKER_KEY, JSON.stringify(data)); } catch (err) { t.textContent = "Couldn't save"; return; }
       if (ACCOUNT) ACCOUNT.changed("tracker");
