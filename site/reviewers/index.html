@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find reviewers: peer reviewers for any manuscript | The Grey Swan Editorial</title>
+<meta name="description" content="Free reviewer finder for journal editors: active peer reviewers for a manuscript, ranked by fit and likelihood to accept, with potential overlaps of interest set aside and every reason shown. Built on OpenAlex.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="rf.css">
+<link rel="stylesheet" href="pulse.css">
+<link rel="stylesheet" href="/assets/account.css">
+<link rel="stylesheet" href="/assets/workspace.css">
+<link rel="stylesheet" href="/assets/scroll.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <img src="grey_swan_emblem.png" alt="The Grey Swan emblem" class="emblem">
+    <div>
+      <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· For editors</span></div>
+      <h1 class="title">Find <em>reviewers</em></h1>
+      <nav class="tools"><a href="/">Home</a> · <a href="../checker/">For authors</a> · <span>For editors</span> · <a href="/cygnus/">Cygnus Program</a></nav>
+    </div>
+    <div id="gs-account" class="masthead-account"></div>
+  </header>
+
+  <nav class="workspace-tabs" aria-label="Editor workspace"><a href="../reviewers/" aria-current="page">Find reviewers</a><a href="../researchers/">Check a person</a><a href="../tracker/">Invitations</a></nav>
+
+  <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
+
+  <p class="lead">Active reviewers for a manuscript, ranked by how closely their recent work fits and how likely they
+    are to say yes. Potential overlaps with the authors (a shared paper, the same institution) are listed separately
+    with the evidence, your own reviewers' history counts, and every suggestion shows its reasons.</p>
+
+  <div class="card">
+    <b>It suggests; you decide.</b> Candidates come from <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a>,
+    which doesn't hold every researcher, email address or unpublished link. Check each person before inviting.<br>
+    <b>What leaves your computer.</b> The manuscript is read inside your browser. Its title, keywords, key terms from the
+    abstract, reference DOIs and the authors' names go to OpenAlex (and ORCID and ROR, for the authors) to search.
+    Your Invitations list stays in this browser.
+  </div>
+
+  <main class="rf-layout">
+    <section class="rf-input" aria-label="The manuscript">
+      <div id="status" class="status"><span class="spinner"></span>
+        <span id="status-text">Preparing the finder. The first visit takes a few seconds…</span></div>
+
+      <h2 class="step"><span>I</span> The manuscript</h2>
+      <label id="dropzone" class="dropzone">
+        <input type="file" id="file-input" accept=".docx,.pdf,.odt,.rtf,.tex" multiple hidden>
+        <strong>Drop the manuscript (and cover letter)</strong>
+        <span>The title, abstract, keywords, authors, the authors' suggested reviewers and the reference list are read
+          here, in your browser. Check them below.</span>
+      </label>
+      <div class="ms-grid">
+        <label class="field wide">Title <input id="ms-title" placeholder="The manuscript's title"></label>
+        <label class="field wide">Keywords <input id="ms-keywords" placeholder="e.g. carbapenem resistance, Klebsiella pneumoniae, neonatal sepsis"></label>
+        <label class="field wide">Abstract <textarea id="ms-abstract" rows="5" placeholder="Paste the abstract: its key terms sharpen the search"></textarea></label>
+      </div>
+      <details class="paste" id="refs-box">
+        <summary id="refs-summary">References: none yet (optional)</summary>
+        <textarea id="refs-text" rows="4" placeholder="Paste the reference list: recent papers it cites lead to more candidates"></textarea>
+        <div class="row-actions"><button type="button" class="button" id="refs-add">Read these references</button></div>
+      </details>
+
+      <h2 class="step"><span>II</span> Authors and exclusions</h2>
+      <p class="muted small">The authors are needed to look for overlaps with them (shared papers, the same institution). Suggested
+        reviewers named by the authors are checked as in <a href="../researchers/">Check a person</a>. Add anyone the editor or
+        authors asked to exclude.</p>
+      <div class="add-ways">
+        <details class="paste" id="paste-box">
+          <summary>…paste a list</summary>
+          <textarea id="paste" rows="4" placeholder="One person per line, e.g.&#10;Dr Priya Sharma, priya.sharma@aiims.edu, AIIMS New Delhi, 0000-0002-1825-0097"></textarea>
+          <div class="row-actions">
+            <label class="inline">Add as
+              <select id="paste-role"><option value="author">authors</option><option value="suggested">suggested by the authors</option>
+                <option value="excluded">reviewers to exclude</option></select></label>
+            <button type="button" class="button" id="paste-add">Add to the list</button>
+          </div>
+        </details>
+        <button type="button" class="text-button" id="add-row">+ Add a person by hand</button>
+      </div>
+      <div id="people-wrap" hidden>
+        <div class="table-wrap"><table class="people">
+          <thead><tr><th>Role</th><th>Name</th><th>Email</th><th>Affiliation</th><th>ORCID iD</th><th></th></tr></thead>
+          <tbody id="people"></tbody>
+        </table></div>
+      </div>
+
+      <div class="run-row">
+        <button type="button" class="button big" id="run" disabled>Find reviewers</button>
+        <details class="settings">
+          <summary>Search settings</summary>
+          <div class="settings-grid">
+            <label class="field">Overlap look-back
+              <select id="lookback"><option value="3">3 years</option><option value="5" selected>5 years</option><option value="10">10 years</option></select></label>
+            <label class="field">Papers from the last
+              <select id="recent"><option value="3">3 years</option><option value="5" selected>5 years</option><option value="8">8 years</option></select></label>
+            <label class="field">Journal's country (optional)
+              <input id="journal-country" maxlength="2" placeholder="e.g. GB" autocomplete="off"></label>
+            <label class="field">Your OpenAlex API key (optional)
+              <input id="oa-key" autocomplete="off" spellcheck="false" placeholder="Free from openalex.org/settings/api"></label>
+          </div>
+          <p class="muted small">The key is kept in this browser only, and shared with Check a person. Add one if searches stop
+            with a "daily limit" message.</p>
+        </details>
+      </div>
+    </section>
+
+    <section aria-live="polite">
+      <div id="results"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
+    © <span class="brand">The Grey Swan Editorial</span> · Research data from
+    <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a> (CC0), institutions from
+    <a href="https://ror.org" target="_blank" rel="noopener">ROR</a> (CC0), and public
+    <a href="https://orcid.org" target="_blank" rel="noopener">ORCID</a> records · <a href="/privacy/">Privacy</a> ·
+    <a href="/">thegreyswan.in</a>
+  </footer>
+</div>
+
+<noscript><p class="page">Find reviewers needs JavaScript turned on.</p></noscript>
+<script>
+// The still side rails (see /assets/scroll.js): a field of stars drifts past on the left; the right rail shows the
+// shortlist filling up, reviewers needed against reviewers chosen
+window.GS_SCROLL = {
+  width: 1180, title: "Fit · Overlap · Response", motif: "stars",
+  nav: [{ label: "Overview", target: ".masthead" }, { label: "Manuscript", target: ".rf-input" },
+        { label: "Shortlist", target: "#shortlist" }, { label: "Candidates", target: "#candidates" }],
+  reveal: ".foot",
+  watch: "#results",
+  readout() {
+    const s = window.RF_STATE && window.RF_STATE();
+    if (!s || !s.found) return "";
+    return `<b>${s.primary}/${s.needed}</b><small>reviewers chosen</small>
+      <div class="gs-pips">${Array.from({ length: s.needed }, (_, i) => `<span class="gs-pip ${i < s.primary ? "ok" : "should"}"></span>`).join("")}</div>`;
+  },
+};
+</script>
+<script src="/assets/scroll.js"></script>
+<script src="/assets/account.js"></script>
+<script src="/assets/feedback.js"></script>
+<script src="pulse.js"></script>
+<script src="rf.js"></script>
+</body>
+</html>

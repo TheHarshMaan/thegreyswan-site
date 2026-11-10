@@ -1,0 +1,20 @@
+/* Reviewer Pulse (pulse.js): neutral colours only; evidence, never a warning */
+.pulse { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 0.8rem; color: var(--muted); }
+.pulse-label { font-family: var(--caps); font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.pulse-chip { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 0.74rem; font-weight: 500; border: 1px solid; white-space: nowrap; }
+.pulse-chip.verified { color: #E2B885; border-color: rgba(226, 184, 133, 0.6); }
+.pulse-chip.editorial { color: var(--advisory); border-color: rgba(143, 179, 217, 0.6); }
+.pulse-chip.none { color: var(--muted); border-color: var(--line); }
+.pulse-chip.check { color: var(--advisory); border-color: rgba(143, 179, 217, 0.5); }
+.pulse-sum { color: var(--ink); opacity: 0.85; }
+.pulse-more { flex-basis: 100%; }
+.pulse-more > summary { cursor: pointer; color: var(--gold); font-size: 0.78rem; display: inline; }
+.pulse-list { list-style: none; margin: 8px 0 4px; padding: 0 0 0 12px; border-left: 1px solid rgba(198, 159, 112, 0.4); }
+.pulse-list li { position: relative; margin: 0 0 6px; padding-left: 10px; display: flex; gap: 10px; flex-wrap: wrap; font-size: 0.8rem; }
+.pulse-list li::before { content: ""; position: absolute; left: -16px; top: 0.55em; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); }
+.pulse-when { min-width: 92px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pulse-what { color: var(--ink); flex: 1; min-width: 200px; }
+.pulse-tag { border: 1px solid rgba(143, 179, 217, 0.5); color: var(--advisory); border-radius: 4px; padding: 0 5px; font-size: 0.72rem; }
+.pulse-note { margin: 4px 0; font-size: 0.76rem; color: var(--muted); }
+.pulse-box h4 { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pulse-box .pulse-sum { margin: 0 0 6px; font-size: 0.84rem; }

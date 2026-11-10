@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Check a person: researcher identity and overlap check | The Grey Swan Editorial</title>
+<meta name="description" content="A free researcher check for journals: verify authors' and suggested reviewers' profiles, ORCID iDs, email domains and affiliations, spot potential overlaps with the authors, and find further reviewers in a reviewer's co-author network. Uses OpenAlex, ROR and ORCID.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="ids.css">
+<link rel="stylesheet" href="pulse.css">
+<link rel="stylesheet" href="/assets/account.css">
+<link rel="stylesheet" href="/assets/workspace.css">
+<link rel="stylesheet" href="/assets/scroll.css">
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <img src="grey_swan_emblem.png" alt="The Grey Swan emblem" class="emblem">
+    <div>
+      <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· For editors</span></div>
+      <h1 class="title">Check a <em>person</em></h1>
+      <div class="subtitle">Researcher identity and overlap check</div>
+      <nav class="tools"><a href="/">Home</a> · <a href="../checker/">For authors</a> · <span>For editors</span> · <a href="/cygnus/">Cygnus Program</a></nav>
+    </div>
+    <div id="gs-account" class="masthead-account"></div>
+  </header>
+
+  <nav class="workspace-tabs" aria-label="Editor workspace"><a href="../reviewers/">Find reviewers</a><a href="../researchers/" aria-current="page">Check a person</a><a href="../tracker/">Invitations</a></nav>
+
+  <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
+
+  <p class="lead">Check a manuscript's authors and suggested reviewers against open research databases: whether each
+    researcher's profile, ORCID iD, email domain and affiliation fit together, whether their work fits the
+    manuscript, and whether suggested reviewers have published with the authors. For reviewers who check out, find
+    candidates among their co-authors, with any overlap with the authors flagged.</p>
+
+  <div class="card">
+    <b>It flags; it never accuses.</b> A free email address, a short publication record or no profile at all is a
+    reason to check, not evidence of misconduct. A clean result doesn't prove identity or independence either: only
+    your own process can confirm who controls an email address.<br>
+    <b>What leaves your computer.</b> Files are read inside your browser. Names, ORCID iDs and institution names go to
+    <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a>,
+    <a href="https://ror.org" target="_blank" rel="noopener">ROR</a> and
+    <a href="https://orcid.org" target="_blank" rel="noopener">ORCID</a> to look them up; email addresses are
+    compared here and never sent.
+  </div>
+
+  <main class="ids-layout">
+    <section class="ids-input" aria-label="Who to check">
+      <div id="status" class="status"><span class="spinner"></span>
+        <span id="status-text">Preparing the checker. The first visit takes a few seconds…</span></div>
+
+      <h2 class="step"><span>I</span> Who to check</h2>
+      <label id="dropzone" class="dropzone">
+        <input type="file" id="file-input" accept=".docx,.pdf,.odt,.rtf,.tex" multiple hidden>
+        <strong>Drop the manuscript, title page or cover letter</strong>
+        <span>Authors, affiliations, emails and ORCID iDs are read from the title page; suggested reviewers from a
+          cover letter. Check and correct them below.</span>
+      </label>
+
+      <div class="add-ways">
+        <details class="paste" id="paste-box">
+          <summary>…or paste a list</summary>
+          <textarea id="paste" rows="5" placeholder="One person per line, in any order, e.g.&#10;Dr Priya Sharma, priya.sharma@aiims.edu, AIIMS New Delhi, 0000-0002-1825-0097&#10;Tomas Lind, t.lind@halvard.no, Halvard University Hospital, reviewer"></textarea>
+          <div class="row-actions">
+            <label class="inline">Add as
+              <select id="paste-role"><option value="author">authors</option><option value="reviewer">suggested reviewers</option></select></label>
+            <button type="button" class="button" id="paste-add">Add to the list</button>
+          </div>
+        </details>
+        <details class="paste" id="tracker-box" hidden>
+          <summary>…or add reviewers from your Invitations list</summary>
+          <input type="search" id="tracker-search" placeholder="Search name, affiliation or keyword" aria-label="Search the tracker">
+          <div id="tracker-list" class="tracker-list"></div>
+        </details>
+        <button type="button" class="text-button" id="add-row">+ Add a person by hand</button>
+      </div>
+
+      <div id="people-wrap" hidden>
+        <div class="table-wrap"><table class="people">
+          <thead><tr><th>Role</th><th>Name</th><th>Email</th><th>Affiliation</th><th>ORCID iD</th><th></th></tr></thead>
+          <tbody id="people"></tbody>
+        </table></div>
+        <p class="muted small" id="unplaced" hidden></p>
+      </div>
+
+      <h2 class="step"><span>II</span> The manuscript</h2>
+      <div class="ms-grid">
+        <label class="field">Title
+          <input id="ms-title" placeholder="Used to judge whether each researcher's work fits the subject"></label>
+        <label class="field">Keywords
+          <input id="ms-keywords" placeholder="e.g. antimicrobial resistance, urinary tract infection, ESBL"></label>
+        <label class="field">Co-authorship look-back
+          <select id="lookback"><option value="3">3 years</option><option value="5" selected>5 years</option><option value="10">10 years</option></select></label>
+      </div>
+
+      <div class="run-row">
+        <button type="button" class="button big" id="run" disabled>Check the researchers</button>
+        <details class="settings">
+          <summary>Settings</summary>
+          <label class="field">Your OpenAlex API key (optional)
+            <input id="oa-key" autocomplete="off" spellcheck="false" placeholder="Free from openalex.org/settings/api">
+            <span class="muted small">OpenAlex gives each key a free daily allowance. If checks stop with a "daily limit"
+              message, add your own free key here. It's kept in this browser only.</span></label>
+        </details>
+      </div>
+    </section>
+
+    <section aria-live="polite">
+      <div id="results"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
+    © <span class="brand">The Grey Swan Editorial</span> · Researcher data from
+    <a href="https://openalex.org" target="_blank" rel="noopener">OpenAlex</a> (CC0), institutions from
+    <a href="https://ror.org" target="_blank" rel="noopener">ROR</a> (CC0), and public
+    <a href="https://orcid.org" target="_blank" rel="noopener">ORCID</a> records · <a href="/privacy/">Privacy</a> ·
+    <a href="/">thegreyswan.in</a>
+  </footer>
+</div>
+
+<noscript><p class="page">This checker needs JavaScript turned on.</p></noscript>
+<script>
+// The still side rails (see /assets/scroll.js): ORCID-style identifiers drift past on the left; the right rail
+// shows a dot for each person checked, coloured by result
+window.GS_SCROLL = {
+  width: 1180, title: "Identity · Affiliation · Overlap", motif: "ids",
+  nav: [{ label: "Overview", target: ".masthead" }, { label: "Who to check", target: ".ids-input" },
+        { label: "Results", target: "#results" }],
+  reveal: ".foot",
+  watch: "#results",
+  readout() {
+    const cards = [...document.querySelectorAll("#results .person")];
+    if (!cards.length) return "";
+    const red = cards.filter((c) => c.dataset.verdict === "red").length;
+    const pip = { green: "ok", amber: "should", red: "must" };
+    return `<b>${red}</b><small>to verify</small>
+      <div class="gs-pips">${cards.slice(0, 16).map((c) => `<span class="gs-pip ${pip[c.dataset.verdict]}"></span>`).join("")}</div>`;
+  },
+};
+</script>
+<script src="/assets/scroll.js"></script>
+<script src="/assets/account.js"></script>
+<script src="/assets/feedback.js"></script>
+<script src="pulse.js"></script>
+<script src="ids.js"></script>
+</body>
+</html>

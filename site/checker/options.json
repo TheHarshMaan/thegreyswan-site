@@ -1,0 +1,49 @@
+{
+ "profiles": [
+  {
+   "id": "generic",
+   "name": "Generic (universal core)"
+  },
+  {
+   "id": "ama_journal",
+   "name": "AMA style (medicine)"
+  },
+  {
+   "id": "apa_journal",
+   "name": "APA style (psychology, social sciences)"
+  },
+  {
+   "id": "generic_double_blind",
+   "name": "Generic, double-blind"
+  },
+  {
+   "id": "humanities_journal",
+   "name": "Humanities journal"
+  },
+  {
+   "id": "ieee_journal",
+   "name": "IEEE style (engineering, computing)"
+  },
+  {
+   "id": "strict_screening",
+   "name": "Screening desk (strict)"
+  },
+  {
+   "id": "vancouver_journal",
+   "name": "Vancouver style (biomedical)"
+  }
+ ],
+ "review_models": {
+  "single_blind": "Single-blind",
+  "double_blind": "Double-blind",
+  "open": "Open"
+ },
+ "citation_styles": {
+  "auto": "Any (detect from the manuscript)",
+  "apa": "APA 7",
+  "harvard": "Harvard",
+  "ama": "AMA",
+  "vancouver": "Vancouver",
+  "ieee": "IEEE"
+ }
+}

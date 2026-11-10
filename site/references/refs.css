@@ -1,0 +1,7 @@
+/* Reference checker: additions to the shared Grey Swan style (style.css) */
+
+.refs-layout { display: grid; grid-template-columns: 1fr; gap: 22px; }
+.input-panel { max-width: 900px; }
+.paste { margin: 12px 0 6px; }
+.paste summary { cursor: pointer; color: var(--gold); font-size: 0.9rem; }
+.paste textarea { margin: 10px 0; font-size: 0.86rem; }
