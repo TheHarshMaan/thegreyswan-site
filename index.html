@@ -230,10 +230,76 @@
   .ws-head { font-family: var(--caps); letter-spacing: 3px; font-size: 0.85rem; text-transform: uppercase; color: var(--gold);
              font-weight: 400; margin: 36px 0 14px; }
   @media (max-width: 520px) { .door { padding: 26px; } .door h2 { font-size: 2rem; } .cygnus-band { padding: 26px; } }
+
+  /* ---------- Crest opening (homepage, once per visit) ---------- */
+  #gs-intro { display: none; }
+  html.gs-intro body { overflow: hidden; }
+  html.gs-intro #gs-intro { display: grid; }
+  #gs-intro { position: fixed; inset: 0; z-index: 1000; place-items: center; background: #111315; cursor: pointer; transition: background .6s ease; }
+  #gs-intro.leaving { background: transparent; pointer-events: none; }
+  .gi-mark { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .gi-crest { position: relative; width: min(58vmin, 400px); aspect-ratio: 414 / 420; }
+  .gi-crest img, .gi-crest svg, .gi-shine { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .gi-crest img { clip-path: inset(100% 0 0 0); animation: gi-paint 1s 1.15s cubic-bezier(.6,0,.2,1) forwards; }
+  .gi-crest svg { animation: gi-settle .6s 2.1s ease forwards; }
+  .gi-shine { background: linear-gradient(115deg, transparent 38%, rgba(255,236,196,.75) 50%, transparent 62%) no-repeat; background-size: 250% 100%; background-position: 130% 0;
+    -webkit-mask: url(assets/crest-intro.webp) center / 100% 100% no-repeat; mask: url(assets/crest-intro.webp) center / 100% 100% no-repeat;
+    mix-blend-mode: soft-light; opacity: 0; animation: gi-shine 1.1s 2.05s ease-in-out forwards; }
+  .gi-ink { fill: none; stroke: #E2B885; stroke-width: 2.2; stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .gi-arch { animation: gi-draw 1.1s .15s cubic-bezier(.55,0,.25,1) forwards; }
+  .gi-base { animation: gi-draw .6s .55s ease-out forwards; }
+  .gi-pillar { animation: gi-draw .7s .75s ease-out forwards; }
+  .gi-fleur, .gi-star { fill: #E2B885; opacity: 0; transform-box: fill-box; transform-origin: center; }
+  .gi-fleur { animation: gi-fleur .7s 1.05s cubic-bezier(.3,1.6,.5,1) forwards; }
+  .gi-star { animation: gi-star .6s 1.3s cubic-bezier(.3,1.8,.5,1) forwards; }
+  .gi-word { text-align: center; font-family: 'Cinzel', Georgia, serif; color: #E2B885; }
+  .gi-the { font-size: clamp(11px, 1.6vmin, 14px); letter-spacing: .6em; margin-left: .6em; opacity: 0; animation: gi-rise .6s 1.75s ease-out forwards; }
+  .gi-name { font-size: clamp(26px, 5.2vmin, 44px); letter-spacing: .14em; margin-left: .14em; line-height: 1.1; opacity: 0; animation: gi-spread 1s 1.85s cubic-bezier(.2,.8,.2,1) forwards; }
+  .gi-rule { width: min(58vmin, 400px); height: 14px; display: block; margin-top: 4px; }
+  .gi-rule path { fill: none; stroke: #C69F70; stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 1; animation: gi-draw .7s 2.15s ease-out forwards; }
+  .gi-rule .gi-dia { fill: #E2B885; stroke: none; opacity: 0; transform-box: fill-box; transform-origin: center; animation: gi-star .5s 2.1s cubic-bezier(.3,1.8,.5,1) forwards; }
+  .gi-skip { position: absolute; right: 22px; bottom: 22px; background: transparent; color: #A9A49B; border: 1px solid #3A352D; border-radius: 999px;
+    padding: 10px 18px; font: inherit; font-size: .9rem; cursor: pointer; }
+  .gi-skip:hover, .gi-skip:focus-visible { color: #ECE8E1; border-color: #C69F70; outline: none; }
+  @keyframes gi-draw { to { stroke-dashoffset: 0; } }
+  @keyframes gi-fleur { from { opacity: 0; transform: translateY(-14px) scale(.6); } to { opacity: 1; transform: none; } }
+  @keyframes gi-star { 0% { opacity: 0; transform: scale(0) rotate(-90deg); } 70% { opacity: 1; transform: scale(1.5) rotate(0); } 100% { opacity: 1; transform: scale(1); } }
+  @keyframes gi-paint { to { clip-path: inset(0 0 0 0); } }
+  @keyframes gi-settle { to { opacity: 0; } }
+  @keyframes gi-shine { 0% { opacity: 1; background-position: 130% 0; } 100% { opacity: 1; background-position: -30% 0; } }
+  @keyframes gi-rise { from { opacity: 0; transform: translateY(6px); } to { opacity: .85; transform: none; } }
+  @keyframes gi-spread { from { opacity: 0; letter-spacing: .5em; } to { opacity: 1; letter-spacing: .14em; } }
 </style>
 <link rel="stylesheet" href="assets/account.css">
+  <link rel="preload" as="image" href="assets/crest-intro.webp">
+  <script>
+    /* The crest opening plays once per visit, never for reduced motion. */
+    try { if (!sessionStorage.getItem("gs-intro-seen") && !matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("gs-intro"); } catch (e) {}
+  </script>
 </head>
 <body>
+<div id="gs-intro" aria-hidden="true">
+  <div class="gi-mark" id="gi-mark">
+    <div class="gi-crest" id="gi-crest">
+      <img src="assets/crest-intro.webp" alt="">
+      <div class="gi-shine"></div>
+      <svg viewBox="0 0 414 420">
+        <path class="gi-ink gi-arch" pathLength="1" d="M68 378 L68 185 A138 138 0 0 1 196 47.4"/>
+        <path class="gi-ink gi-arch" pathLength="1" d="M344 378 L344 185 A138 138 0 0 0 216 47.4"/>
+        <path class="gi-ink gi-base" pathLength="1" d="M68 380 C60 380 40 381 22 382"/>
+        <path class="gi-ink gi-base" pathLength="1" d="M344 380 C352 380 372 381 392 382"/>
+        <path class="gi-ink gi-pillar" pathLength="1" d="M45 380 L45 212"/>
+        <path class="gi-ink gi-pillar" pathLength="1" d="M366 380 L366 212"/>
+        <path class="gi-star" d="M45 300 L48 311 L59 314 L48 317 L45 328 L42 317 L31 314 L42 311 Z"/>
+        <path class="gi-star" d="M366 300 L369 311 L380 314 L369 317 L366 328 L363 317 L352 314 L363 311 Z"/>
+        <path class="gi-fleur" d="M206 12 C214 22 214 32 208 40 C216 34 224 34 226 40 C228 47 220 50 214 47 L211 52 L216 56 L196 56 L201 52 L198 47 C192 50 184 47 186 40 C188 34 196 34 204 40 C198 32 198 22 206 12 Z"/>
+      </svg>
+    </div>
+    <div class="gi-word"><div class="gi-the">THE</div><div class="gi-name">GREY SWAN</div></div>
+    <svg class="gi-rule" viewBox="0 0 420 14"><path pathLength="1" d="M200 7 L60 7"/><path pathLength="1" d="M220 7 L360 7"/><path class="gi-dia" d="M210 1 L214 7 L210 13 L206 7 Z"/></svg>
+  </div>
+  <button type="button" class="gi-skip" id="gi-skip" tabindex="-1">Skip</button>
+</div>
 
 <aside class="rail rail-left" aria-hidden="true">
   <div class="rail-line"></div><div class="progress" id="progress"></div>
@@ -485,5 +551,39 @@
 </script>
 <script src="assets/account.js"></script>
 <script src="assets/feedback.js"></script>
+<script>
+/* Crest opening: draws, then flies into the header logo. Click, Skip or Escape ends it early. */
+(function () {
+  var root = document.documentElement, intro = document.getElementById("gs-intro");
+  if (!intro) return;
+  if (!root.classList.contains("gs-intro")) { intro.remove(); return; }
+  try { sessionStorage.setItem("gs-intro-seen", "1"); } catch (e) {}
+  var mark = document.getElementById("gi-mark"), crest = document.getElementById("gi-crest");
+  var logo = document.querySelector("header .brand img"), ended = false;
+  function finish() { root.classList.remove("gs-intro"); intro.remove(); document.removeEventListener("keydown", onKey); }
+  function end(fast) {
+    if (ended) return; ended = true;
+    intro.classList.add("leaving");
+    intro.querySelectorAll(".gi-word, .gi-rule, .gi-skip").forEach(function (el) { el.style.transition = "opacity .35s"; el.style.opacity = "0"; });
+    if (!fast && logo && mark.animate) {
+      var a = crest.getBoundingClientRect(), b = logo.getBoundingClientRect(), m = mark.getBoundingClientRect();
+      mark.style.transformOrigin = (a.left + a.width / 2 - m.left) + "px " + (a.top + a.height / 2 - m.top) + "px";
+      var fly = mark.animate([
+        { transform: "none", opacity: 1 },
+        { transform: "translate(" + (b.left + b.width / 2 - a.left - a.width / 2) + "px," + (b.top + b.height / 2 - a.top - a.height / 2) + "px) scale(" + (b.width / a.width) + ")", opacity: .2 }
+      ], { duration: 850, easing: "cubic-bezier(.65,0,.25,1)", fill: "forwards" });
+      fly.onfinish = finish;
+    } else {
+      mark.style.transition = "opacity .4s"; mark.style.opacity = "0";
+      setTimeout(finish, 420);
+    }
+  }
+  function onKey(e) { if (e.key === "Escape") end(true); }
+  document.addEventListener("keydown", onKey);
+  intro.addEventListener("click", function () { end(true); });
+  setTimeout(function () { end(false); }, 3000);
+  setTimeout(finish, 6000);   /* safety net: never leave the page covered */
+})();
+</script>
 </body>
 </html>
