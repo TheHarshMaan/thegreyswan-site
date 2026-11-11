@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio: write your paper the way journals expect | The Grey Swan Editorial</title>
+<meta name="description" content="Studio, a free writing space for researchers: your paper set up the way journals expect, statements drafted, references numbered for you, gentle screening-desk notes as you write, and Word export. It all stays on your computer.">
+<link rel="icon" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="studio.css">
+<link rel="stylesheet" href="/assets/account.css">
+<link rel="stylesheet" href="/assets/workspace.css">
+</head>
+<body data-view="home">
+
+<header class="studio-head">
+  <div class="studio-head-row">
+    <a class="studio-brand" href="/"><img src="grey_swan_emblem.png" alt="" width="40" height="41"><span>The Grey Swan</span></a>
+    <nav class="studio-nav" aria-label="Main"><a href="../checker/" aria-current="true">For authors</a><a href="../reviewers/">For editors</a><a href="/cygnus/">Cygnus Program</a></nav>
+    <div id="gs-account" class="masthead-account"></div>
+  </div>
+  <nav class="workspace-tabs studio-tabs" aria-label="Author workspace"><a href="../studio/" aria-current="page">Studio</a><a href="../checker/">Check your manuscript</a><a href="../references/">Check references</a></nav>
+</header>
+
+<!-- ============ Home: your papers ============ -->
+<main id="home" class="studio-home" hidden>
+  <h1 class="home-h1"><span id="greet">Hello.</span></h1>
+  <p class="home-lead">Write your paper here, the way journals expect it. Studio sets up the sections, drafts the statements, numbers your references and quietly points out what a screening desk would ask about. Everything stays on this computer.</p>
+  <div class="home-actions">
+    <button type="button" class="btn btn-gold" id="new-paper">Start a new paper</button>
+    <label class="btn file-btn">Open a Word file<input type="file" id="import-home" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"></label>
+    <span id="home-status" class="status" role="status"></span>
+  </div>
+  <h2 class="home-h2">Your papers</h2>
+  <ul id="papers" class="papers"></ul>
+  <div id="home-empty" class="home-empty">
+    <p>No papers yet. <button type="button" class="link-btn" id="new-paper-2">Start your first one</button>; it takes about a minute to set up.</p>
+  </div>
+  <p class="privacy-note">Your papers are kept in this browser on this computer, not on our servers, and nobody else can see them. Sign in with Google and they are also kept in your own Google Drive, so they follow you to other devices and survive clearing the browser. Reference searches go to Crossref, which sees only what you search for.</p>
+</main>
+
+<!-- ============ Setup: a few questions ============ -->
+<main id="setup" class="studio-setup" hidden>
+  <div class="setup-track" aria-hidden="true"><div id="setup-progress"></div></div>
+  <div id="setup-box" class="setup-box" aria-live="polite"></div>
+</main>
+
+<!-- ============ Editor ============ -->
+<div id="editor" hidden>
+  <div class="ed-bar">
+    <div class="ed-doc">
+      <button type="button" class="link-btn back" id="to-home">← Your papers</button>
+      <span class="ed-title" id="doc-title">Untitled paper</span>
+      <span class="ed-saved" id="saved" role="status"></span>
+    </div>
+    <div class="ed-tools" role="toolbar" aria-label="Formatting">
+      <label class="sr-only" for="block">Paragraph style</label>
+      <select id="block" class="tool-select"><option value="">Style</option><option value="h2">Section heading</option><option value="h3">Subheading</option><option value="p">Normal text</option></select>
+      <button type="button" class="tool" data-cmd="bold" aria-label="Bold" title="Bold (Ctrl+B)"><b>B</b></button>
+      <button type="button" class="tool" data-cmd="italic" aria-label="Italic" title="Italic (Ctrl+I)"><i>I</i></button>
+      <button type="button" class="tool" data-cmd="underline" aria-label="Underline" title="Underline (Ctrl+U)"><u>U</u></button>
+      <button type="button" class="tool" data-cmd="superscript" aria-label="Superscript" title="Superscript">x²</button>
+      <button type="button" class="tool" data-cmd="subscript" aria-label="Subscript" title="Subscript">x₂</button>
+      <button type="button" class="tool" data-cmd="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list">•≡</button>
+      <button type="button" class="tool" data-cmd="insertOrderedList" aria-label="Numbered list" title="Numbered list">1≡</button>
+      <span class="tool-sep" aria-hidden="true"></span>
+      <button type="button" class="tool tool-word" id="add-cite">+ Cite</button>
+      <button type="button" class="tool tool-word" id="add-table">+ Table</button>
+      <button type="button" class="tool tool-word" id="add-figure">+ Figure</button>
+      <span class="tool-sep" aria-hidden="true"></span>
+      <button type="button" class="tool tool-word" id="focus">Focus</button>
+    </div>
+    <div class="ed-out">
+      <label class="btn file-btn">Open Word<input type="file" id="import-editor" accept=".docx"></label>
+      <button type="button" class="btn" id="full-check" title="Run every screening check on this paper">Full check</button>
+      <button type="button" class="btn btn-gold" id="export">Export Word</button>
+    </div>
+    <div class="ed-status" id="word-status" role="status"></div>
+  </div>
+
+  <div class="ed-body">
+    <nav class="ed-outline" aria-label="Outline">
+      <p class="side-h">Outline</p>
+      <ul id="outline" class="outline"></ul>
+      <p class="side-foot"><span id="words">0 words</span><br><span id="doc-kind">Manuscript</span></p>
+      <p class="field-badge" id="field-badge" hidden></p>
+    </nav>
+
+    <main class="ed-main">
+      <article id="page" class="sheet" contenteditable="true" spellcheck="true" aria-label="Your manuscript"></article>
+    </main>
+
+    <aside class="ed-panel" aria-label="Studio panel">
+      <div class="ptabs" role="tablist">
+        <button type="button" class="ptab" role="tab" data-tab="notes" aria-selected="true">Desk notes <span class="count" id="notes-count"></span></button>
+        <button type="button" class="ptab" role="tab" data-tab="refs" aria-selected="false">References <span class="count" id="ref-count"></span></button>
+        <button type="button" class="ptab" role="tab" data-tab="data" aria-selected="false">Data</button>
+        <button type="button" class="ptab" role="tab" data-tab="submit" aria-selected="false">Submit</button>
+      </div>
+      <section class="pview" id="pv-notes">
+        <p class="panel-lead">What a journal’s screening desk would ask about, as you write. Click one to find the spot.</p>
+        <ul id="notes" class="notes"></ul>
+        <p class="good" id="good"></p>
+      </section>
+      <section class="pview" id="pv-refs" hidden>
+        <form id="ref-form" class="ref-form">
+          <label for="ref-q" class="panel-lead">Click in your text where the citation goes, then add a reference by DOI or title.</label>
+          <input id="ref-q" class="input" autocomplete="off" placeholder="10.1136/archdischild-2020-320217 or a title">
+          <div class="ref-buttons"><button type="submit" class="btn btn-small btn-gold">Find</button><button type="button" class="link-btn" id="ref-manual">Add it as typed</button></div>
+          <span id="ref-status" class="status" role="status"></span>
+        </form>
+        <ul id="ref-results" class="refs"></ul>
+        <ul id="ref-lib" class="refs"></ul>
+        <label class="panel-lead style-pick">Reference style
+          <select id="cite-style" class="tool-select"><option value="vancouver">Vancouver (numbered)</option><option value="apa">APA 7 (author–year)</option><option value="harvard">Harvard (author–year)</option></select></label>
+        <p class="panel-foot">Use the style your target journal asks for; you can change it any time. Crossref sees only what you search for.</p>
+      </section>
+      <section class="pview" id="pv-data" hidden>
+        <details class="tool-box" id="box-table" open>
+          <summary>Make a table from your data</summary>
+          <p class="panel-lead">Choose your spreadsheet (Excel or CSV). Studio builds Table 1 with the right summary and test for each row. The file is read here and isn’t saved or uploaded.</p>
+          <label class="btn btn-small file-btn">Choose a spreadsheet<input type="file" id="data-file" accept=".csv,.tsv,.txt,.xlsx,.xlsm"></label>
+          <span id="data-status" class="status" role="status"></span>
+          <div id="data-setup"></div>
+        </details>
+        <details class="tool-box" id="box-test">
+          <summary>Which test?</summary>
+          <div id="which-test"></div>
+        </details>
+        <details class="tool-box" id="box-share">
+          <summary>Share your data</summary>
+          <div id="share"></div>
+        </details>
+        <details class="tool-box" id="box-figure">
+          <summary>Check a figure</summary>
+          <p class="panel-lead">Choose an image (PNG or JPEG). Studio checks its resolution, its colours and whether parts of it look repeated. Nothing is uploaded.</p>
+          <label class="btn btn-small file-btn">Choose an image<input type="file" id="fig-file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"></label>
+          <label class="check-row"><input type="checkbox" id="fig-blot"> It’s a gel or blot</label>
+          <div id="fig-out"></div>
+        </details>
+      </section>
+      <section class="pview" id="pv-submit" hidden>
+        <details class="tool-box" id="box-missed" open>
+          <summary>Papers you may have missed</summary>
+          <p class="panel-lead">Studio finds papers on the same subject, then shows what they cite that you don’t. Your title, keywords and the start of your abstract are sent to OpenAlex to search.</p>
+          <button type="button" class="btn btn-small" id="find-missed">Look for them</button>
+          <span id="missed-status" class="status" role="status"></span>
+          <ul id="missed" class="refs"></ul>
+        </details>
+        <details class="tool-box" id="box-journals">
+          <summary>Find a journal</summary>
+          <p class="panel-lead">Journals that publish work like yours, from OpenAlex, with open access, fees and DOAJ listing. Always check a journal yourself before you submit.</p>
+          <button type="button" class="btn btn-small" id="find-journals">Find journals</button>
+          <span id="journals-status" class="status" role="status"></span>
+          <ul id="journals" class="refs"></ul>
+        </details>
+        <details class="tool-box" id="box-letter">
+          <summary>Cover letter</summary>
+          <div id="letter"></div>
+        </details>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="/assets/account.js"></script>
+<script src="stats.js"></script>
+<script src="studio-numbers.js"></script>
+<script src="studio-notes.js"></script>
+<script src="studio-data.js"></script>
+<script src="studio.js"></script>
+<script src="studio-tools.js"></script>
+<script src="/assets/feedback.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 /* The Grey Swan: accounts and sync
    =====================================================================
    Sign in with Google, and everything saved by the tools (reviewer tracker, checker settings and history,
-   reference checks, your profile) is kept in a private app folder in YOUR OWN Google Drive, so it follows you
+   reference checks, Studio papers, your profile) is kept in a private app folder in YOUR OWN Google Drive, so it follows you
    to any device. The Grey Swan has no server and never sees the data.
 
    How it works
@@ -36,6 +36,7 @@
     tracker:    { key: "greyswan-reviewer-tracker-v1",  file: "tracker.json",    label: "Reviewer tracker" },
     checker:    { key: "gs-checker",                    file: "checker.json",    label: "Manuscript checker" },
     references: { key: "gs-references",                 file: "references.json", label: "Reference checks" },
+    studio:     { key: "gs-studio",                     file: "studio.json",     label: "Studio papers" },
   };
   const PAUSED_NOTE = "Google sign-ins last an hour. Your work is still saved on this device; click anywhere to resume syncing.";
   const RENEW_EARLY = 10 * 60 * 1000;    // renew the Google pass on a click when less than this is left

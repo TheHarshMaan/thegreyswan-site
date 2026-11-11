@@ -40,7 +40,7 @@
   }
 
   const PAGES = { "/checker/": "Check your manuscript", "/references/": "Reference check", "/researchers/": "Check a person",
-                  "/reviewers/": "Find reviewers", "/tracker/": "Invitations", "/cygnus/": "Cygnus Program", "/account/": "Account", "/privacy/": "Privacy page", "/": "Home page" };
+                  "/reviewers/": "Find reviewers", "/tracker/": "Invitations", "/cygnus/": "Cygnus Program", "/studio/": "Studio", "/account/": "Account", "/privacy/": "Privacy page", "/": "Home page" };
   function pageName() {
     const p = location.pathname.replace(/index\.html$/, "");
     const key = Object.keys(PAGES).find((k) => k !== "/" && p.endsWith(k)) || "/";

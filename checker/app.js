@@ -568,3 +568,25 @@ function checkReferences() {
   refChecker.run([file], "", file.name);
 }
 if ($("verify-refs")) $("verify-refs").addEventListener("change", () => { if (lastRun) checkReferences(); else $("refs-section").hidden = true; });
+
+
+// ---------------------------------------------------------------------------
+// A paper sent from Studio ("Full check"): check it straight away
+// ---------------------------------------------------------------------------
+(function fromStudio() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("from") !== "studio" || !window.indexedDB) return;
+  const req = indexedDB.open("gs-handoff", 1);
+  req.onupgradeneeded = () => req.result.createObjectStore("files");
+  req.onsuccess = () => {
+    const tx = req.result.transaction("files", "readwrite"), st = tx.objectStore("files"), get = st.get("studio");
+    get.onsuccess = () => {
+      const rec = get.result;
+      st.delete("studio");
+      if (!rec || Date.now() - (rec.at || 0) > 10 * 60 * 1000) return;
+      addFiles([new File([rec.data], rec.name, { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" })]);
+      params.delete("from");
+      history.replaceState(null, "", location.pathname + (params.toString() ? "?" + params : ""));
+    };
+  };
+})();

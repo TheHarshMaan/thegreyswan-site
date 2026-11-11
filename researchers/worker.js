@@ -144,6 +144,25 @@ os.makedirs("/tmp/uploads")
       postMessage({ id, ok: true, result: { report, word } }, [report, word]);
       return;
     }
+    if (fn === "studio_export") {
+      const path = call(fn, ...args);
+      const word = py.FS.readFile(path).buffer;
+      postMessage({ id, ok: true, result: { word } }, [word]);
+      return;
+    }
+    if (fn === "studio_sheet") {
+      // args: [{name, data: ArrayBuffer}, sheetName]
+      const ext = (args[0].name.match(/\.[a-z0-9]+$/i) || [".xlsx"])[0].toLowerCase();
+      py.FS.writeFile("/tmp/studio_sheet" + ext, new Uint8Array(args[0].data));
+      postMessage({ id, ok: true, result: call(fn, "/tmp/studio_sheet" + ext, args[1] || "") });
+      return;
+    }
+    if (fn === "studio_import") {
+      // args: [{name, data: ArrayBuffer}]
+      py.FS.writeFile("/tmp/studio_import.docx", new Uint8Array(args[0].data));
+      postMessage({ id, ok: true, result: call(fn, "/tmp/studio_import.docx") });
+      return;
+    }
     result = call(fn, ...args);
     postMessage({ id, ok: true, result });
   } catch (err) {
