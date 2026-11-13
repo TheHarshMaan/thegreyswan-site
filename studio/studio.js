@@ -279,6 +279,7 @@
     paper = p;
     paper.refs = paper.refs || [];
     page().innerHTML = sanitize(paper.html);
+    if (promoteHeadings(page())) { paper.html = page().innerHTML; store.put(paper); }
     ensureRefs();
     $("#doc-title").textContent = paper.meta.title || "Untitled paper";
     $("#doc-kind").textContent = paper.meta.kindLabel || "Manuscript";
@@ -289,6 +290,29 @@
     refresh();
     setSaved();
     if (message) toast(message);
+  }
+  // Word files made from PDFs often have "Abstract", "Methods" and so on as plain paragraphs.
+  // When a paper has no headings at all, turn lines that are exactly a section name into headings.
+  const SECTION_NAMES = new Set(["abstract", "summary", "background", "introduction", "methods", "method", "materials and methods", "material and methods",
+    "methodology", "patients and methods", "subjects and methods", "study design", "results", "findings", "discussion", "results and discussion",
+    "conclusion", "conclusions", "limitations", "strengths and limitations", "acknowledgements", "acknowledgments", "acknowledgement", "acknowledgment",
+    "funding", "financial support", "conflict of interest", "conflicts of interest", "competing interests", "declaration of competing interest",
+    "disclosures", "author contributions", "authors' contributions", "data availability", "data availability statement", "ethics statement",
+    "ethical approval", "ethics approval", "ethics approval and consent to participate", "supplementary material", "supplementary materials",
+    "abbreviations", "case report", "case presentation"]);
+  function promoteHeadings(pg) {
+    if (pg.querySelector("h2:not(.refs-h)")) return false;
+    let n = 0;
+    for (const el of [...pg.children]) {
+      if (el.tagName !== "P" || el.classList.length) continue;
+      const t = el.textContent.trim().replace(/^(\d+(\.\d+)*\.?|[IVX]+\.)\s+/, "").replace(/[:.]$/, "").replace(/\s+/g, " ").toLowerCase();
+      if (t.length > 45 || !SECTION_NAMES.has(t.replace(/’/g, "'"))) continue;
+      const h = document.createElement("h2");
+      h.innerHTML = el.innerHTML.trim().replace(/:\s*(<\/[a-z]+>)*$/i, "$1");
+      el.replaceWith(h);
+      n++;
+    }
+    return n > 0;
   }
   function fieldLabel(f) { return { clinical: "Field pack: clinical medicine", micro: "Field pack: microbiology", public: "Field pack: public health", bioinfo: "Field pack: bioinformatics", qual: "Field pack: qualitative" }[f] || ""; }
 
@@ -456,8 +480,15 @@
       items.push({ el: sec.head, label: sec.title, meta: n ? String(n) : "", state: !n ? "s-empty" : hasBlank ? "s-part" : "s-done", sub: false });
       for (const e of sec.els) if (e.tagName === "H3") items.push({ el: e, label: e.textContent.trim(), meta: "", state: "", sub: true });
     }
+    total = 0;
+    for (const el of pg.children) {
+      if (el.matches("h1, .kicker, .refs-h, .refs-out")) continue;
+      total += GSNotes.words(el.textContent);
+    }
     const box = $("#outline");
     box.innerHTML = items.map((it, i) => `<li><button type="button" class="oi${it.sub ? " sub" : ""}" data-i="${i}"><span class="dot ${it.state}" aria-hidden="true"></span><span class="ol-label">${esc(it.label)}</span><span class="ol-meta">${esc(it.meta)}</span></button></li>`).join("");
+    if (!items.some((it) => !it.el.classList.contains("refs-h")))
+      box.insertAdjacentHTML("afterbegin", `<li class="ol-hint">No section headings yet. Put the cursor on a line like “Methods” and choose “Section heading” from Style.</li>`);
     $$(".oi", box).forEach((b) => b.onclick = () => jump(items[+b.dataset.i].el));
     $("#words").textContent = `${total.toLocaleString()} words`;
     // notes
@@ -468,15 +499,84 @@
     nbox.innerHTML = notes.length ? notes.map((n, i) => `<li><div class="note ${n.level}"><button type="button" class="note-go" data-n="${i}"><span class="note-icon" aria-hidden="true">${n.level === "bad" ? "✕" : "◆"}</span><span><b>${esc(n.title)}</b><br>${esc(n.body)}</span></button>${n.fix ? `<button type="button" class="note-fix" data-fix="${i}">Fix</button>` : ""}</div></li>`).join("")
       : `<li class="calm">Nothing for the desk to ask about right now.</li>`;
     $("#good").textContent = good.length ? "Looks good: " + good.join(" · ") : "";
-    $$(".note-go", nbox).forEach((b) => b.onclick = () => jump(notes[+b.dataset.n].target, notes[+b.dataset.n].word));
+    $$(".note-go", nbox).forEach((b) => b.onclick = () => jump(notes[+b.dataset.n].target, notes[+b.dataset.n]));
     $$(".note-fix", nbox).forEach((b) => b.onclick = () => applyFix(notes[+b.dataset.fix]));
   }
-  function jump(el, word) {
+  // Go to what a note is about. With a position, light up just that sentence and the exact words;
+  // otherwise (a heading, a table cell, a caption) flash the whole element.
+  const NOT_END = /\b(?:al|Fig|Figs|e\.g|i\.e|vs|approx|Dr|Prof|No|Eq|Ref|Refs|cf|ca|St|Mr|Mrs|Ms|Jr|Sr|[A-Z])$/;
+  let hlTimer = 0;
+  function blockText(block) {
+    const nodes = [], starts = [];
+    let text = "";
+    const w = document.createTreeWalker(block, NodeFilter.SHOW_TEXT);
+    while (w.nextNode()) { starts.push(text.length); nodes.push(w.currentNode); text += w.currentNode.nodeValue; }
+    const at = (pos) => {
+      for (let i = nodes.length - 1; i >= 0; i--) if (pos >= starts[i]) return [nodes[i], Math.min(pos - starts[i], nodes[i].nodeValue.length)];
+      return [nodes[0], 0];
+    };
+    return { nodes, starts, text, at };
+  }
+  function sentenceBounds(text, from, to) {
+    const END = /[.!?;]["”’')\]]*\s+/g;
+    let start = 0, end = text.length, m;
+    while ((m = END.exec(text))) {
+      const before = text.slice(0, m.index);
+      const next = text[m.index + m[0].length] || "A";
+      if (NOT_END.test(before) || !/[A-Z0-9(“"\[]/.test(next)) continue;
+      const cut = m.index + m[0].length;
+      if (cut <= from) start = cut;
+      else if (m.index >= to - 1) { end = m.index + 1; break; }
+    }
+    return [start, end];
+  }
+  function rangeFor(block, a, b) {
+    const r = document.createRange();
+    const [n1, o1] = block.at(a), [n2, o2] = block.at(b);
+    r.setStart(n1, o1); r.setEnd(n2, o2);
+    return r;
+  }
+  function locate(el, note) {
+    if (note && note.node && note.node.isConnected && note.len) {
+      const blockEl = note.node.parentElement.closest("p, li, td, th, h1, h2, h3, .caption") || el;
+      const block = blockText(blockEl);
+      const i = block.nodes.indexOf(note.node);
+      if (i >= 0) { const from = block.starts[i] + note.at; return { block, from, to: from + note.len }; }
+    }
+    if (note && note.word && el) {
+      const block = blockText(el);
+      const re = new RegExp("\\b" + note.word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b");
+      const m = re.exec(block.text);
+      if (m) return { block, from: m.index, to: m.index + m[0].length };
+    }
+    return null;
+  }
+  function clearHighlights() { if (window.CSS && CSS.highlights) { CSS.highlights.delete("gs-sentence"); CSS.highlights.delete("gs-word"); } }
+  function jump(el, note) {
     if (!el || el === page()) return;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
-    el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
-    setTimeout(() => el.classList.remove("flash"), 1800);
-    if (el.classList.contains("blank")) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    if (typeof note === "string") note = { word: note };
+    const spot = el.classList.contains("blank") ? null : locate(el, note);
+    if (!spot) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+      setTimeout(() => el.classList.remove("flash"), 1800);
+      if (el.classList.contains("blank")) { const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+      return;
+    }
+    const word = rangeFor(spot.block, spot.from, spot.to);
+    const [a, b] = sentenceBounds(spot.block.text, spot.from, spot.to);
+    const sentence = rangeFor(spot.block, a, b);
+    const rect = word.getBoundingClientRect();
+    window.scrollTo({ top: window.scrollY + rect.top - window.innerHeight / 2, behavior: "smooth" });
+    clearTimeout(hlTimer);
+    if (window.CSS && CSS.highlights && window.Highlight) {
+      clearHighlights();
+      CSS.highlights.set("gs-sentence", new Highlight(sentence));
+      CSS.highlights.set("gs-word", new Highlight(word));
+      hlTimer = setTimeout(clearHighlights, 3500);
+    } else {
+      const s = getSelection(); s.removeAllRanges(); s.addRange(word);
+    }
   }
   function applyFix(note) {
     const el = note.target, f = note.fix;

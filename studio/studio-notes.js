@@ -11,6 +11,10 @@
     // names of reporting guidelines and registries, which journals use as names
     "CONSORT", "STROBE", "PRISMA", "CARE", "ARRIVE", "SRQR", "COREQ", "PROSPERO", "STARD", "TRIPOD", "SPIRIT", "CHEERS", "SQUIRE", "RECORD", "MOOSE", "CTRI", "CLSI", "EUCAST"]);
 
+  // Degrees and honours that follow authors' names ("Asha Verma, MD,"): not abbreviations to spell out there.
+  const DEGREES = new Set(["MD", "MS", "MA", "MPH", "MSC", "MBBS", "BDS", "MDS", "DM", "DNB", "MCH", "BS", "BA", "BSC", "MBA", "RN", "DO", "DDS",
+    "FRCP", "MRCP", "FRCS", "MRCS", "FACS", "FACP", "MSPH", "DRPH", "SCD", "MPHIL", "DPHIL", "MBCHB", "PHARMD", "MPT", "BPT", "MDS"]);
+
   // Common species: abbreviated form -> full name, so a note can offer the fix.
   const SPECIES = {
     "E. coli": "Escherichia coli", "S. aureus": "Staphylococcus aureus", "S. epidermidis": "Staphylococcus epidermidis",
@@ -82,7 +86,10 @@
     const textNodes = bodyTextNodes(page);
     const full = textNodes.map((n) => n.nodeValue).join("\n");
 
-    // 3. Abbreviations: used before (or without) being spelled out
+    // 3. Abbreviations: used before (or without) being spelled out.
+    // The front matter (author names, degrees, affiliations, state codes) is skipped when the paper has headings.
+    const firstHead = page.querySelector("h2");
+    const inFront = (node) => firstHead && !!(firstHead.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_PRECEDING);
     const seen = new Map();
     const ABBR = /\b([A-Z][A-Z0-9]{1,6})(s?)\b/g;
     for (const node of textNodes) {
@@ -91,6 +98,8 @@
       while ((m = ABBR.exec(node.nodeValue))) {
         const a = m[1];
         if (ABBR_OK.has(a) || /^\d/.test(a) || /^[A-Z]\d+$/.test(a)) continue;
+        if (inFront(node)) continue;
+        if (DEGREES.has(a) && /,\s*$/.test(node.nodeValue.slice(Math.max(0, m.index - 3), m.index))) continue;
         if (!seen.has(a)) seen.set(a, { node, index: m.index });
       }
     }
@@ -99,8 +108,8 @@
       const defined = def >= 0 || def2 >= 0;
       const firstPos = textNodes.indexOf(first.node);
       const defPos = defined ? positionOf(textNodes, def >= 0 ? def : def2) : -1;
-      if (!defined) notes.push({ id: "abbr-" + a, level: "warn", title: `${a} isn’t spelled out`, body: `Write it in full the first time, with ${a} in brackets after it.`, target: first.node.parentElement, word: a });
-      else if (defPos > firstPos) notes.push({ id: "abbr-" + a, level: "warn", title: `${a} is used before it’s spelled out`, body: "Move the full form to its first use.", target: first.node.parentElement, word: a });
+      if (!defined) notes.push({ id: "abbr-" + a, level: "warn", title: `${a} isn’t spelled out`, body: `Write it in full the first time, with ${a} in brackets after it.`, target: first.node.parentElement, word: a, node: first.node, at: first.index, len: a.length });
+      else if (defPos > firstPos) notes.push({ id: "abbr-" + a, level: "warn", title: `${a} is used before it’s spelled out`, body: "Move the full form to its first use.", target: first.node.parentElement, word: a, node: first.node, at: first.index, len: a.length });
     }
 
     // 4. Species names: abbreviated before the full name, or not in italics
@@ -110,7 +119,7 @@
       let g;
       while ((g = GENUS_RE.exec(node.nodeValue))) {
         fullSeen.add(g[1][0] + ". " + g[2]);
-        if (!italic(node)) notes.push({ id: "ital-" + g[0], level: "warn", title: `${g[0]} should be in italics`, body: "Species names are italic.", target: node.parentElement, fix: { kind: "italic", text: g[0] } });
+        if (!italic(node)) notes.push({ id: "ital-" + g[0], level: "warn", title: `${g[0]} should be in italics`, body: "Species names are italic.", target: node.parentElement, node, at: g.index, len: g[0].length, fix: { kind: "italic", text: g[0] } });
       }
       const ABBR_SP = /\b([A-Z])\.\s?([a-z]{3,})\b/g;
       let s;
@@ -120,7 +129,7 @@
         const fullName = SPECIES[key];
         notes.push({ id: "sp-" + key, level: "warn", title: `Write ${key} in full the first time`,
           body: fullName ? `${fullName}, in italics. After that, ${key} is fine.` : "The genus in full the first time, in italics.",
-          target: node.parentElement, fix: fullName ? { kind: "species", text: s[0], to: fullName } : null });
+          target: node.parentElement, node, at: s.index, len: s[0].length, fix: fullName ? { kind: "species", text: s[0], to: fullName } : null });
         fullSeen.add(key);
       }
     }
@@ -139,7 +148,7 @@
       while ((m = MENTION.exec(node.nodeValue))) {
         const kind = /^t/i.test(m[1]) ? "Table" : "Figure";
         const a = +m[2], b = m[3] ? +m[3] : a;
-        for (let k = a; k <= Math.min(b, a + 20); k++) mentions[kind].push({ n: k, node });
+        for (let k = a; k <= Math.min(b, a + 20); k++) mentions[kind].push({ n: k, node, at: m.index, len: m[0].length });
       }
     }
     for (const kind of ["Table", "Figure"]) {
@@ -147,13 +156,13 @@
       for (const [n, el] of caps[kind]) if (!mentioned.has(n)) notes.push({ id: `uncited-${kind}${n}`, level: "warn", title: `${kind} ${n} isn’t mentioned in the text`, body: "Journals ask for every table and figure to be cited, in order.", target: el });
       for (const n of mentioned) if (!caps[kind].has(n)) {
         const where = mentions[kind].find((x) => x.n === n);
-        notes.push({ id: `missing-${kind}${n}`, level: "warn", title: `${kind} ${n} is mentioned, but there’s no ${kind} ${n}`, body: `Add it with + ${kind === "Table" ? "Table" : "Figure"}, or check the number.`, target: where.node.parentElement });
+        notes.push({ id: `missing-${kind}${n}`, level: "warn", title: `${kind} ${n} is mentioned, but there’s no ${kind} ${n}`, body: `Add it with + ${kind === "Table" ? "Table" : "Figure"}, or check the number.`, target: where.node.parentElement, node: where.node, at: where.at, len: where.len });
       }
       const order = [];
       for (const x of mentions[kind]) if (!order.includes(x.n)) order.push(x.n);
       for (let i = 1; i < order.length; i++) if (order[i] < order[i - 1]) {
         const where = mentions[kind].find((x) => x.n === order[i - 1]);
-        notes.push({ id: `order-${kind}`, level: "warn", title: `${kind}s are first cited out of order`, body: `${kind} ${order[i - 1]} is mentioned before ${kind} ${order[i]}. Number them in the order they first appear.`, target: where.node.parentElement });
+        notes.push({ id: `order-${kind}`, level: "warn", title: `${kind}s are first cited out of order`, body: `${kind} ${order[i - 1]} is mentioned before ${kind} ${order[i]}. Number them in the order they first appear.`, target: where.node.parentElement, node: where.node, at: where.at, len: where.len });
         break;
       }
       if (caps[kind].size && [...caps[kind].keys()].every((n) => mentioned.has(n))) good.push(`${kind.toLowerCase()}s all cited`);
@@ -163,8 +172,11 @@
     if (global.GSNumbers) {
       const N = global.GSNumbers;
       for (const r of N.checkReportedTests(full)) {
-        const node = textNodes[positionOf(textNodes, r.at)];
-        notes.push({ id: "p-" + r.at, level: r.crosses ? "bad" : "warn", title: r.title, body: r.body, target: node ? node.parentElement : page });
+        const i = positionOf(textNodes, r.at), node = textNodes[i];
+        const off = node ? r.at - textNodes.slice(0, i).reduce((t, n) => t + n.nodeValue.length + 1, 0) : 0;
+        const fits = node && off >= 0 && off + r.text.length <= node.nodeValue.length;
+        notes.push({ id: "p-" + r.at, level: r.crosses ? "bad" : "warn", title: r.title, body: r.body, target: node ? node.parentElement : page,
+          node: fits ? node : null, at: off, len: r.text.length });
       }
       const tables = [];
       for (const t of page.querySelectorAll("table")) {
