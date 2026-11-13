@@ -95,8 +95,9 @@
 
     <aside class="ed-panel" aria-label="Studio panel">
       <div class="ptabs" role="tablist">
-        <button type="button" class="ptab" role="tab" data-tab="notes" aria-selected="true">Desk notes <span class="count" id="notes-count"></span></button>
-        <button type="button" class="ptab" role="tab" data-tab="refs" aria-selected="false">References <span class="count" id="ref-count"></span></button>
+        <button type="button" class="ptab" role="tab" data-tab="notes" aria-selected="true">Notes <span class="count" id="notes-count"></span></button>
+        <button type="button" class="ptab" role="tab" data-tab="abbr" aria-selected="false" title="Abbreviations"><span class="tl-long">Abbreviations</span><span class="tl-short">Abbr.</span> <span class="count" id="abbr-count"></span></button>
+        <button type="button" class="ptab" role="tab" data-tab="refs" aria-selected="false" title="References">Refs <span class="count" id="ref-count"></span></button>
         <button type="button" class="ptab" role="tab" data-tab="data" aria-selected="false">Data</button>
         <button type="button" class="ptab" role="tab" data-tab="submit" aria-selected="false">Submit</button>
       </div>
@@ -104,6 +105,16 @@
         <p class="panel-lead">What a journal’s screening desk would ask about, as you write. Click one to find the spot.</p>
         <ul id="notes" class="notes"></ul>
         <p class="good" id="good"></p>
+      </section>
+      <section class="pview" id="pv-abbr" hidden>
+        <p class="panel-lead">Every abbreviation in your paper, in the order it first appears. Click one to go to it; click again for the next place it’s used.</p>
+        <div class="ab-keys" id="ab-keys"></div>
+        <label class="ab-mark"><input type="checkbox" id="ab-mark"> Mark the problem ones in the text</label>
+        <ol id="ab-list" class="ab-list"></ol>
+        <div class="ab-foot">
+          <button type="button" class="btn btn-small" id="ab-copy">Copy as an abbreviations list</button>
+          <p class="panel-foot">The list is alphabetical, for journals that ask for an abbreviations section. Author lines, affiliations, funding and references are left out. Gene symbols with numbers (NEK6) and grant codes aren’t counted. Click ✕ on anything that isn’t a real abbreviation.</p>
+        </div>
       </section>
       <section class="pview" id="pv-refs" hidden>
         <form id="ref-form" class="ref-form">

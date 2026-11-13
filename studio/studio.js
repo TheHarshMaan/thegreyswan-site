@@ -493,15 +493,87 @@
     $("#words").textContent = `${total.toLocaleString()} words`;
     // notes
     const meta = Object.assign({}, paper.meta, { refs: paper.refs.map((r) => Object.assign({}, r, { cited: !!r.n, short: r.text })) });
-    const { notes, good } = GSNotes.analyse(pg, meta);
+    const ignored = new Set(paper.meta.ignored || []);
+    meta.ignored = [...ignored];
+    const all = GSNotes.analyse(pg, meta), good = all.good;
+    renderAbbr(all.abbr);
+    const notes = all.notes.filter((n) => !ignored.has(n.id));
+    const hidden = all.notes.length - notes.length;
     const nbox = $("#notes");
     $("#notes-count").textContent = notes.length ? String(notes.length) : "";
-    nbox.innerHTML = notes.length ? notes.map((n, i) => `<li><div class="note ${n.level}"><button type="button" class="note-go" data-n="${i}"><span class="note-icon" aria-hidden="true">${n.level === "bad" ? "✕" : "◆"}</span><span><b>${esc(n.title)}</b><br>${esc(n.body)}</span></button>${n.fix ? `<button type="button" class="note-fix" data-fix="${i}">Fix</button>` : ""}</div></li>`).join("")
+    nbox.innerHTML = notes.length ? notes.map((n, i) => `<li><div class="note ${n.level}"><button type="button" class="note-go" data-n="${i}"><span class="note-icon" aria-hidden="true">${n.level === "bad" ? "✕" : "◆"}</span><span><b>${esc(n.title)}</b><br>${esc(n.body)}</span></button>${n.fix ? `<button type="button" class="note-fix" data-fix="${i}">Fix</button>` : ""}<button type="button" class="note-ignore" data-ign="${i}" title="Not a problem here: hide this note for this paper" aria-label="Ignore: ${esc(n.title)}">✕</button></div></li>`).join("")
       : `<li class="calm">Nothing for the desk to ask about right now.</li>`;
     $("#good").textContent = good.length ? "Looks good: " + good.join(" · ") : "";
-    $$(".note-go", nbox).forEach((b) => b.onclick = () => jump(notes[+b.dataset.n].target, notes[+b.dataset.n]));
+    nbox.insertAdjacentHTML("beforeend", hidden ? `<li class="ignored-row">${hidden} note${hidden > 1 ? "s" : ""} hidden · <button type="button" class="link-btn" id="unignore">show again</button></li>` : "");
+    $$(".note-ignore", nbox).forEach((b) => b.onclick = () => {
+      paper.meta.ignored = [...new Set([...(paper.meta.ignored || []), notes[+b.dataset.ign].id])];
+      scheduleSave(); refresh();
+    });
+    const un = $("#unignore"); if (un) un.onclick = () => { paper.meta.ignored = []; scheduleSave(); refresh(); };
+    $$(".note-go", nbox).forEach((b) => b.onclick = () => { const n = notes[+b.dataset.n]; if (n.tab) openTab(n.tab); jump(n.target, n); });
     $$(".note-fix", nbox).forEach((b) => b.onclick = () => applyFix(notes[+b.dataset.fix]));
   }
+  // -------------------------------------------------------------------------
+  // Abbreviations tab: every abbreviation in order, colour-coded, with the problem ones marked in the text
+  // -------------------------------------------------------------------------
+  let abbrList = [];
+  const abbrStep = new Map();
+  const AB_LABEL = { undefined: "Not spelled out", late: "Spelled out after its first use", defined: "", standard: "Standard, no need to spell out", ignored: "Ignored" };
+  function renderAbbr(list) {
+    abbrList = list;
+    const bad = list.filter((x) => x.status === "undefined").length, late = list.filter((x) => x.status === "late").length;
+    const fine = list.filter((x) => x.status === "defined" || x.status === "standard").length;
+    $("#abbr-count").textContent = bad + late ? String(bad + late) : "";
+    $("#ab-keys").innerHTML = list.length ? [
+      bad ? `<span class="ab-key s-undefined"><i></i>${bad} not spelled out</span>` : "",
+      late ? `<span class="ab-key s-late"><i></i>${late} spelled out late</span>` : "",
+      fine ? `<span class="ab-key s-defined"><i></i>${fine} fine</span>` : ""].join("") : "";
+    $("#ab-list").innerHTML = list.length ? list.map((x, i) => {
+      const long = x.status === "undefined" ? "Not defined" : esc(x.long || "");
+      const note = AB_LABEL[x.status] && x.status !== "undefined" ? `<small>${AB_LABEL[x.status]}</small>` : "";
+      return `<li class="ab-row s-${x.status}"><button type="button" class="ab-go" data-i="${i}"><span class="ab-dot" aria-hidden="true"></span><b class="ab-short">${esc(x.abbr)}</b><span class="ab-long">${long}${note}</span><span class="ab-n" title="Used ${x.count} time${x.count > 1 ? "s" : ""}">×${x.count}</span></button>`
+        + `<button type="button" class="ab-ign" data-i="${i}" title="${x.status === "ignored" ? "Count it again" : "Not a real abbreviation: ignore it"}" aria-label="${x.status === "ignored" ? "Count again" : "Ignore"} ${esc(x.abbr)}">${x.status === "ignored" ? "↺" : "✕"}</button></li>`;
+    }).join("") : `<li class="calm">No abbreviations yet.</li>`;
+    $$(".ab-go").forEach((b) => b.onclick = () => {
+      const x = abbrList[+b.dataset.i];
+      const k = abbrStep.has(x.abbr) ? (abbrStep.get(x.abbr) + 1) % x.uses.length : 0;
+      abbrStep.set(x.abbr, k);
+      const u = x.uses[k];
+      jump(u.node.parentElement, u);
+      toast(`${x.abbr}: ${k + 1} of ${x.uses.length}${x.defAt && x.defAt.node === u.node && x.defAt.at === u.at ? " (where it’s spelled out)" : ""}`);
+    });
+    $$(".ab-ign").forEach((b) => b.onclick = () => {
+      const id = "abbr-" + abbrList[+b.dataset.i].abbr, cur = new Set(paper.meta.ignored || []);
+      cur.has(id) ? cur.delete(id) : cur.add(id);
+      paper.meta.ignored = [...cur];
+      scheduleSave(); refresh();
+    });
+    markAbbr();
+  }
+  function markAbbr() {
+    if (!(window.CSS && CSS.highlights && window.Highlight)) { $(".ab-mark").hidden = true; return; }
+    CSS.highlights.delete("gs-ab-bad"); CSS.highlights.delete("gs-ab-late");
+    if (!$("#ab-mark").checked) return;
+    const bad = new Highlight(), late = new Highlight();
+    for (const x of abbrList) {
+      if (x.status !== "undefined" && x.status !== "late") continue;
+      for (const u of x.uses) {
+        if (x.status === "late" && x.def >= 0 && u.pos >= x.def) continue;
+        if (!u.node.isConnected || u.at + u.len > u.node.nodeValue.length) continue;
+        const r = document.createRange(); r.setStart(u.node, u.at); r.setEnd(u.node, u.at + u.len);
+        (x.status === "undefined" ? bad : late).add(r);
+      }
+    }
+    CSS.highlights.set("gs-ab-bad", bad); CSS.highlights.set("gs-ab-late", late);
+  }
+  function copyAbbr() {
+    const rows = abbrList.filter((x) => x.long && (x.status === "defined" || x.status === "late"))
+      .sort((a, b) => a.abbr.localeCompare(b.abbr, "en", { sensitivity: "base" })).map((x) => `${x.abbr}: ${x.long}`);
+    const missing = abbrList.filter((x) => x.status === "undefined").length;
+    if (!rows.length) return toast("Nothing spelled out yet to list.");
+    navigator.clipboard.writeText(rows.join("\n")).then(() => toast(`Copied ${rows.length} abbreviations.${missing ? ` ${missing} not spelled out yet are left off.` : ""}`), () => toast("Couldn’t copy. Select the list by hand."));
+  }
+
   // Go to what a note is about. With a position, light up just that sentence and the exact words;
   // otherwise (a heading, a table cell, a caption) flash the whole element.
   const NOT_END = /\b(?:al|Fig|Figs|e\.g|i\.e|vs|approx|Dr|Prof|No|Eq|Ref|Refs|cf|ca|St|Mr|Mrs|Ms|Jr|Sr|[A-Z])$/;
@@ -529,6 +601,17 @@
       else if (m.index >= to - 1) { end = m.index + 1; break; }
     }
     return [start, end];
+  }
+  function lineBounds(block, from, to, lo, hi) {
+    const top = (i) => { const r = rangeFor(block, i, i + 1).getClientRects()[0]; return r ? r.top : null; };
+    const t0 = top(from);
+    if (t0 == null) return [Math.max(lo, from - 60), Math.min(hi, to + 60)];
+    const same = (i) => { const t = top(i); return t == null || Math.abs(t - t0) < 4; };
+    let a = from, b = Math.max(from, to - 1);
+    while (a > lo && same(a - 1)) a--;
+    const t1 = top(b) == null ? t0 : top(b);
+    while (b + 1 < hi) { const t = top(b + 1); if (t != null && Math.abs(t - t1) >= 4) break; b++; }
+    return [a, b + 1];
   }
   function rangeFor(block, a, b) {
     const r = document.createRange();
@@ -565,7 +648,10 @@
     }
     const word = rangeFor(spot.block, spot.from, spot.to);
     const [a, b] = sentenceBounds(spot.block.text, spot.from, spot.to);
-    const sentence = rangeFor(spot.block, a, b);
+    // A "sentence" that runs on (a table pasted as text, a list with no full stops) is cut down to the line the words sit on.
+    let [sa, sb] = [a, b];
+    if (b - a > 220) [sa, sb] = lineBounds(spot.block, spot.from, spot.to, a, b);
+    const sentence = rangeFor(spot.block, sa, sb);
     const rect = word.getBoundingClientRect();
     window.scrollTo({ top: window.scrollY + rect.top - window.innerHeight / 2, behavior: "smooth" });
     clearTimeout(hlTimer);
@@ -929,6 +1015,10 @@
   function start() {
     wireEditor(); wireToolbar(); wireRefs();
     $("#new-paper").addEventListener("click", startSetup);
+    $("#ab-mark").addEventListener("change", markAbbr);
+    $("#ab-copy").addEventListener("click", copyAbbr);
+    document.addEventListener("studio-tab", (e) => { if (e.detail === "abbr" && !$("#ab-mark").dataset.touched) { $("#ab-mark").checked = true; markAbbr(); } });
+    $("#ab-mark").addEventListener("click", () => { $("#ab-mark").dataset.touched = "1"; });
     $("#new-paper-2").addEventListener("click", startSetup);
     for (const id of ["#import-home", "#import-editor"]) $(id).addEventListener("change", (e) => { const f = e.target.files[0]; e.target.value = ""; if (f) importWord(f); });
     if (window.GSAccount && window.GSAccount.onRemote) window.GSAccount.onRemote("studio", () => {

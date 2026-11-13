@@ -86,31 +86,17 @@
     const textNodes = bodyTextNodes(page);
     const full = textNodes.map((n) => n.nodeValue).join("\n");
 
-    // 3. Abbreviations: used before (or without) being spelled out.
-    // The front matter (author names, degrees, affiliations, state codes) is skipped when the paper has headings.
-    const firstHead = page.querySelector("h2");
-    const inFront = (node) => firstHead && !!(firstHead.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_PRECEDING);
-    const seen = new Map();
-    const ABBR = /\b([A-Z][A-Z0-9]{1,6})(s?)\b/g;
-    for (const node of textNodes) {
-      let m;
-      ABBR.lastIndex = 0;
-      while ((m = ABBR.exec(node.nodeValue))) {
-        const a = m[1];
-        if (ABBR_OK.has(a) || /^\d/.test(a) || /^[A-Z]\d+$/.test(a)) continue;
-        if (inFront(node)) continue;
-        if (DEGREES.has(a) && /,\s*$/.test(node.nodeValue.slice(Math.max(0, m.index - 3), m.index))) continue;
-        if (!seen.has(a)) seen.set(a, { node, index: m.index });
-      }
-    }
-    for (const [a, first] of seen) {
-      const def = full.indexOf("(" + a + ")"), def2 = full.indexOf("(" + a + "s)");
-      const defined = def >= 0 || def2 >= 0;
-      const firstPos = textNodes.indexOf(first.node);
-      const defPos = defined ? positionOf(textNodes, def >= 0 ? def : def2) : -1;
-      if (!defined) notes.push({ id: "abbr-" + a, level: "warn", title: `${a} isn’t spelled out`, body: `Write it in full the first time, with ${a} in brackets after it.`, target: first.node.parentElement, word: a, node: first.node, at: first.index, len: a.length });
-      else if (defPos > firstPos) notes.push({ id: "abbr-" + a, level: "warn", title: `${a} is used before it’s spelled out`, body: "Move the full form to its first use.", target: first.node.parentElement, word: a, node: first.node, at: first.index, len: a.length });
-    }
+    // 3. Abbreviations: one summary note each for "not spelled out" and "spelled out too late";
+    // the Abbreviations tab lists every one of them in order.
+    const ab = abbreviations(page, meta.ignored || []);
+    const undef = ab.filter((x) => x.status === "undefined"), late = ab.filter((x) => x.status === "late");
+    const names = (xs) => xs.slice(0, 6).map((x) => x.abbr).join(", ") + (xs.length > 6 ? `, and ${xs.length - 6} more` : "");
+    if (undef.length) notes.push({ id: "abbr-undefined", level: "warn", tab: "abbr",
+      title: undef.length === 1 ? `${undef[0].abbr} isn’t spelled out` : `${undef.length} abbreviations aren’t spelled out`,
+      body: `${names(undef)}. Open the list to see each one and where it’s used.`, target: undef[0].uses[0].node.parentElement, ...undef[0].uses[0] });
+    if (late.length) notes.push({ id: "abbr-late", level: "warn", tab: "abbr",
+      title: late.length === 1 ? `${late[0].abbr} is used before it’s spelled out` : `${late.length} abbreviations are used before they’re spelled out`,
+      body: `${names(late)}. Move each full form to its first use.`, target: late[0].uses[0].node.parentElement, ...late[0].uses[0] });
 
     // 4. Species names: abbreviated before the full name, or not in italics
     const fullSeen = new Set();
@@ -202,15 +188,117 @@
     // 8. References flagged by Crossref
     for (const r of (meta.refs || [])) if (r.retracted && r.cited) notes.push({ id: "retracted-" + r.id, level: "bad", title: `Reference ${r.n} has been retracted`, body: r.short || "", target: page.querySelector(`.cite[data-refs~="${r.id}"]`) || page });
 
-    return { notes, good };
+    return { notes, good, abbr: ab };
   }
 
   // Which text node holds character position `pos` of the joined text (joined with "\n").
+  // ---------------------------------------------------------------------------
+  // Abbreviations, in the order they first appear
+  // ---------------------------------------------------------------------------
+  const STANDARD = { DNA: "deoxyribonucleic acid", RNA: "ribonucleic acid", USA: "United States of America", UK: "United Kingdom",
+    SD: "standard deviation", SE: "standard error", CI: "confidence interval", OR: "odds ratio", HR: "hazard ratio", RR: "relative risk",
+    IQR: "interquartile range", BMI: "body mass index", ID: "identifier", PDF: "Portable Document Format", URL: "web address",
+    DOI: "Digital Object Identifier", AM: "ante meridiem", PM: "post meridiem", UTC: "Coordinated Universal Time" };
+  const BACK = /^(\d+\.?\s*)?(acknowledg|funding|financial support|conflicts? of interest|competing interests?|declaration|disclosures?|authors?[’']?s?[’']? contributions?|data availability|references|bibliography|literature cited|supplementary)/i;
+  // Letters (optionally after a short lowercase prefix: mRNA, siRNA, qPCR) with at least two capitals.
+  const TOKEN = /(?<![\p{L}\p{N}\-])([a-z]{0,2}[A-Z][A-Z0-9]*[A-Z][A-Z0-9]*|[A-Z]{2,}[a-z]?)(s?)(?![\p{L}\p{N}])/gu;
+
+  // Schwartz & Hearst (2003): find the long form ending just before "(SF)" whose letters spell the short form.
+  const STOP = new Set(["of", "the", "and", "in", "for", "to", "on", "with", "a", "an", "by", "at", "or", "&"]);
+  function longFormBefore(text, abbr) {
+    const words = text.trimEnd().split(/\s+/);
+    // First try word initials ("Colon Cancer Family Registry" -> CCFR), skipping small words; then letter matching.
+    const sfl = abbr.toLowerCase().replace(/[^a-z]/g, "");
+    for (let k = 1; k <= Math.min(words.length, sfl.length + 4); k++) {
+      const part = words.slice(-k);
+      const init = part.flatMap((w) => w.split("-")).filter((w) => w && !STOP.has(w.toLowerCase())).map((w) => w.replace(/^[^\p{L}]+/u, "")[0] || "").join("").toLowerCase();
+      if (init === sfl && !STOP.has(part[0].toLowerCase())) return part.join(" ").replace(/^[\s,;:(]+/, "");
+      if (init.length > sfl.length) break;
+    }
+    const cand = words.slice(-Math.min(abbr.length + 5, abbr.length * 2)).join(" ");
+    const sf = abbr.toLowerCase().replace(/[^a-z0-9]/g, ""), lf = cand.toLowerCase();
+    let si = sf.length - 1, li = lf.length - 1;
+    while (si >= 0) {
+      const c = sf[si];
+      while ((li >= 0 && lf[li] !== c) || (si === 0 && li > 0 && /[a-z0-9]/.test(lf[li - 1]))) li--;
+      if (li < 0) return null;
+      li--; si--;
+    }
+    const out = cand.slice(lf.lastIndexOf(" ", li) + 1).replace(/^[\s,;:(]+/, "").trim();
+    return out.length > abbr.length && out.split(/\s+/).length > 1 || out.length > abbr.length + 2 ? out : null;
+  }
+
+  function abbreviations(page, ignored) {
+    ignored = new Set(ignored || []);
+    // which top-level blocks to read: not the front matter (names, degrees, affiliations) and not the back matter
+    const hasHead = !!page.querySelector("h2:not(.refs-h)");
+    const skip = new Set();
+    let zone = hasHead ? "front" : "body";
+    for (const el of page.children) {
+      const plain = el.textContent.trim();
+      if (el.tagName === "H2" || (el.tagName === "P" && plain.length < 50 && BACK.test(plain) && !/[.]\s/.test(plain))) zone = BACK.test(plain) ? "back" : "body";
+      if (zone !== "body") skip.add(el);
+    }
+    const nodes = [], starts = [];
+    let text = "";
+    const w = document.createTreeWalker(page, NodeFilter.SHOW_TEXT, { acceptNode(n) {
+      const el = n.parentElement;
+      if (!el || el.closest("h1, h2, h3, .kicker, .authors, .refs-out, .refs-h, .cite")) return NodeFilter.FILTER_REJECT;
+      let top = el; while (top && top.parentElement !== page) top = top.parentElement;
+      return top && !skip.has(top) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    } });
+    while (w.nextNode()) { starts.push(text.length); nodes.push(w.currentNode); text += w.currentNode.nodeValue + "\n"; }
+    const where = (pos) => { let i = starts.length - 1; while (i > 0 && starts[i] > pos) i--; return { node: nodes[i], at: pos - starts[i] }; };
+
+    const map = new Map();
+    TOKEN.lastIndex = 0;
+    let m;
+    while ((m = TOKEN.exec(text))) {
+      const a = m[1];
+      if (/^[A-Z]\d+$/.test(a) || /^[A-Z]{1,3}\d{2,}/.test(a) && /\d{3,}/.test(a)) continue;   // grant and sample codes (R01, CA81488)
+      if (/^[A-Z]{2,}\d+[A-Z0-9]*$/.test(a)) continue;                                            // gene and variant symbols (NEK6, IGFBP3)
+      if (DEGREES.has(a) && /,\s*$/.test(text.slice(Math.max(0, m.index - 3), m.index))) continue;
+      if (/^[IVXL]+$/.test(a)) continue;                                                           // Roman numerals
+      const pos = m.index;
+      if (!map.has(a)) map.set(a, { abbr: a, uses: [], def: -1, long: null });
+      const x = map.get(a);
+      // is this occurrence a definition? "long form (ABBR)" or "(ABBR," ...
+      const before = text.slice(Math.max(0, pos - 2), pos), after = text.slice(pos + m[0].length, pos + m[0].length + 2);
+      if (x.def < 0 && /\(\s?$/.test(before) && /^\s?[),;]/.test(after)) {
+        const lf = longFormBefore(text.slice(Math.max(0, pos - 300), pos).replace(/\(\s?$/, ""), a);
+        if (lf) { x.def = pos; x.long = lf; }
+      }
+      // or "ABBR (long form)"
+      if (x.def < 0 && /^\s\(/.test(text.slice(pos + m[0].length, pos + m[0].length + 2))) {
+        const close = text.indexOf(")", pos + m[0].length);
+        const inner = close > 0 ? text.slice(pos + m[0].length + 2, close) : "";
+        if (inner && inner.length < 120 && !/\d{3}/.test(inner)) {
+          const initials = inner.split(/[\s\-]+/).map((t) => t[0] || "").join("").toLowerCase();
+          if (initials.includes(a.toLowerCase().replace(/[^a-z]/g, "").slice(0, 2)) && longFormBefore(inner + " ", a)) { x.def = pos; x.long = inner.trim(); }
+        }
+      }
+      x.uses.push({ pos, len: a.length + m[2].length });
+    }
+    const out = [];
+    for (const x of map.values()) {
+      x.uses = x.uses.map((u) => Object.assign(where(u.pos), { len: u.len, pos: u.pos }));
+      x.count = x.uses.length;
+      x.first = x.uses[0];
+      if (ignored.has("abbr-" + x.abbr)) x.status = "ignored";
+      else if (x.def >= 0) x.status = x.uses[0].pos < x.def ? "late" : "defined";
+      else if (STANDARD[x.abbr] || ABBR_OK.has(x.abbr)) { x.status = "standard"; x.long = STANDARD[x.abbr] || ""; }
+      else x.status = "undefined";
+      if (x.def >= 0) x.defAt = where(x.def);
+      out.push(x);
+    }
+    return out.sort((a, b) => a.first.pos - b.first.pos);
+  }
+
   function positionOf(nodes, pos) {
     let at = 0;
     for (let i = 0; i < nodes.length; i++) { const len = nodes[i].nodeValue.length + 1; if (pos < at + len) return i; at += len; }
     return nodes.length;
   }
 
-  global.GSNotes = { analyse, sections, words, SPECIES };
+  global.GSNotes = { analyse, sections, words, SPECIES, abbreviations, longFormBefore };
 })(window);
