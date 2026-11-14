@@ -16,106 +16,112 @@
 <link rel="stylesheet" href="/assets/scroll.css">
 </head>
 <body>
-<div class="page">
+<div class="page wide">
 
-  <header class="masthead">
-    <img src="grey_swan_emblem.png" alt="The Grey Swan emblem" class="emblem">
-    <div>
-      <div class="eyebrow"><a href="/">The Grey Swan</a> <span>· For authors</span></div>
-      <h1 class="title">Check your <em>manuscript</em></h1>
-      <nav class="tools"><a href="/">Home</a> · <span>For authors</span> · <a href="../reviewers/">For editors</a> · <a href="/cygnus/">Cygnus Program</a></nav>
-    </div>
+  <header class="masthead slim">
+    <a class="brandmark" href="/"><img src="grey_swan_emblem.png" alt="" class="emblem"><span>The Grey Swan</span></a>
+    <nav class="tools" aria-label="Site"><a href="/">Home</a><a href="../checker/" aria-current="true">For authors</a><a href="../reviewers/">For editors</a><a href="/cygnus/">Cygnus Program</a></nav>
     <div id="gs-account" class="masthead-account"></div>
   </header>
 
   <nav class="workspace-tabs" aria-label="Author workspace"><a href="../studio/">Studio</a><a href="../checker/" aria-current="page">Check your manuscript</a><a href="../references/">Check references</a></nav>
 
-  <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
-
-  <p class="lead">Check a manuscript the way a journal screening desk does before peer review:
-    structure, abbreviations, figure and table citations, ethics and consent statements, declarations,
-    references and citation style (APA, AMA, Vancouver, Harvard, IEEE) and, for double-blind journals, anonymisation,
-    then verify every reference against Crossref and Retraction Watch, all in one report. Choose your journal's profile, or adjust the rules to match its guidelines.</p>
-
-  <div class="card">
-    <b>Private by design.</b> The checker runs inside your browser. Your manuscripts are never uploaded,
-    stored or shared: they don't leave your computer. When reference verification is on, each reference's DOI or text
-    is sent to Crossref, and nothing else.<br>
-    <b>A screening aid, not a verdict.</b> It flags issues for a person to review. It does not judge the
-    science, and it can miss problems or raise false alarms.
+  <div class="intro">
+    <h1 class="title">Check your manuscript before the journal does</h1>
+    <p class="lead">The same checks a screening desk runs before peer review, in one report.</p>
   </div>
 
-  <main class="layout">
-    <aside class="panel" aria-label="Journal profile and settings">
-      <h2>Journal profile</h2>
-      <select id="profile-select" aria-label="Journal profile" disabled></select>
-      <p id="profile-desc" class="muted small"></p>
-      <label class="text-button" id="profile-load-label">
-        Load a saved profile (.yaml)
-        <input type="file" id="profile-file" accept=".yaml,.yml" hidden>
+  <section class="strip" aria-label="Journal profile and settings">
+    <h2 class="step-label">1 · The journal's rules</h2>
+    <div class="strip-row">
+      <label class="sf sf-profile">Journal profile
+        <select id="profile-select" disabled></select>
       </label>
-      <p id="profile-note" class="small note" hidden></p>
-
-      <h3>Settings</h3>
-      <label class="field">Peer review
-        <select id="review-model"></select>
-        <span class="muted small">Double-blind adds checks that the manuscript doesn't reveal who the authors are.</span>
+      <label class="sf">Peer review
+        <select id="review-model" aria-describedby="review-help"></select>
       </label>
-      <label class="field">Reference style
-        <select id="citation-style"></select>
-        <span class="muted small">“Any” checks citations match the list and are consistent; a named style also checks its format.</span>
+      <label class="sf">Reference style
+        <select id="citation-style" aria-describedby="style-help"></select>
       </label>
-      <label class="field">Abstract word limit
+      <label class="sf sf-num">Abstract limit
         <input type="number" id="abstract-limit" min="50" max="1000" step="10">
       </label>
-      <label class="field">Flag data collected before
+      <label class="sf sf-num">Flag data before
         <input type="number" id="cutoff" min="1950" max="2100" step="1">
       </label>
-      <label class="field">Abbreviations to ignore
-        <textarea id="ignore" rows="2" placeholder="e.g. ICU, MIC"></textarea>
-        <span class="muted small">Ones this journal doesn't require authors to define, separated by commas.</span>
-      </label>
-      <label class="check">
-        <input type="checkbox" id="skip-symbols">
-        <span>Skip gene, cell-line and chemical names <span class="muted small">(e.g. TP53, MCF-7, NaCl)</span></span>
-      </label>
+      <button type="button" class="more-btn" id="more-btn" aria-expanded="false" aria-controls="more-settings">More settings</button>
+    </div>
+    <p id="profile-desc" class="muted small strip-desc"></p>
+    <p id="profile-note" class="small note" hidden></p>
+    <div class="strip-actions">
+    <div class="panel-actions">
+      <button type="button" id="save-profile" class="button" hidden>Save these settings as a profile</button>
+      <button type="button" id="reset-profile" class="text-button" hidden>Undo my changes</button>
+    </div>
+    <div id="keep-box" hidden>
+      <button type="button" id="keep-profile" class="button ghost">Save to my profiles</button>
+      <form class="keep-profile" id="keep-form" hidden>
+        <input id="keep-name" aria-label="Name for this profile" maxlength="80">
+        <button type="submit" class="button">Save</button>
+      </form>
+      <p class="muted small" id="keep-note"></p>
+    </div>
+    </div>
 
-      <details id="rules-box">
-        <summary>Rules and severities</summary>
-        <p class="muted small">Must fix and Should fix make a manuscript <i>Needs revision</i>. Advisory items
-          are shown but don't block it. Off skips the check.</p>
-        <div id="rules-list"></div>
-      </details>
-
-      <div class="panel-actions">
-        <button type="button" id="save-profile" class="button" hidden>Save these settings as a profile</button>
-        <button type="button" id="reset-profile" class="text-button" hidden>Undo my changes</button>
+    <div id="more-settings" class="more-settings" hidden>
+      <div class="more-col">
+        <p class="muted small" id="review-help"><b>Peer review:</b> double-blind adds checks that the manuscript doesn't reveal who the authors are.</p>
+        <p class="muted small" id="style-help"><b>Reference style:</b> “Any” checks citations match the list and are consistent; a named style also checks its format.</p>
+        <label class="field">Abbreviations to ignore
+          <textarea id="ignore" rows="2" placeholder="e.g. ICU, MIC"></textarea>
+          <span class="muted small">Ones this journal doesn't require authors to define, separated by commas.</span>
+        </label>
+        <label class="check">
+          <input type="checkbox" id="skip-symbols">
+          <span>Skip gene, cell-line and chemical names <span class="muted small">(e.g. TP53, MCF-7, NaCl)</span></span>
+        </label>
+        <label class="text-button" id="profile-load-label">
+          Load a saved profile (.yaml)
+          <input type="file" id="profile-file" accept=".yaml,.yml" hidden>
+        </label>
       </div>
-      <div id="keep-box" hidden>
-        <button type="button" id="keep-profile" class="button ghost">Save to my profiles</button>
-        <form class="keep-profile" id="keep-form" hidden>
-          <input id="keep-name" aria-label="Name for this profile" maxlength="80">
-          <button type="submit" class="button">Save</button>
-        </form>
-        <p class="muted small" id="keep-note"></p>
+      <div class="more-col">
+        <details id="rules-box" open>
+          <summary>Rules and severities</summary>
+          <p class="muted small">Must fix and Should fix make a manuscript <i>Needs revision</i>. Advisory items
+            are shown but don't block it. Off skips the check.</p>
+          <div id="rules-list"></div>
+        </details>
       </div>
-    </aside>
+    </div>
+  </section>
 
+  <main class="layout">
     <section class="work" aria-live="polite">
-      <div id="status" class="status"><span class="spinner"></span>
-        <span id="status-text">Preparing the checker. The first visit takes a few seconds…</span></div>
+      <div class="step-card" id="files-step">
+        <h2 class="step-label">2 · Your files</h2>
+        <div id="status" class="status"><span class="spinner"></span>
+          <span id="status-text">Preparing the checker. The first visit takes a few seconds…</span></div>
 
-      <label id="dropzone" class="dropzone">
-        <input type="file" id="file-input" accept=".docx,.pdf,.odt,.rtf,.tex" multiple hidden>
-        <strong>Drop your submission files here</strong>
-        <span>or click to choose: Word, PDF, OpenDocument, RTF or LaTeX. Add the title page and cover letter too.</span>
-      </label>
-      <p class="muted small">Word files give the fullest check: a PDF can't show tracked changes, hidden text, superscripts
-        or page layout. Old .doc files: in Word, use File → Save As → .docx.</p>
+        <label id="dropzone" class="dropzone">
+          <input type="file" id="file-input" accept=".docx,.pdf,.odt,.rtf,.tex" multiple hidden>
+          <strong>Drop your manuscript here</strong>
+          <span>or click to choose. Word gives the fullest check; PDF, OpenDocument, RTF and LaTeX also work.</span>
+          <span class="drop-extra">Add the title page and cover letter too, if you have them.</span>
+        </label>
+        <p class="muted small drop-note">A PDF can't show tracked changes, hidden text, superscripts or page layout.
+          Old .doc files: in Word, use File → Save As → .docx.</p>
 
-      <label class="verify-refs"><input type="checkbox" id="verify-refs" checked>
-        <span>Also verify the references against Crossref and Retraction Watch. Each reference's DOI or text is sent to
-          Crossref; the manuscript itself is never uploaded.</span></label>
+        <label class="verify-refs"><input type="checkbox" id="verify-refs" checked>
+          <span>Also verify every reference against Crossref and Retraction Watch. Each reference's DOI or text is sent to
+            Crossref; the manuscript itself is never uploaded.</span></label>
+      </div>
+
+      <div class="step-card ghost" id="report-step">
+        <h2 class="step-label">3 · Your report</h2>
+        <p>Appears here in a few seconds: what to fix, sorted into Must fix, Should fix and Advisory, each with how to
+          fix it and the guideline it comes from.</p>
+      </div>
 
       <div id="results"></div>
       <section id="refs-section" class="refs-section" aria-live="polite" hidden>
@@ -125,6 +131,16 @@
       </section>
     </section>
   </main>
+
+  <section class="assure" aria-label="How the checker works">
+    <p><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+      <span><b>Stays on your computer.</b> The file is read inside your browser and never uploaded.</span></p>
+    <p><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+      <span><b>Written rules, no AI.</b> The same file always gets the same result.</span></p>
+    <p><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v5M12 16v.5"/></svg>
+      <span><b>An aid, not a verdict.</b> It flags issues for you to review. It doesn't judge the science, and it can miss problems or raise false alarms.</span></p>
+  </section>
+  <p class="covers"><span>What it checks</span><i>Structure</i><i>Abbreviations</i><i>Figures and tables</i><i>Ethics and consent</i><i>Declarations</i><i>References</i><i>Citation style</i><i>Anonymisation</i></p>
 
   <footer class="foot">
     <div class="ornament" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 0 C10.8 6.5 13.5 9.2 20 10 C13.5 10.8 10.8 13.5 10 20 C9.2 13.5 6.5 10.8 0 10 C6.5 9.2 9.2 6.5 10 0 Z"/></svg></div>
@@ -138,8 +154,8 @@
 // The still side rails (see /assets/scroll.js): manuscript line numbers drift past a red margin rule, and the
 // right rail shows how many of the checked files are ready to submit
 window.GS_SCROLL = {
-  width: 1180, title: "Screening · Pre-submission", motif: "lines",
-  nav: [{ label: "Overview", target: ".masthead" }, { label: "Profile & files", target: ".layout" },
+  width: 1560, title: "Screening · Pre-submission", motif: "lines",
+  nav: [{ label: "Overview", target: ".masthead" }, { label: "Settings & files", target: ".strip" },
         { label: "Results", target: "#results" }],
   reveal: ".foot",
   watch: "#results",

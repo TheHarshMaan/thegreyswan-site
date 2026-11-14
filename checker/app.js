@@ -45,6 +45,7 @@ let baseProfile = null;        // the profile as chosen or loaded, before the vi
 let uploadedProfile = null;    // a profile file the visitor loaded, if any
 let files = [];                // [{name, data: ArrayBuffer}]
 let lastRun = null;            // {results, report}
+const collapsed = new Set();   // result groups the reader has hidden
 const shown = { must: true, should: true, advisory: true };
 
 // Signed in with Google (see /assets/account.js): saved profiles, preferences and check history follow the user
@@ -332,7 +333,8 @@ function extension(name) {
   return m ? m[0] : "";
 }
 
-async function addFiles(list) {
+let nextIsVersion = false;      // the next chosen file came from "Drop the new version"
+async function addFiles(list, newVersion) {
   const all = [...list];
   const readable = all.filter((f) => READABLE.includes(extension(f.name)));
   const old = all.filter((f) => extension(f.name) === ".doc");
@@ -341,9 +343,26 @@ async function addFiles(list) {
       : "Add Word (.docx), PDF, OpenDocument (.odt), RTF or LaTeX (.tex) files.", "error");
     return;
   }
+  // A new version of a file already checked (same name, or dropped on "Drop the new version") keeps its ticks and
+  // dismissals, and the report says what has changed since.
+  const before = lastRun ? lastRun.results.filter((r) => !r.error) : [];
+  const names = new Set(readable.map((f) => f.name));
+  const renamed = !!newVersion && before.length === 1 && readable.length === 1 && !names.has(before[0].name);
+  compareWith = null;
+  if (before.some((r) => names.has(r.name)) || renamed) {
+    compareWith = Object.fromEntries(before.map((r) => [r.name, r.issues.map((i) => i.key)]));
+    if (renamed) Object.defineProperty(compareWith, "__renamed", { value: true });
+  }
+  const kept = [...dismissed];
+  dismissed.clear();
+  for (const id of kept) {
+    const [name, key] = splitId(id);
+    if (names.has(name)) dismissed.add(id);
+    else if (renamed) dismissed.add(`${readable[0].name}|${key}`);
+  }
+  if (renamed && ticks[before[0].name]) { ticks[readable[0].name] = [...ticks[before[0].name]]; saveTicks(); }
   files = await Promise.all(readable.map(async (f) => ({ name: f.name, data: await f.arrayBuffer() })));
   runId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  dismissed.clear();
   const skipped = all.length - readable.length;
   if (skipped) setStatus(`${skipped} file(s) skipped: ${old.length ? "old .doc files must be saved as .docx; " : ""}`
     + "only .docx, .pdf, .odt, .rtf and .tex files can be checked.", "done");
@@ -352,7 +371,14 @@ async function addFiles(list) {
 }
 
 const drop = $("dropzone");
-$("file-input").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+$("more-btn").addEventListener("click", () => {
+  const b = $("more-btn"), open = b.getAttribute("aria-expanded") !== "true";
+  b.setAttribute("aria-expanded", String(open));
+  $("more-settings").hidden = !open;
+});
+
+$("file-input").addEventListener("change", (e) => { addFiles(e.target.files, nextIsVersion); nextIsVersion = false; e.target.value = ""; });
+drop.addEventListener("click", () => { nextIsVersion = false; });
 drop.addEventListener("dragover", (e) => { e.preventDefault(); drop.classList.add("over"); });
 drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 drop.addEventListener("drop", (e) => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); });
@@ -418,22 +444,144 @@ function tagFor(info) {
   return parts.length ? `<span class="tag">${escapeHtml(parts.join(" · "))}</span>` : "";
 }
 
-function issueRow(r, i) {
+// "Renumber the references…" becomes "Please renumber the references…", ready to paste into a decision letter
+function asComment(fix) {
+  const t = String(fix || "").trim();
+  if (!t) return "";
+  return /^please\b/i.test(t) ? t : "Please " + t.charAt(0).toLowerCase() + t.slice(1);
+}
+
+// Ticks: findings the author has marked as fixed. Kept in this browser only, per file name.
+const TICKS_KEY = "gs-checker-ticks";
+let ticks = {};
+try { ticks = JSON.parse(localStorage.getItem(TICKS_KEY) || "{}") || {}; } catch (e) { ticks = {}; }
+const isTicked = (name, key) => (ticks[name] || []).includes(key);
+function saveTicks() {
+  const names = Object.keys(ticks);
+  for (const n of names.slice(0, Math.max(0, names.length - 40))) delete ticks[n];     // keep the 40 latest files
+  try { localStorage.setItem(TICKS_KEY, JSON.stringify(ticks)); } catch (e) { /* storage unavailable */ }
+}
+function setTick(name, key, on) {
+  const s = new Set(ticks[name] || []);
+  on ? s.add(key) : s.delete(key);
+  delete ticks[name];
+  if (s.size) ticks[name] = [...s];
+  saveTicks();
+}
+const splitId = (id) => { const cut = id.indexOf("|"); return [id.slice(0, cut), id.slice(cut + 1)]; };
+const openItems = new Map();     // finding id -> details open?  (default: Must fix open)
+const openGroups = new Map();    // "file|severity" -> open?      (default: Advisory folded away)
+let uid = 0;
+
+// Must fix and Should fix are what stand between the paper and Ready
+function progressHtml(r) {
+  const need = liveIssues(r).filter((i) => i.severity !== "advisory");
+  if (!need.length) return "";
+  const done = need.filter((i) => isTicked(r.name, i.key)).length, left = need.length - done;
+  return `<div class="bar" role="img" aria-label="${done} of ${need.length} fixed"><span style="width: ${Math.round(100 * done / need.length)}%"></span></div>
+    <span class="bar-text">${left ? `<b>${done} of ${need.length} fixed</b> · ${left} to go before it’s ready to submit`
+      : `<b>All ${need.length} ticked off.</b> Drop the edited file to confirm it’s ready.`}</span>`;
+}
+
+function checklistItem(r, i) {
+  const id = `${r.name}|${i.key}`, n = ++uid;
+  const isGone = dismissed.has(id), done = isTicked(r.name, i.key);
+  const open = openItems.has(id) ? openItems.get(id) : i.severity === "must" && !done && !isGone;
+  const comment = asComment(i.fix);
+  return `<li class="cl-item${done ? " done" : ""}${isGone ? " gone" : ""}${open ? " open" : ""}" data-id="${escapeHtml(id)}">
+    <div class="cl-top">
+      <input type="checkbox" class="tick" id="tick-${n}" aria-label="Fixed: ${escapeHtml(i.check)}" ${done ? "checked" : ""} ${isGone ? "disabled" : ""}>
+      <label for="tick-${n}" class="cl-label"><span class="cl-title">${escapeHtml(i.check)}</span>
+        <span class="cl-sub">${escapeHtml(i.section)}</span><span class="cl-preview">${escapeHtml(i.details)}</span></label>
+      <button type="button" class="text-button cl-toggle" aria-expanded="${open}" aria-controls="body-${n}">${open ? "Hide" : "Details"}</button>
+    </div>
+    <div class="cl-body" id="body-${n}" ${open ? "" : "hidden"}>
+      <p class="cl-found">${escapeHtml(i.details)}</p>
+      ${i.fix ? `<div class="howfix"><span class="howfix-label">How to fix</span><span>${escapeHtml(i.fix)}</span></div>` : ""}
+      <div class="cl-foot">${i.source && i.source !== "—" ? `<span class="source">Source: ${escapeHtml(i.source)}</span>` : ""}
+        <span class="cl-actions">${comment && !isGone
+          ? `<button type="button" class="text-button copy-comment" data-comment="${escapeHtml(comment)}">Copy as a comment</button>` : ""}
+        <button type="button" class="text-button dismiss" data-id="${escapeHtml(id)}">${isGone ? "Restore" : "Not a problem here"}</button></span></div>
+    </div></li>`;
+}
+
+// Author view: a to-do list, most serious first, with the optional suggestions folded away
+function checklist(r, visible) {
+  return ["must", "should", "advisory"].map((sev) => {
+    const items = visible.filter((i) => i.severity === sev);
+    if (!items.length) return "";
+    const n = items.length, gid = `${r.name}|${sev}`;
+    const list = (hide) => `<ul class="checklist" ${hide ? "hidden" : ""}>${items.map((i) => checklistItem(r, i)).join("")}</ul>`;
+    const pill = `<span class="pill">${escapeHtml(LABELS[sev])}</span>`;
+    if (sev === "advisory") {
+      const open = openGroups.get(gid) === true;
+      return `<section class="cl-group sev-advisory optional"><div class="cl-head">${pill}
+          <span class="cl-note">${n} optional suggestion${n > 1 ? "s" : ""}. ${n > 1 ? "They don’t" : "It doesn’t"} stop the paper being ready.</span>
+          <button type="button" class="button ghost cl-group-toggle" data-gid="${escapeHtml(gid)}" aria-expanded="${open}">${open ? "Hide suggestions" : "Show suggestions"}</button></div>
+        ${list(!open)}</section>`;
+    }
+    return `<section class="cl-group sev-${sev}"><div class="cl-head">${pill}<span class="gcount" data-n="${n}"></span></div>${list(false)}</section>`;
+  }).join("");
+}
+
+function refreshProgress(panel) {
+  const r = lastRun.results.find((x) => x.name === panel.dataset.name);
+  const box = panel.querySelector(".cl-progress");
+  if (r && box) box.innerHTML = progressHtml(r);
+  for (const g of panel.querySelectorAll(".cl-head .gcount")) {
+    const n = +g.dataset.n, fixed = g.closest(".cl-group").querySelectorAll(".cl-item.done").length;
+    g.textContent = `${n} finding${n > 1 ? "s" : ""}${fixed ? ` · ${fixed} fixed` : ""}`;
+  }
+}
+
+function issueRow(r, i) {          // editor view: one line of the screening log
   const id = `${r.name}|${i.key}`;
   const isGone = dismissed.has(id);
-  const button = `<button type="button" class="dismiss" data-id="${escapeHtml(id)}"
-      title="${isGone ? "Restore" : "Dismiss as a false alarm"}" aria-label="${isGone ? "Restore" : "Dismiss"} ${escapeHtml(i.check)}">${isGone ? "↺" : "×"}</button>`;
-  const sev = `<td class="sev sev-${i.severity}" data-label="Severity">${escapeHtml(LABELS[i.severity])}</td>`;
-  if (view === "editor") {
-    return `<tr class="${isGone ? "gone" : ""}"><td class="section" data-label="Section">${escapeHtml(i.section)}</td>${sev}
-      <td data-label="Check">${escapeHtml(i.check)}</td><td data-label="Status">${escapeHtml(i.status)}</td>
-      <td data-label="Details">${escapeHtml(i.details)}</td><td class="act">${button}</td></tr>`;
-  }
-  return `<tr class="${isGone ? "gone" : ""}">${sev}
-    <td data-label="Check"><span class="section-small">${escapeHtml(i.section)}</span>${escapeHtml(i.check)}</td>
+  return `<tr class="${isGone ? "gone" : ""}"><td data-label="Finding"><span class="finding-name">${escapeHtml(i.check)}</span></td>
+    <td class="sev sev-${i.severity}" data-label="Severity">${escapeHtml(LABELS[i.severity])}</td>
+    <td data-label="Status">${escapeHtml(i.status)}</td>
     <td data-label="Details">${escapeHtml(i.details)}</td>
-    <td data-label="How to fix" class="fix">${escapeHtml(i.fix || "")}${i.source && i.source !== "—"
-      ? `<span class="source">${escapeHtml(i.source)}</span>` : ""}</td><td class="act">${button}</td></tr>`;
+    <td class="act"><button type="button" class="dismiss" data-id="${escapeHtml(id)}" title="${isGone ? "Restore" : "Dismiss as a false alarm"}"
+      aria-label="${isGone ? "Restore" : "Dismiss"} ${escapeHtml(i.check)}">${isGone ? "↺" : "×"}</button></td></tr>`;
+}
+
+// Editor view: one table per file, section by section
+function findingsTable(r, visible) {
+  const groups = [];
+  for (const i of visible) {
+    let g = groups.find((x) => x.key === i.section);
+    if (!g) groups.push(g = { key: i.section, items: [] });
+    g.items.push(i);
+  }
+  const body = groups.map((g) => {
+    const gid = `${r.name}|editor|${g.key}`, shut = collapsed.has(gid), n = g.items.length;
+    return `<tbody><tr class="group section"><th colspan="5" scope="colgroup">
+        <span class="pill">${escapeHtml(g.key)}</span><span class="gcount">${n} finding${n > 1 ? "s" : ""}</span>
+        <button type="button" class="text-button group-toggle" data-gid="${escapeHtml(gid)}" aria-expanded="${!shut}">${shut ? "Show" : "Hide"}</button></th></tr>
+      ${shut ? "" : g.items.map((i) => issueRow(r, i)).join("")}</tbody>`;
+  }).join("");
+  return `<div class="table-wrap"><table class="findings editor"><thead><tr><th class="col-finding">Check</th><th>Severity</th><th>Status</th>
+    <th>Details</th><th><span class="sr-only">Dismiss</span></th></tr></thead>${body}</table></div>`;
+}
+
+// After a new version of a file is dropped in: what has gone and what is new
+let compareWith = null;        // {file name: [finding keys]} from the run before
+function versionNote(readable) {
+  if (!compareWith) return "";
+  const prevNames = Object.keys(compareWith);
+  let fixed = 0, fresh = 0, matched = 0;
+  for (const r of readable) {
+    const prev = compareWith[r.name] || (compareWith.__renamed && readable.length === 1 ? compareWith[prevNames[0]] : null);
+    if (!prev) continue;
+    matched += 1;
+    const now = new Set(r.issues.map((i) => i.key));
+    fixed += prev.filter((k) => !now.has(k)).length;
+    fresh += [...now].filter((k) => !prev.includes(k)).length;
+  }
+  if (!matched) return "";
+  const text = !fixed && !fresh ? "the findings are the same as before."
+    : `<b>${fixed} finding${fixed === 1 ? "" : "s"} fixed</b>${fresh ? `, ${fresh} new` : ""}.`;
+  return `<p class="version-note" role="status">Since the last version: ${text}</p>`;
 }
 
 function renderResults() {
@@ -442,27 +590,30 @@ function renderResults() {
   const ready = readable.filter((r) => verdictOf(liveIssues(r)) === "Ready").length;
   const openAll = results.length === 1;
   const goneCount = [...dismissed].length;
-  const head = view === "editor"
-    ? "<th>Section</th><th>Severity</th><th>Check</th><th>Status</th><th>Details</th><th></th>"
-    : "<th>Severity</th><th>Check</th><th>What was found</th><th>How to fix</th><th></th>";
+  const author = view === "author";
+  const all = { must: 0, should: 0, advisory: 0 };
+  readable.forEach((r) => { const c = countsOf(liveIssues(r)); for (const k in all) all[k] += c[k]; });
+  const downloads = `${report ? '<button type="button" class="button ghost" id="download-report">Excel report</button>' : ""}
+      ${word ? '<button type="button" class="button ghost" id="download-word">Word report</button>' : ""}`;
+  uid = 0;
 
-  const parts = [`<div class="results-head"><h2>Results</h2><div class="downloads">
-      ${report ? '<button type="button" class="button ghost" id="download-report">Excel report</button>' : ""}
-      ${word ? '<button type="button" class="button ghost" id="download-word">Word report</button>' : ""}</div></div>
+  const parts = [`<div class="results-head"><h2>Results</h2>${author ? "" : `<div class="downloads">${downloads}</div>`}</div>
     <p class="muted small">Checked against: ${escapeHtml(profileName)} · ${results.length} file(s):
       ${ready} ready, ${readable.length - ready} need revision${results.length > readable.length
         ? `, ${results.length - readable.length} could not be read` : ""}.</p>
+    ${versionNote(readable)}
     <div class="toolbar">
       <div class="view-toggle" role="group" aria-label="Report view">
-        <button type="button" data-view="author" aria-pressed="${view === "author"}">Author view</button>
-        <button type="button" data-view="editor" aria-pressed="${view === "editor"}">Editor view</button>
+        <button type="button" data-view="author" aria-pressed="${author}">Author view</button>
+        <button type="button" data-view="editor" aria-pressed="${!author}">Editor view</button>
       </div>
-      <div class="filters" role="group" aria-label="Show severities">
+      ${author ? "" : `<div class="filters" role="group" aria-label="Show severities">
         ${["must", "should", "advisory"].map((s) =>
-          `<button type="button" class="chip sev-${s}" data-sev="${s}" aria-pressed="${shown[s]}">${escapeHtml(LABELS[s])}</button>`).join("")}
-      </div>
+          `<button type="button" class="chip sev-${s}" data-sev="${s}" aria-pressed="${shown[s]}"><span class="dot" aria-hidden="true"></span>${escapeHtml(LABELS[s])} · ${all[s]}</button>`).join("")}
+      </div>`}
       ${goneCount ? `<button type="button" class="text-button" id="toggle-dismissed">${goneCount} dismissed · ${showDismissed ? "hide" : "show"}</button>` : ""}
-    </div>`];
+    </div>
+    <div class="results-grid${author ? " with-aside" : ""}"><div class="results-main">`];
 
   for (const r of results) {
     if (r.error) {
@@ -473,21 +624,28 @@ function renderResults() {
     }
     const live = liveIssues(r);
     const v = verdictOf(live), isReadyDoc = v === "Ready";
-    const rank = { must: 0, should: 1, advisory: 2 };
-    let visible = r.issues.filter((i) => shown[i.severity] && (showDismissed || !dismissed.has(`${r.name}|${i.key}`)));
-    if (view === "author") {      // authors: most serious first; editors: section by section, as a screening log
-      visible = visible.map((i, n) => [i, n]).sort((a, b) => rank[a[0].severity] - rank[b[0].severity] || a[1] - b[1])
-        .map(([i]) => i);
-    }
-    const rows = visible.map((i) => issueRow(r, i)).join("");
+    const visible = r.issues.filter((i) => (author || shown[i.severity]) && (showDismissed || !dismissed.has(`${r.name}|${i.key}`)));
     const body = !r.issues.length ? '<p class="empty">All checks passed.</p>'
-      : rows ? `<div class="table-wrap"><table class="${view}"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`
-      : '<p class="empty muted">Nothing to show at the selected severities.</p>';
+      : !visible.length ? '<p class="empty muted">Nothing to show at the selected severities.</p>'
+      : author ? `<div class="cl-progress">${progressHtml(r)}</div>${checklist(r, visible)}`
+      : findingsTable(r, visible);
     parts.push(`<details class="manuscript" ${openAll ? "open" : ""} data-name="${escapeHtml(r.name)}"><summary>
         <span class="fname">${escapeHtml(r.name)}</span>${tagFor(r.info)}
         <span class="verdict ${isReadyDoc ? "ready" : v === "Unable to screen" ? "error" : "revise"}">${v}</span>
         ${live.length ? `<span class="tally">${tally(countsOf(live))}</span>` : ""}</summary>${body}</details>`);
   }
+  parts.push("</div>");
+  if (author) {
+    parts.push(`<aside class="next" aria-label="Next steps">
+      <div class="next-card"><h3 class="step-label">Fixed it in Word?</h3>
+        <label class="redrop" id="redrop" for="file-input"><strong>Drop the new version</strong>
+          <span>The list updates by itself and shows what’s now fixed.</span></label></div>
+      <div class="next-card"><h3 class="step-label">Take it with you</h3>${downloads}
+        <button type="button" class="button ghost" id="copy-all">Copy all comments</button>
+        <p class="muted small" id="copy-all-note">Every Must fix and Should fix, as “Please…” lines.</p></div>
+    </aside>`);
+  }
+  parts.push("</div>");
 
   // keep open/closed panels as they were when the results refresh
   const wasOpen = new Set([...document.querySelectorAll(".manuscript[open]")].map((e) => e.dataset.name));
@@ -496,6 +654,9 @@ function renderResults() {
   if (hadPanels) {
     for (const d of document.querySelectorAll(".manuscript")) d.open = wasOpen.has(d.dataset.name) || openAll;
   }
+  for (const d of document.querySelectorAll(".manuscript[data-name]")) refreshProgress(d);
+  $("report-step").hidden = true;
+  drop.classList.add("compact");
 
   const xl = $("download-report");
   if (xl) xl.addEventListener("click", () => download("screening_report.xlsx", report,
@@ -503,6 +664,7 @@ function renderResults() {
   const wd = $("download-word");
   if (wd) wd.addEventListener("click", () => download("screening_report.docx", word,
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
+  const copyText = (text, done) => (navigator.clipboard ? navigator.clipboard.writeText(text).then(() => done(true), () => done(false)) : done(false));
   for (const chip of $("results").querySelectorAll(".chip")) {
     chip.addEventListener("click", () => { shown[chip.dataset.sev] = !shown[chip.dataset.sev]; renderResults(); });
   }
@@ -513,6 +675,57 @@ function renderResults() {
       saveAccountData((d) => { d.view = view; });
       renderResults();
     });
+  }
+  for (const b of document.querySelectorAll(".group-toggle")) {
+    b.addEventListener("click", () => { const g = b.dataset.gid; collapsed.has(g) ? collapsed.delete(g) : collapsed.add(g); renderResults(); });
+  }
+  for (const t of document.querySelectorAll(".tick")) {
+    t.addEventListener("change", () => {
+      const li = t.closest(".cl-item"), [name, key] = splitId(li.dataset.id);
+      setTick(name, key, t.checked);
+      li.classList.toggle("done", t.checked);
+      refreshProgress(li.closest(".manuscript"));
+    });
+  }
+  for (const b of document.querySelectorAll(".cl-toggle")) {
+    b.addEventListener("click", () => {
+      const li = b.closest(".cl-item"), body = li.querySelector(".cl-body"), open = body.hidden;
+      body.hidden = !open;
+      li.classList.toggle("open", open);
+      b.setAttribute("aria-expanded", String(open));
+      b.textContent = open ? "Hide" : "Details";
+      openItems.set(li.dataset.id, open);
+    });
+  }
+  for (const b of document.querySelectorAll(".cl-group-toggle")) {
+    b.addEventListener("click", () => {
+      const list = b.closest(".cl-group").querySelector(".checklist"), open = list.hidden;
+      list.hidden = !open;
+      b.setAttribute("aria-expanded", String(open));
+      b.textContent = open ? "Hide suggestions" : "Show suggestions";
+      openGroups.set(b.dataset.gid, open);
+    });
+  }
+  for (const b of document.querySelectorAll(".copy-comment")) {
+    b.addEventListener("click", () => copyText(b.dataset.comment, (ok) => {
+      b.textContent = ok ? "Copied" : "Couldn’t copy"; setTimeout(() => { b.textContent = "Copy as a comment"; }, 1600);
+    }));
+  }
+  const copyAll = $("copy-all");
+  if (copyAll) copyAll.addEventListener("click", () => {
+    const blocks = readable.map((r) => {
+      const lines = liveIssues(r).filter((i) => i.severity !== "advisory" && i.fix).map((i) => "- " + asComment(i.fix));
+      return lines.length ? (readable.length > 1 ? r.name + "\n" : "") + lines.join("\n") : "";
+    }).filter(Boolean);
+    if (!blocks.length) { $("copy-all-note").textContent = "Nothing to copy: no Must fix or Should fix findings."; return; }
+    copyText(blocks.join("\n\n"), (ok) => { $("copy-all-note").textContent = ok ? "Copied." : "Couldn’t copy from this browser."; });
+  });
+  const redrop = $("redrop");
+  if (redrop) {
+    redrop.addEventListener("click", () => { nextIsVersion = true; });
+    redrop.addEventListener("dragover", (e) => { e.preventDefault(); redrop.classList.add("over"); });
+    redrop.addEventListener("dragleave", () => redrop.classList.remove("over"));
+    redrop.addEventListener("drop", (e) => { e.preventDefault(); redrop.classList.remove("over"); addFiles(e.dataTransfer.files, true); });
   }
   const toggle = $("toggle-dismissed");
   if (toggle) toggle.addEventListener("click", () => { showDismissed = !showDismissed; renderResults(); });
