@@ -1,0 +1,12 @@
+# AMA style (medicine)
+
+name: AMA style (medicine)
+description: >-
+  AMA: superscript numbers cited in order, references as Surname AB, Year;Volume(Issue):Pages, DOIs as doi:10…, first three authors then et al when there are more than six.
+based_on: generic
+last_verified: 2026-10
+
+settings:
+  citation_style: ama
+  p_value_style: no_leading_zero     # AMA: P = .03
+  spelling: us

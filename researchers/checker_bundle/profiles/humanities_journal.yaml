@@ -1,0 +1,33 @@
+# Humanities journal
+# Essays and articles in history, literature, philosophy and similar fields: no IMRaD, no participants
+# or study design, so the study checks are switched off. Citations are checked for consistency only.
+
+name: Humanities journal
+description: >-
+  For essays in history, literature, philosophy and similar fields: no IMRaD structure and no study-design
+  checks; abbreviations, figures, declarations and references are still checked.
+based_on: generic
+last_verified: 2026-10
+
+settings:
+  citation_style: auto
+
+required_sections:
+  research: [Abstract, Keywords, References]
+
+rules:
+  ethics_statement: 'off'
+  sample_size: 'off'
+  study_period: 'off'
+  data_age: 'off'
+  inclusion_exclusion: 'off'
+  euthanasia: 'off'
+  trial_registration: 'off'
+  prospero: 'off'
+  reporting_guideline: 'off'
+  guideline_items: 'off'
+  helsinki: 'off'
+  sex_gender: 'off'
+  code_availability: 'off'
+  data_availability: 'off'
+  reference_age: 'off'          # older sources are normal in the humanities

@@ -1,0 +1,12 @@
+# Generic, double-blind review
+# The universal core, plus the checks that make sure reviewers can't tell who the authors are.
+
+name: Generic, double-blind
+description: >-
+  The universal core plus anonymisation checks for double-blind review: no title page, author names,
+  emails or affiliations in the manuscript, clean file properties, no first-person self-citation.
+based_on: generic
+last_verified: 2026-10
+
+settings:
+  review_model: double_blind

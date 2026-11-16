@@ -1,0 +1,176 @@
+# Generic profile: the universal core.
+# What nearly every journal expects (ICMJE / COPE basics), without any one publisher's house rules.
+# Every other profile starts from this one ("based_on: generic") and only lists what it changes.
+
+name: Generic (universal core)
+description: >-
+  Baseline checks most journals share: required sections, abbreviations, figure and table
+  citations, ethics, consent, declarations and references. House-specific rules are advisory.
+last_verified: 2026-10
+
+settings:
+  review_model: single_blind          # single_blind / double_blind / open. double_blind turns on the anonymisation checks
+  citation_style: auto                # auto / apa / harvard / ama / vancouver / ieee. auto checks consistency only
+  old_reference_years: 10             # references older than this count as old (rule: reference_age)
+  old_reference_share: 50             # flag when more than this % of references are old
+  self_citation_share: 30             # flag when more than this % of references include an author's surname
+  abstract_word_limit: 250
+  data_cutoff_year: 2020              # data collected before this year is flagged (rule: data_age)
+  extra_ignore_abbreviations: []      # abbreviations this journal doesn't need defined, e.g. [ICU, MIC]
+  skip_gene_and_chemical_symbols: true
+  limits: {}                          # per article type: {words, references, figures_tables, abstract_words}
+  title_max_words: null
+  require_running_title: false
+  abstract_structure: any
+  abstract_headings: []
+  keywords: {}
+  require_highlights: false
+  highlights: {}
+  require_line_numbers: false
+  require_double_spacing: false
+  require_page_numbers: false
+  p_value_style: any
+  spelling: any
+
+# Formatting requirements. None of these are checked unless a profile sets them (null / false = not checked).
+formatting_help: >-
+  limits: per article type, e.g. research: {words: 4000, references: 50, figures_tables: 6, abstract_words: 300}.
+  abstract_structure: any / structured / unstructured; abstract_headings: e.g. [Background, Methods, Results, Conclusions].
+  keywords: {min: 3, max: 6}. highlights: {min: 3, max: 5, max_chars: 85} with require_highlights: true.
+  p_value_style: any / leading_zero (p = 0.03) / no_leading_zero (p = .03). spelling: any / us / uk.
+
+# Sections each article type must have (rule: section_missing / abstract_missing / keywords_missing).
+# "Results and discussion" counts as both Results and Discussion.
+required_sections:
+  research:            [Abstract, Keywords, Introduction, Methods, Results, Discussion, References]
+  short communication: [Abstract, Keywords, Introduction, Methods, Results, Discussion, References]
+  case report:         [Abstract, Keywords, Introduction, Case presentation, Discussion, References]
+  narrative review:    [Abstract, Keywords, Introduction, References]
+  protocol:            [Abstract, Keywords, Introduction, Methods, References]
+  methods:             [Abstract, Keywords, Introduction, Methods, References]
+  data paper:          [Abstract, Methods, References]
+  letter:              [References]
+  commentary:          [References]
+  book review:         []
+  correction:          []
+
+# How much each rule matters: must / should / advisory / off.  See rules.py for what each one checks.
+rules:
+  # Structure
+  section_missing: must
+  abstract_missing: must
+  keywords_missing: should
+  abstract_length: should
+  leftover_markup: should
+
+  # Formatting (most only apply when the profile sets a requirement in settings)
+  word_limit: should
+  reference_limit: should
+  figure_table_limit: should
+  title_length: advisory
+  running_title: should
+  abstract_structure: should
+  keyword_count: advisory
+  highlights: should
+  line_numbers: advisory
+  line_spacing: advisory
+  page_numbers: advisory
+  p_value_format: advisory
+  spelling_consistency: advisory
+  number_sentence_start: advisory
+
+  # Files in a submission
+  extraction_failed: must
+  extraction_partial: should
+  input_format: advisory
+  title_page_items: should
+  cover_letter: should
+
+  # Integrity red flags
+  tortured_phrases: should
+  ai_artifacts: should
+  prompt_injection: must
+  hidden_text: should
+  ai_author: must
+  freemail: advisory
+  percentage_check: should
+  impossible_values: should
+  self_citation_ratio: advisory
+
+  # Anonymisation (only checked when review_model is double_blind)
+  anon_title_page: must
+  anon_emails: must
+  anon_names: must
+  anon_headers: should
+  anon_metadata: should
+  anon_self_citation: should
+  anon_acknowledgements: should
+  anon_institution: advisory
+
+  # Abbreviations
+  abbr_not_defined: should
+  abbr_used_early: should
+  abbr_defined_twice: advisory
+  abbr_not_used: advisory
+
+  # Figures and tables
+  figtab_numbering: should
+  figtab_order: should
+  figtab_not_cited: must
+  figtab_no_caption: should
+  table_count: advisory
+
+  # Declarations
+  coi_statement: must
+  funding_statement: must
+  author_contributions: should
+  acknowledgements: advisory
+  data_availability: should
+  ethics_statement: advisory
+  ethics_approval: must
+  ethics_committee: should
+  ethics_number: should
+  ethics_date: advisory
+  consent: must
+  consent_mode: should
+  verbal_consent: advisory
+  consent_minors: must
+  consent_publication: must
+  ai_disclosure: advisory
+  credit_roles: advisory
+  corresponding_author: advisory
+  orcid: 'off'                        # most journals collect ORCID iDs in the submission system
+  data_on_request: 'off'              # turn on for journals that require data in a repository
+  code_availability: advisory
+  helsinki: advisory
+  funding_details: advisory
+  figure_permission: should
+
+  # Reporting guidelines (EQUATOR)
+  reporting_guideline: advisory
+  guideline_items: advisory
+
+  # Study details
+  sample_size: should
+  study_period: should
+  data_age: advisory
+  inclusion_exclusion: should
+  questionnaire: advisory
+  euthanasia: advisory
+  trial_registration: must
+  prospero: should
+  trial_registration_timing: should
+  sex_gender: advisory
+
+  # References
+  reference_list: must
+  citation_not_in_list: must
+  reference_not_cited: should
+  citation_format: advisory
+  citation_system: must
+  citation_mixed: should
+  citation_order: should
+  reference_list_order: should
+  intext_format: should
+  reference_format: should
+  reference_age: advisory

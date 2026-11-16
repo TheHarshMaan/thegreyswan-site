@@ -1,0 +1,18 @@
+# IEEE style (engineering, computing)
+
+name: IEEE style (engineering, computing)
+description: >-
+  IEEE: numbers in square brackets cited in order, references as [1] A. B. Smith, “Title,” Journal, vol., no., pp.
+based_on: generic
+last_verified: 2026-10
+
+settings:
+  citation_style: ieee
+
+# Engineering papers name their middle sections freely ("Proposed Method", "Experiments"), and rarely state
+# a data collection period
+required_sections:
+  research: [Abstract, Keywords, Introduction, References]
+rules:
+  study_period: 'off'
+  data_age: 'off'

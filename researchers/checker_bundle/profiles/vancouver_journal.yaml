@@ -1,0 +1,10 @@
+# Vancouver style (biomedical)
+
+name: Vancouver style (biomedical)
+description: >-
+  Vancouver: numbered citations in order of first mention, references as Surname AB, Year;Volume(Issue):Pages, first six authors then et al.
+based_on: generic
+last_verified: 2026-10
+
+settings:
+  citation_style: vancouver

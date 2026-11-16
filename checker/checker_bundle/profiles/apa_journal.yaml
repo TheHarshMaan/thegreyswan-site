@@ -1,0 +1,17 @@
+# APA style (psychology, social sciences)
+
+name: APA style (psychology, social sciences)
+description: >-
+  APA 7: author–date citations such as (Smith & Lee, 2020), an alphabetical reference list with the year in brackets after the authors, and DOIs as https://doi.org links.
+based_on: generic
+last_verified: 2026-10
+
+settings:
+  citation_style: apa
+  p_value_style: no_leading_zero     # APA: p = .03
+  spelling: us
+
+# APA papers don't put a heading on the introduction (the title is repeated instead), and use "Method"
+required_sections:
+  research: [Abstract, Keywords, Methods, Results, Discussion, References]
+  short communication: [Abstract, Keywords, Methods, Results, Discussion, References]

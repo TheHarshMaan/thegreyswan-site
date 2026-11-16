@@ -1,0 +1,30 @@
+# Strict screening desk
+# The stricter house rules of a publisher screening desk, as the checker originally worked:
+# approval date, old data, verbal-only consent, questionnaires and euthanasia are all followed up.
+
+name: Screening desk (strict)
+description: >-
+  Strict screening-desk rules: the generic core plus approval dates, data older than the
+  cut-off year, verbal-only consent, supplied questionnaires and euthanasia statements.
+based_on: generic
+last_verified: 2026-10
+
+rules:
+  acknowledgements: should
+  author_contributions: must
+  data_availability: must
+  ethics_statement: should
+  ethics_committee: must
+  ethics_number: must
+  ethics_date: must
+  verbal_consent: should
+  study_period: must
+  data_age: should
+  inclusion_exclusion: must
+  questionnaire: should
+  euthanasia: should
+  prospero: must
+  table_count: should
+  ai_disclosure: should
+  consent_publication: must
+  reporting_guideline: should
