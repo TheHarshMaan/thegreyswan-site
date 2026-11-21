@@ -49,6 +49,8 @@ SECTION_NAMES = {
     "Data availability":     ["data availability", "data availability statement", "availability of data and materials",
                               "data sharing statement"],
     "Data records":          ["data records", "technical validation", "usage notes", "data description"],
+    "Plain language summary": ["plain language summary", "plain language summary title", "lay summary",
+                               "plain english summary", "non-technical summary"],
     "References":            ["references", "bibliography", "literature cited", "reference list", "works cited",
                               "cited works", "sources"],
 }
@@ -82,6 +84,11 @@ def match_section(paragraph):
         if cleaned in variants:
             return official
     return None
+
+
+# "Background:" / "Methods:" on a line of their own inside an abstract are its labels, not the paper's headings
+ABSTRACT_LABEL = re.compile(r"^\s*(?:background|objectives?|aims?|purpose|context|methods?|materials and methods|"
+                            r"design|setting|results?|findings|conclusions?|interpretation)\s*:\s*$", re.IGNORECASE)
 
 
 UNITS = re.compile(r"(?:\b(?:m|cm|mm|km|kg|µm|μm|nm|ft|in|s)|\d)$")
@@ -121,6 +128,9 @@ def split_into_sections(path, name=None):
     for p in doc.paragraphs:
         name = match_section(p)
         text = paragraph_text(p).strip()
+        if name and sections[-1][0] == "Abstract" and ABSTRACT_LABEL.match(p.text or "") \
+                and sum(len(t.split()) for t in sections[-1][1]) < 450:
+            name = None                      # stays in the abstract, as text
         if name:
             sections.append((name, []))
             # keep inline text, e.g. "Keywords: x, y" -> "x, y"

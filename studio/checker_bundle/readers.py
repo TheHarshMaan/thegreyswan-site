@@ -181,8 +181,9 @@ def read_pdf(source):
         for line in set(l.strip() for l in lines):
             counts[line] = counts.get(line, 0) + 1
     repeated = {l for l, n in counts.items() if len(pages) >= 3 and n >= len(pages) * 0.6 and len(l) < 120}
+    watermark = re.compile(r"(?:for\s+)?peer\s+review(?:\s+only)?|confidential|not\s+for\s+distribution", re.IGNORECASE)
     lines = [l.strip() for page in pages for l in page
-             if l.strip() and l.strip() not in repeated and not re.fullmatch(r"(?:page\s*)?\d+(?:\s*(?:of|/)\s*\d+)?", l.strip(), re.I)]
+             if l.strip() and l.strip() not in repeated and not watermark.fullmatch(l.strip()) and not re.fullmatch(r"(?:page\s*)?\d+(?:\s*(?:of|/)\s*\d+)?", l.strip(), re.I)]
 
     from step1_split_sections import match_section
     from step5_anonymisation import AUTHOR_LINE, EMAIL, ORCID, front_standalone, institutions_in, looks_like_title

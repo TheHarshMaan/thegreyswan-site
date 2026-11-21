@@ -1251,6 +1251,33 @@ def _names_in(line):
     return found
 
 
+# Lower-case words allowed in a line of names (particles); two or more other lower-case words mean a sentence or a title
+NAME_PARTICLES = {"and", "de", "da", "del", "della", "der", "den", "van", "von", "la", "le", "bin", "binti", "al", "el",
+                  "dos", "das", "du", "et", "ibn", "ter", "by"}
+
+# ScholarOne cover page: "Complete List of Authors: Rajabzadeh, Hanieh ; Urmia University of Medical Sciences", then one
+# "Surname, Given ; Institution" per line
+S1_AUTHORS = re.compile(r"^\s*complete\s+list\s+of\s+authors\s*:\s*", re.IGNORECASE)
+S1_ROW = re.compile(r"^\s*([A-Za-z\u00C0-\u024F][\w'’\- ]{0,40}?),\s*([A-Za-z\u00C0-\u024F][\w'’\-. ]{0,40}?)\s*;\s*(.*)$")
+
+
+def scholarone_authors(paragraphs):
+    people, on = [], False
+    for t in paragraphs:
+        t = t.strip()
+        if S1_AUTHORS.match(t):
+            on, t = True, S1_AUTHORS.sub("", t)
+        elif not on:
+            continue
+        m = S1_ROW.match(t)
+        if not m:
+            break
+        sur, giv, aff = m.group(1).strip(), m.group(2).strip(), m.group(3).strip()
+        fix = lambda s: s.title() if s.islower() else s                       # "goodarzi" -> "Goodarzi"
+        people.append(_person(f"{fix(giv)} {fix(sur)}", affiliation=clean_affiliation(aff)))
+    return people
+
+
 def _is_name_line(line):
     if EMAIL_RE.search(line) or len(line) > 400:
         return []
@@ -1258,6 +1285,8 @@ def _is_name_line(line):
     names = _names_in(head)
     if not names:
         return []
+    if len([w for w in re.findall(r"\b[a-z]{2,}\b", head) if w not in NAME_PARTICLES]) >= 2:
+        return []                              # "Glucose and Breast Cancer Burden in Asia: …" is a title, not names
     covered = sum(e - b for b, e in (n["span"] for n in names))
     bare = re.sub(r"\b(?:and|&)\b|[,;\s\d\[\]*†‡§¶#–-]", "", head)
     letters = re.sub(r"[^A-Za-z]", "", head)
@@ -1484,7 +1513,7 @@ def merge_people(lists):
 def extract(files):
     """files: [(path, original name)] -> {title, abstract, keywords, people, unplaced}"""
     from step1_split_sections import split_into_sections
-    title, abstract, keywords, lists, unplaced = "", "", [], [], []
+    title, abstract, keywords, lists, unplaced, texts = "", "", [], [], [], []
     for path, name in files:
         try:
             sections, _ = split_into_sections(path, name)
@@ -1513,11 +1542,21 @@ def extract(files):
                             abstract = t[:m.start()].strip()
                         break
             keywords = [k.strip(" .") for k in re.split(r"[;,·•|]", kw) if 1 < len(k.strip(" .")) < 80][:15]
+        lists.append(scholarone_authors(front))         # a ScholarOne cover page, if there is one
         people, loose = parse_title_page(front)
         lists.append(people)
+        texts += [t for n, paras in sections if n != "References" for t in paras][:150]
         unplaced += loose
         lists.append(reviewers_in([t for _, paras in sections for t in paras]))
-    return {"title": title, "abstract": abstract, "keywords": keywords, "people": merge_people(lists),
+    seen = set()                                          # the same keywords on a cover page and the title page
+    keywords = [k for k in keywords if not (k.lower() in seen or seen.add(k.lower()))]
+    merged = merge_people(lists)
+    for t in texts:                                       # an email further in (the title page after a cover page)
+        for m in EMAIL_RE.finditer(t):
+            who = _match_by_email([x for x in merged if x["role"] == "author" and not x["email"]], m.group(0))
+            if who and not any(x["email"].lower() == m.group(0).lower() for x in merged):
+                who["email"] = m.group(0)
+    return {"title": title, "abstract": abstract, "keywords": keywords, "people": merged,
             "unplaced": list(dict.fromkeys(unplaced))}
 
 
