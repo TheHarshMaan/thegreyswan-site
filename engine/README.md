@@ -49,8 +49,9 @@ To see the numbers, open `<engine address>/marks`: `total`, `days` (stars per da
 
 - **Cost:** Cloudflare's free plan covers a large number of requests a day, far more than the site uses now.
 - **Switching it off:** empty the quotes in `assets/engine.js` again; the tools go straight back to OpenAlex.
-- **Safety:** it answers only GET requests from thegreyswan.in, and only for api.openalex.org, so nobody can use it
-  as a general proxy or to spend your OpenAlex allowance from their own site.
+- **Safety:** it forwards only GET requests to api.openalex.org, and only for thegreyswan.in, so nobody can use it
+  as a general proxy or to spend your OpenAlex allowance from their own site. The only thing it accepts a POST for is
+  a star in the homepage sky, again only from thegreyswan.in.
 - **The key** lives only in Cloudflare's secret store, never in this public repository.
 - `wrangler.toml` is there in case a developer prefers to deploy it with Cloudflare's command-line tool
   (`npx wrangler deploy`, then `npx wrangler secret put OPENALEX_KEY`).
