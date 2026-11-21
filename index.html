@@ -105,6 +105,21 @@
   /* Sections */
   section { padding: 72px 0; }
   .section-head { text-align: center; max-width: 720px; margin: 0 auto 44px; }
+
+  /* Leave a mark */
+  .marks-sky { display: block; width: 100%; height: auto; aspect-ratio: 1000 / 360; border: 1px solid var(--line);
+               border-radius: 10px; cursor: crosshair; }
+  .marks-sky .star { fill: #ECE8E1; opacity: 0.75; }
+  .marks-sky .star.new { fill: var(--gold-bright); opacity: 0.95; }
+  .marks-sky .star.yours { fill: var(--gold-bright); opacity: 1; animation: marks-pulse 1.8s ease-in-out infinite; }
+  .marks-lines line { stroke: var(--gold); stroke-width: 0.8; opacity: 0.28; }
+  @keyframes marks-pulse { 0%, 100% { r: 5; opacity: 1; } 50% { r: 7.5; opacity: 0.6; } }
+  @media (prefers-reduced-motion: reduce) { .marks-sky .star.yours { animation: none; } }
+  .marks-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
+  .marks-count { margin: 0; color: var(--muted); }
+  .marks-count b { color: var(--ink); font-weight: 500; }
+  .marks-note { margin: 10px 0 0; color: var(--gold); min-height: 1.6em; }
+  .marks-button { padding: 10px 20px; }
   h2 { font-size: clamp(2rem, 4.5vw, 2.9rem); margin: 10px 0 14px; }
   .section-head p { color: var(--muted); margin: 0; }
   .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
@@ -508,6 +523,32 @@
     </div>
   </section>
 
+  <section id="marks" class="marks" style="border-top:1px solid var(--line)" hidden>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Visitors</div>
+        <h2>Leave a <em>mark</em></h2>
+        <p>Tap the sky to add your star. No sign-in, and nothing about you is kept: just a star, and the day you left it.</p>
+      </div>
+      <svg id="marks-sky" class="marks-sky" viewBox="0 0 1000 360" preserveAspectRatio="none" role="img"
+           aria-label="A night sky of stars left by visitors. Click to add yours.">
+        <defs>
+          <radialGradient id="marks-glow" cx="50%" cy="0%" r="90%">
+            <stop offset="0%" stop-color="#1F2430"/><stop offset="100%" stop-color="#0D0F12"/>
+          </radialGradient>
+        </defs>
+        <rect width="1000" height="360" fill="url(#marks-glow)"/>
+        <g id="marks-lines" class="marks-lines"></g>
+        <g id="marks-stars"></g>
+      </svg>
+      <div class="marks-foot">
+        <p id="marks-count" class="marks-count" aria-live="polite">Looking up at the sky…</p>
+        <button type="button" id="marks-button" class="btn btn-line marks-button">Leave my mark</button>
+      </div>
+      <p id="marks-note" class="marks-note" aria-live="polite"></p>
+    </div>
+  </section>
+
   <section id="contact" class="contact" style="border-top:1px solid var(--line)">
     <div class="wrap">
       <div class="eyebrow">Contact</div>
@@ -560,6 +601,8 @@
 </script>
 <script src="assets/account.js"></script>
 <script src="assets/feedback.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/marks.js"></script>
 <script>
 /* Crest opening: draws, then flies into the header logo. Click, Skip or Escape ends it early. */
 (function () {

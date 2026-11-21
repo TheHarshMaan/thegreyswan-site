@@ -31,6 +31,20 @@ Until it is set up, the site works exactly as before: `assets/engine.js` is empt
 
    Commit. From then on, Find reviewers and Check conflicts ask OpenAlex through the engine.
 
+## Switch on "Leave a mark" (the homepage sky)
+
+The homepage's night sky stores visitors' stars in Cloudflare KV, a small free database. One-time set-up:
+
+1. In the Cloudflare dashboard: **Storage & Databases → KV → Create a namespace**, name it `grey-swan-marks`.
+2. Open the worker **grey-swan-engine → Bindings** (or **Settings → Bindings**) → **Add binding → KV namespace**.
+   Variable name: `MARKS`, namespace: `grey-swan-marks`. Save and deploy.
+3. Optional: add a **Secret** variable `MARK_SALT` with any long random text (it scrambles the short-lived visitor
+   fingerprint that stops one person filling the sky).
+4. Paste the newest `worker.js` into **Edit code** and **Deploy**.
+5. Check `<engine address>/health`: it should now include `"marks":true`. The sky appears on the homepage by itself.
+
+To see the numbers, open `<engine address>/marks`: `total`, `days` (stars per day) and `countries` (stars per country).
+
 ## Good to know
 
 - **Cost:** Cloudflare's free plan covers a large number of requests a day, far more than the site uses now.
