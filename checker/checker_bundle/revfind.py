@@ -520,15 +520,37 @@ def outlook(c, t, fit_label, journal_country, today_year=None):
     return label, pts, why
 
 
+ASPECT_BONUS = 5               # per aspect of the manuscript a candidate adds to those already covered (at most 3)
+
+
+def aspects_of(ctx):
+    """The manuscript's angles for a balanced panel: its keywords, then its own key phrases."""
+    out, seen = [], set()
+    for a in [k.strip() for k in ctx["keywords"][:6]] + key_phrases(ctx, 4):
+        key = " ".join(sorted(words(a)))
+        if a and key and key not in seen:
+            seen.add(key)
+            out.append(a)
+    return out[:8]
+
+
+def covered(aspects, have):
+    """Which aspects a researcher's work covers: every content word of the aspect appears in it."""
+    return [a for a in aspects if words(a) and all(w in have for w in words(a))]
+
+
 def mmr_order(cands, limit=None):
     """Best first, but a candidate who shares an institution with, or has published with, someone already chosen
-    moves down, and one country can't fill the list."""
+    moves down, one country can't fill the list, and someone who covers an angle of the manuscript nobody above
+    covers yet moves up (a panel, not five copies of the same expert)."""
     left = [c for c in cands if not c["conflicted"]]
     chosen, inst_seen, country_n = [], set(), {}
-    ids_chosen = set()
+    ids_chosen, aspects_seen = set(), set()
     while left and (limit is None or len(chosen) < limit):
         def value(c):
             v = c["score"]
+            if chosen:
+                v += ASPECT_BONUS * min(3, len(set(c.get("covers") or []) - aspects_seen))
             if c["institution_key"] and c["institution_key"] in inst_seen:
                 v -= 25
             if set(c["coauthors_in_list"]) & ids_chosen:
@@ -540,6 +562,7 @@ def mmr_order(cands, limit=None):
         left.remove(best)
         chosen.append(best)
         ids_chosen.add(best["id"])
+        aspects_seen.update(best.get("covers") or [])
         if best["institution_key"]:
             inst_seen.add(best["institution_key"])
         country_n[best["country"] or "?"] = country_n.get(best["country"] or "?", 0) + 1
@@ -785,6 +808,7 @@ async def find(session, fetch, progress=None):
     max_credit = max((p["credit"] for p in picked if p["id"] in profs), default=0) or 1
 
     cands, conflicted, dropped = [], [], 0
+    aspects = aspects_of(ctx)
     for p in picked:
         a = profs.get(p["id"])
         if not a:
@@ -829,6 +853,7 @@ async def find(session, fetch, progress=None):
              "shared_refs": shared_best, "fit": fit, "fit_label": fit_label,
              "retracted": retracted.get(p["id"], 0)}
         c["seniority"] = seniority(prof, stats)
+        c["covers"] = covered(aspects, set(texts.get(p["id"], {})) | ic.terms(profile_text))
         # Independence
         reasons = []
         if p["id"] in self_authors:
@@ -950,7 +975,7 @@ async def find(session, fetch, progress=None):
                     for p, i in author_pairs],
         "method": {"queries": queries, "topics": [topic_count[t][1] for t in topics], "references_with_doi": len(dois),
                    "references_found": len(cited), "references_compared": len(ref_ids), "sharing_papers": coupled_found,
-                   "phrases": key_phrases(ctx), "considered": len(pool.people), "profiles": len(profs), "low_fit": dropped,
+                   "phrases": key_phrases(ctx), "aspects": aspects, "considered": len(pool.people), "profiles": len(profs), "low_fit": dropped,
                    "since": since, "independence_since": coi_since, "seeds": [s for s, _ in seeds],
                    "tracker_matches": sum(1 for c in ordered + conflicted if c.get("tracker"))},
         "warnings": warnings, "manuscript": {"title": ctx["title"], "keywords": ctx["keywords"]},

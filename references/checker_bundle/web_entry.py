@@ -163,15 +163,31 @@ class BrowserFetcher(idcheck.Fetcher):
                 return None, None
         return r.status, None
 
+    # The Grey Swan Engine (engine/worker.js, on Cloudflare): when the site has one, OpenAlex is asked through it. It
+    # adds the site's OpenAlex key and remembers answers for a day, so visitors need no key of their own.
+    engine = ""
+
+    def openalex(self, path, **params):
+        url = super().openalex(path, **params)
+        if self.engine:
+            url = self.engine.rstrip("/") + "/openalex" + url[len(idcheck.OPENALEX):]
+        return url
+
 
 _FETCHER = {"keys": None, "fetcher": None}
 
 
 def _fetcher(keys_json):
     keys = json.loads(keys_json or "{}")
-    sig = (keys.get("openalex") or "", keys.get("ror") or "")
+    engine = (keys.get("engine") or "").strip()
+    engine = engine if engine.startswith("https://") else ""
+    sig = ("" if engine else keys.get("openalex") or "", keys.get("ror") or "", engine)   # the engine holds the key
     if _FETCHER["keys"] != sig:
         _FETCHER["fetcher"] = BrowserFetcher(openalex_key=sig[0], ror_client_id=sig[1])
+        if engine:
+            from urllib.parse import urlparse
+            _FETCHER["fetcher"].engine = engine
+            _FETCHER["fetcher"].GAP = {**idcheck.Fetcher.GAP, urlparse(engine).netloc: 0.05}
         _FETCHER["keys"] = sig
     return _FETCHER["fetcher"]
 

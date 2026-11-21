@@ -64,7 +64,7 @@ function download(name, data, type) {
 function keys() {
   let own = "";
   try { own = localStorage.getItem("gs-openalex-key") || ""; } catch (e) { /* storage off */ }
-  return JSON.stringify({ openalex: own.trim() || SITE_OPENALEX_KEY, ror: ROR_CLIENT_ID });
+  return JSON.stringify({ openalex: own.trim() || SITE_OPENALEX_KEY, ror: ROR_CLIENT_ID, engine: window.GS_ENGINE || "" });
 }
 const VERDICT = { green: "No issues found", amber: "Points to check", red: "Important points to check" };
 const STATUS = { ok: "OK", check: "Check", concern: "Concern", info: "Note", unavailable: "Couldn't check" };

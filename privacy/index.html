@@ -54,7 +54,7 @@
 <main class="wrap">
   <div class="eyebrow">Privacy</div>
   <h1>Privacy policy</h1>
-  <p class="updated">Last updated: 11 November 2026</p>
+  <p class="updated">Last updated: 21 November 2026</p>
 
   <div class="summary">
     <b>In short</b>
@@ -99,6 +99,18 @@
     addresses and your Invitations list are not sent. The list is read in your browser to show your history with each candidate. Your
     shortlist, invitation note and settings stay in your browser; results are not saved anywhere unless you download a
     report or add people to your Invitations list.</p>
+  <p><b>Reviewers' public emails.</b> To find a candidate's latest public email address, their name and ORCID iD are
+    sent from your browser to <a href="https://europepmc.org" target="_blank" rel="noopener">Europe PMC</a>, which holds
+    published papers' author details. Only addresses printed in their own published papers are shown, each with a link
+    to the paper it came from. Nothing about the manuscript is sent.</p>
+  <p><b>Smart matching (optional).</b> If you turn on Smart matching, a small language model is downloaded to your
+    browser from <a href="https://huggingface.co" target="_blank" rel="noopener">Hugging Face</a>, and the software that
+    runs it from <a href="https://www.jsdelivr.com" target="_blank" rel="noopener">jsDelivr</a>. The model runs on your
+    computer: the manuscript and the candidates are compared there, and nothing about them is sent to either service.</p>
+  <p><b>The Grey Swan Engine.</b> When it is switched on, the OpenAlex searches above pass through our own small server
+    on <a href="https://www.cloudflare.com" target="_blank" rel="noopener">Cloudflare</a>, which adds our OpenAlex key
+    and keeps OpenAlex's public answers for a day so repeat searches are faster. It receives the same search terms that
+    would otherwise go straight to OpenAlex, never the manuscript, and keeps no record of who searched.</p>
 
   <h2>Papers you write in Studio</h2>
   <p>Studio keeps the papers you write in your browser's local storage, on your device. They are not sent to us.
@@ -153,7 +165,9 @@
     or the names or details of anyone checked.</p>
   <p>Google's sign-in window may set its own cookies, under Google's policies. Like any website, our hosting provider
     may keep standard technical logs (such as IP address and pages requested) for security and reliability. Web fonts are
-    loaded from Google Fonts.</p>
+    loaded from Google Fonts. The tools that read files in your browser download their Python engine (Pyodide) from
+    <a href="https://www.jsdelivr.com" target="_blank" rel="noopener">jsDelivr</a>, which, like any content network,
+    sees your IP address when it sends the files.</p>
 
   <h2>Feedback</h2>
   <p>The Feedback button on each page opens a message in your own email (your mail app or Gmail), ready for you to send

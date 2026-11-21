@@ -7,6 +7,8 @@ Where candidates come from (OpenAlex, the open research database):
     how close the paper is, their place on it (first, last or corresponding author count most) and how recent it is.
   - Field leaders: the most-cited recent papers in the manuscript's research topics.
   - Cited authors: authors of recent papers in the manuscript's own reference list.
+  - Shared references: authors of recent papers that cite several of the same references as the manuscript (papers
+    built on the same research are usually about the same thing; very widely cited references are left out).
   - Your reviewers: people in the Reviewer Tracker whose keywords fit, with their history and email address.
   - Networks of reliable reviewers: co-authors of people who have accepted your invitations before, and of anyone
     the editor picks ("more like this").
@@ -20,7 +22,8 @@ Every candidate is then checked:
   - Candidates who have published together or share an institution are marked, so a shortlist can avoid them.
 
 Ranking (shown with its reasons for every candidate):
-  - Fit (60%): how closely their recent work matches the manuscript (term similarity and search evidence).
+  - Fit (60%): how closely their recent work matches the manuscript: similarity of words and two-word phrases, search
+    evidence, and, when the reference list is given, how many of its references their recent papers share.
   - Outlook (25%): how likely they are to accept: your own history with them first, then what research on reviewer
     responses shows (recent activity, career stage, an open invitation from you, a recent one).
   - Activity (15%): papers in this calendar year and the two before.
@@ -48,6 +51,7 @@ CHUNK = 50                     # ids per OR filter
 ACCEPTED = {"accepted", "submitted"}
 PENDING_DAYS = 21
 RECENT_INVITE_DAYS = 45
+PULSE_DEFAULT = 25             # candidates whose public reviewing record is looked up straight away
 
 def years_label(year):
     """The calendar-year window used for "recent" everywhere: this year and the two before."""
@@ -55,9 +59,16 @@ def years_label(year):
 
 
 SOURCE_TEXT = {"search": "Recent papers match the manuscript", "topic": "Leading recent papers in the manuscript's topics",
-               "cited": "Cited in the manuscript's references", "tracker": "In your Invitations list",
-               "network": "Co-author of a reviewer you trust"}
-SOURCE_WEIGHT = {"search": 1.0, "topic": 0.6, "cited": 0.9, "network": 0.5, "tracker": 0.4}
+               "cited": "Cited in the manuscript's references", "coupled": "Builds on the same research as the manuscript",
+               "tracker": "In your Invitations list", "network": "Co-author of a reviewer you trust"}
+SOURCE_WEIGHT = {"search": 1.0, "topic": 0.6, "cited": 0.9, "coupled": 0.9, "network": 0.5, "tracker": 0.4}
+SOURCE_ORDER = ("search", "coupled", "topic", "cited", "tracker", "network")
+
+# Shared references ("bibliographic coupling"): two papers that cite the same sources are usually about the same thing.
+COUPLING_MAX_CITED = 1500      # a reference cited more often than this (a famous method or guideline) says little
+COUPLING_REFS = 100            # references used to look for papers that share them
+COUPLING_MIN_SHARED = 2        # a paper must share at least this many references to count
+COUPLING_FULL = 6              # sharing this many counts as the strongest evidence
 
 
 # ---------------------------------------------------------------------------
@@ -67,29 +78,97 @@ def words(text):
     return [ic.stem(w) for w in re.findall(r"[a-z][a-z0-9-]{2,}", ic.fold(text or "")) if w not in ic.STOP]
 
 
+CLAUSE = re.compile(r"[.;:,!?()\[\]\n]+")
+
+
+def grams(text):
+    """Word stems plus two-word phrases ("neonat_sepsis"), never across punctuation. Phrases tell "neonatal sepsis"
+    apart from a paper that only mentions "neonatal" and "sepsis" in different places."""
+    out = []
+    for clause in CLAUSE.split(text or ""):
+        ws = words(clause)
+        out += ws
+        out += [a + "_" + b for a, b in zip(ws, ws[1:]) if a != b]
+    return out
+
+
 def manuscript_vector(ctx):
     v = {}
-    for w in words(ctx["title"]):
+    for w in grams(ctx["title"]):
         v[w] = v.get(w, 0) + 3
     for k in ctx["keywords"]:
-        for w in words(k):
+        for w in grams(k):
             v[w] = v.get(w, 0) + 3
-    for w in words(ctx["abstract"]):
+    for w in grams(ctx["abstract"]):
         v[w] = v.get(w, 0) + 1
     return v
 
 
+# Words that are common in abstracts but say nothing about the subject (on top of the shared stop list)
+GENERIC = set("""also may can could would should however therefore thus here there which while whereas within without
+than then such both each other more most less least high higher low lower significant significantly found showed shown
+show shows observed reported present presented current overall total including include included related several various
+different similar first second third one two three four five year years month months day days time times group groups
+level levels rate rates among compared comparison respectively conclusion conclusions background objective objectives aim
+aims purpose findings result outcome outcomes performed conducted investigated examined identified determine determined
+evaluate evaluated increase increased decrease decreased""".split())
+
+
+NUMBERISH = re.compile(r"^(\d|(one|two|three|four|five|six|seven|eight|nine|ten|single|multi|several)-)")
+
+
+def key_phrases(ctx, n=6):
+    """The manuscript's own two- and three-word subject phrases ("carbapenem-resistant klebsiella", "neonatal sepsis"),
+    found the way keyword extractors such as YAKE and RAKE do it, with counting only and no AI: runs of content words
+    between stop words and punctuation, scored by how often they recur and whether the title uses them."""
+    def runs(text):
+        for clause in CLAUSE.split(ic.fold(text or "")):
+            run = []
+            for w in re.findall(r"[a-z][a-z0-9-]*", clause):
+                if w in ic.STOP or w in GENERIC or len(w) < 3 or NUMBERISH.match(w):
+                    if len(run) >= 2:
+                        yield run
+                    run = []
+                else:
+                    run.append(w)
+            if len(run) >= 2:
+                yield run
+
+    score = {}
+    for text, weight in ((ctx["title"], 3), (ctx["abstract"], 1)):
+        for run in runs(text):
+            for size in (3, 2):
+                for i in range(len(run) - size + 1):
+                    p = " ".join(run[i:i + size])
+                    score[p] = score.get(p, 0) + weight
+    keyset = {ic.fold(k).strip() for k in ctx["keywords"]}
+    picked = []
+    for p, s in sorted(score.items(), key=lambda x: (-x[1], -len(x[0].split()), x[0])):
+        if s < 2 or p in keyset:
+            continue
+        if any(p in q or q in p for q in picked):       # "neonatal sepsis" once, not also inside a longer phrase
+            continue
+        picked.append(p)
+        if len(picked) >= n:
+            break
+    return picked
+
+
 def search_queries(ctx):
-    """A few different ways into the literature: the title's key words, each keyword, the abstract's key terms."""
+    """A few different ways into the literature: the title's key words, the keywords, the manuscript's own
+    subject phrases, and (when no phrases recur) the abstract's most frequent terms."""
     qs = []
     tw = [w for w in re.findall(r"[A-Za-z][A-Za-z0-9-]{3,}", ctx["title"]) if w.lower() not in ic.STOP]
     if tw:
         qs.append(" ".join(tw[:9]))
-    for k in ctx["keywords"][:6]:
+    for k in ctx["keywords"][:5]:
         k = re.sub(r"[\"()]", " ", k).strip()
         if len(k) >= 3:
             qs.append(k)
-    if ctx["abstract"]:
+    phrases = key_phrases(ctx)
+    for i in range(0, min(len(phrases), 4), 2):         # two phrases per search: specific, but not too narrow
+        qs.append(" ".join(phrases[i:i + 2]))
+    if ctx["abstract"] and not phrases:
         title_terms = set(words(ctx["title"]))
         freq = {}
         for w in re.findall(r"[A-Za-z][A-Za-z0-9-]{4,}", ctx["abstract"]):
@@ -223,6 +302,7 @@ class Pool:
         self.people = {}          # id -> {id, name, credit, sources:{}, works:{}}
         self.works = {}           # work id -> summary (with authorship details)
         self.links = {}           # id -> set of co-author ids (within the pool's works)
+        self.shared = {}          # work id -> how many of the manuscript's references it also cites
 
     def add_work(self, w, source, rank_weight=1.0):
         wid = ic.short_id(w.get("id"))
@@ -296,6 +376,21 @@ async def works_by_doi(fetch, dois):
         if status == 200 and data:
             out += data.get("results") or []
     return out
+
+
+async def coupled_works(fetch, ref_ids, since):
+    """Recent papers that cite any of the manuscript's references, with their own reference lists, so the number they
+    share can be counted. One request per 50 references. None if every request failed."""
+    chunks = [ref_ids[i:i + CHUNK] for i in range(0, len(ref_ids), CHUNK)]
+    res = await asyncio.gather(*(fetch.get(fetch.openalex(
+        "/works", filter=f"cites:{'|'.join(c)},from_publication_date:{since}-01-01,type:article|review",
+        per_page=200, select=WORK_SELECT + ",referenced_works")) for c in chunks))
+    ok = [data.get("results") or [] for status, data in res if status == 200 and data]
+    return [w for page in ok for w in page] if ok else None
+
+
+def shared_count(work, ref_set):
+    return len({ic.short_id(r) for r in work.get("referenced_works") or []} & ref_set)
 
 
 async def works_of(fetch, author_id, since):
@@ -425,15 +520,37 @@ def outlook(c, t, fit_label, journal_country, today_year=None):
     return label, pts, why
 
 
+ASPECT_BONUS = 5               # per aspect of the manuscript a candidate adds to those already covered (at most 3)
+
+
+def aspects_of(ctx):
+    """The manuscript's angles for a balanced panel: its keywords, then its own key phrases."""
+    out, seen = [], set()
+    for a in [k.strip() for k in ctx["keywords"][:6]] + key_phrases(ctx, 4):
+        key = " ".join(sorted(words(a)))
+        if a and key and key not in seen:
+            seen.add(key)
+            out.append(a)
+    return out[:8]
+
+
+def covered(aspects, have):
+    """Which aspects a researcher's work covers: every content word of the aspect appears in it."""
+    return [a for a in aspects if words(a) and all(w in have for w in words(a))]
+
+
 def mmr_order(cands, limit=None):
     """Best first, but a candidate who shares an institution with, or has published with, someone already chosen
-    moves down, and one country can't fill the list."""
+    moves down, one country can't fill the list, and someone who covers an angle of the manuscript nobody above
+    covers yet moves up (a panel, not five copies of the same expert)."""
     left = [c for c in cands if not c["conflicted"]]
     chosen, inst_seen, country_n = [], set(), {}
-    ids_chosen = set()
+    ids_chosen, aspects_seen = set(), set()
     while left and (limit is None or len(chosen) < limit):
         def value(c):
             v = c["score"]
+            if chosen:
+                v += ASPECT_BONUS * min(3, len(set(c.get("covers") or []) - aspects_seen))
             if c["institution_key"] and c["institution_key"] in inst_seen:
                 v -= 25
             if set(c["coauthors_in_list"]) & ids_chosen:
@@ -445,6 +562,7 @@ def mmr_order(cands, limit=None):
         left.remove(best)
         chosen.append(best)
         ids_chosen.add(best["id"])
+        aspects_seen.update(best.get("covers") or [])
         if best["institution_key"]:
             inst_seen.add(best["institution_key"])
         country_n[best["country"] or "?"] = country_n.get(best["country"] or "?", 0) + 1
@@ -462,8 +580,12 @@ def context(session):
     ctx["limit"] = int(opts.get("limit") or 40)
     ctx["seeds"] = [s for s in opts.get("seeds") or [] if re.fullmatch(r"A\d+", s or "")]
     ctx["manuscript_id"] = (opts.get("manuscript_id") or "").strip()
-    # Reviewer Pulse look-ups: every candidate returned, unless a limit is set (beyond it, cards say so and offer a check)
-    ctx["pulse_limit"] = None if opts.get("pulse_limit") is None else max(0, int(opts["pulse_limit"]))
+    # Reviewer Pulse look-ups: the first PULSE_DEFAULT candidates (ORCID asks for a slower pace, so looking up every
+    # candidate was the slowest step); beyond it, cards say so and offer a check. pulse_limit: null looks up everyone.
+    if "pulse_limit" not in opts:
+        ctx["pulse_limit"] = PULSE_DEFAULT
+    else:
+        ctx["pulse_limit"] = None if opts["pulse_limit"] is None else max(0, int(opts["pulse_limit"]))
     return ctx
 
 
@@ -553,6 +675,32 @@ async def find(session, fetch, progress=None):
         if (w.get("publication_year") or 0) >= today.year - 10:
             pool.add_work(w, "cited", 1.0)
 
+    # Recent papers that build on the same research: they cite several of the manuscript's own references
+    ref_ids = [ic.short_id(w.get("id")) for w in sorted(cited, key=lambda w: w.get("cited_by_count") or 0)
+               if w.get("id") and (w.get("cited_by_count") or 0) <= COUPLING_MAX_CITED][:COUPLING_REFS]
+    coupled_found = 0
+    if len(ref_ids) >= COUPLING_MIN_SHARED:
+        tell(3, "Finding recent papers that build on the same references")
+        ref_set = set(ref_ids)
+        coupled = await coupled_works(fetch, ref_ids, since)
+        if coupled is None:
+            warnings.append("Papers sharing the manuscript's references couldn't be searched this time.")
+        scored = {}
+        for w in coupled or []:
+            wid = ic.short_id(w.get("id"))
+            if not wid or wid in ref_set or wid in scored:
+                continue
+            scored[wid] = (shared_count(w, ref_set), w)
+        for n, (k, w) in enumerate(sorted(scored.values(), key=lambda x: -x[0])):
+            if k < COUPLING_MIN_SHARED or n >= 150:
+                break
+            pool.add_work(w, "coupled", min(1.0, k / COUPLING_FULL))
+            pool.shared[ic.short_id(w.get("id"))] = k
+            coupled_found += 1
+        for wid, (k, _) in scored.items():                 # also counts for papers found by the other searches
+            if k >= COUPLING_MIN_SHARED:
+                pool.shared.setdefault(wid, k)
+
     # The manuscript may already be public (a preprint, or a published paper being tried out). Whoever wrote that
     # paper is an author here, even if no authors were given: they and their co-authors must not be suggested.
     self_authors = {}                                   # author id -> (name, the paper)
@@ -585,7 +733,7 @@ async def find(session, fetch, progress=None):
         text = " ".join(t["keywords"])
         hits, overlap = ic.subject_fit(ctx["keywords"], ctx["title"], text + " " + t["affiliation"])
         tv = {}
-        for w in words(text):
+        for w in grams(". ".join(t["keywords"])):
             tv[w] = tv.get(w, 0) + 1
         sim = cosine(mvec, tv, {})
         if hits or sim >= 0.12:
@@ -645,10 +793,10 @@ async def find(session, fetch, progress=None):
         for wid in p["works"]:
             w = pool.works.get(wid)
             if w:
-                parts.append((w["title"] + " ") * 2 + " ".join(w["topics"] + w["keywords"]))
+                parts += [w["title"], w["title"]] + w["topics"] + w["keywords"]
         parts += [t.get("display_name") or "" for t in (a.get("topics") or [])[:8]]
         vec = {}
-        for w in words(" ".join(parts)):
+        for w in grams(". ".join(parts)):                # ". " so no phrase runs from one title into the next
             vec[w] = vec.get(w, 0) + 1
         texts[p["id"]] = vec
         for w in vec:
@@ -660,6 +808,7 @@ async def find(session, fetch, progress=None):
     max_credit = max((p["credit"] for p in picked if p["id"] in profs), default=0) or 1
 
     cands, conflicted, dropped = [], [], 0
+    aspects = aspects_of(ctx)
     for p in picked:
         a = profs.get(p["id"])
         if not a:
@@ -676,10 +825,17 @@ async def find(session, fetch, progress=None):
             " ".join(w["title"] + " " + " ".join(w["keywords"]) for w in matched[:10])
         hits, _ = ic.subject_fit(ctx["keywords"], ctx["title"], profile_text)
         sim = sims.get(p["id"], 0) / max_sim
-        if sim < 0.15 and not hits:
+        shared = sorted((pool.shared[wid] for wid in p["works"] if wid in pool.shared), reverse=True)
+        shared_best = shared[0] if shared else 0
+        if sim < 0.15 and not hits and shared_best < 3:
             dropped += 1                       # their work doesn't match the manuscript (e.g. a cited methods paper)
             continue
-        fit = round(0.65 * sim + 0.35 * min(1.0, p["credit"] / max_credit), 3)
+        credit = min(1.0, p["credit"] / max_credit)
+        if coupled_found:
+            # With a reference list: words, search evidence and shared references together
+            fit = round(0.55 * sim + 0.25 * credit + 0.20 * min(1.0, shared_best / COUPLING_FULL), 3)
+        else:
+            fit = round(0.65 * sim + 0.35 * credit, 3)
         fit_label = "Strong" if fit >= 0.6 else "Good" if fit >= 0.38 else "Partial"
         c = {"id": prof["id"], "name": prof["name"], "alternatives": prof["alternatives"], "orcid": prof["orcid"],
              "url": prof["url"], "institution": inst["name"] if inst else "", "country": inst["country"] if inst else "",
@@ -689,11 +845,15 @@ async def find(session, fetch, progress=None):
              "fields": list(dict.fromkeys(t["subfield"] for t in prof["topics"] if t["subfield"]))[:3],
              "matches": hits, "papers": evidence_papers, "matched_count": len(matched),
              "contact_paper": {k: contact[k] for k in ("title", "year", "doi")} if contact else None,
-             "sources": [SOURCE_TEXT[s] for s in ("search", "topic", "cited", "tracker", "network") if s in p["sources"]],
-             "source_keys": [s for s in ("search", "topic", "cited", "tracker", "network") if s in p["sources"]],
-             "notes": list(dict.fromkeys(p.get("notes") or []))[:2], "fit": fit, "fit_label": fit_label,
+             "sources": [SOURCE_TEXT[s] for s in SOURCE_ORDER if s in p["sources"]],
+             "source_keys": [s for s in SOURCE_ORDER if s in p["sources"]],
+             "notes": ([f"A recent paper of theirs cites {shared_best} of the manuscript's references"
+                        + (f" ({len(shared)} of their papers share at least {COUPLING_MIN_SHARED})" if len(shared) > 1 else "")]
+                       if shared_best else []) + list(dict.fromkeys(p.get("notes") or []))[:2],
+             "shared_refs": shared_best, "fit": fit, "fit_label": fit_label,
              "retracted": retracted.get(p["id"], 0)}
         c["seniority"] = seniority(prof, stats)
+        c["covers"] = covered(aspects, set(texts.get(p["id"], {})) | ic.terms(profile_text))
         # Independence
         reasons = []
         if p["id"] in self_authors:
@@ -814,7 +974,8 @@ async def find(session, fetch, progress=None):
                                                   "institution": next((x["name"] for x in i["profile"]["institutions"] if x.get("current")), "")}}
                     for p, i in author_pairs],
         "method": {"queries": queries, "topics": [topic_count[t][1] for t in topics], "references_with_doi": len(dois),
-                   "references_found": len(cited), "considered": len(pool.people), "profiles": len(profs), "low_fit": dropped,
+                   "references_found": len(cited), "references_compared": len(ref_ids), "sharing_papers": coupled_found,
+                   "phrases": key_phrases(ctx), "aspects": aspects, "considered": len(pool.people), "profiles": len(profs), "low_fit": dropped,
                    "since": since, "independence_since": coi_since, "seeds": [s for s, _ in seeds],
                    "tracker_matches": sum(1 for c in ordered + conflicted if c.get("tracker"))},
         "warnings": warnings, "manuscript": {"title": ctx["title"], "keywords": ctx["keywords"]},
@@ -840,6 +1001,8 @@ def _why(c, out_year=None):
     bits = [f"{c['fit_label']} fit"]
     if c["matches"]:
         bits.append("matches " + ", ".join(c["matches"][:4]))
+    if c.get("shared_refs"):
+        bits.append(f"shares {c['shared_refs']} of the manuscript's references")
     bits.append(f"{c['recent_works']} papers in {years_label(out_year)}")
     return "; ".join(bits)
 

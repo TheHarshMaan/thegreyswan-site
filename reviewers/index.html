@@ -42,7 +42,9 @@
     which doesn't hold every researcher, email address or unpublished link. Check each person before inviting.<br>
     <b>What leaves your computer.</b> The manuscript is read inside your browser. Its title, keywords, key terms from the
     abstract, reference DOIs and the authors' names go to OpenAlex (and ORCID and ROR, for the authors) to search.
-    Your Invitations list stays in this browser.
+    To find a reviewer's latest public email, their name and ORCID iD go to Europe PMC. Smart matching, if you turn it
+    on, runs a small model inside your browser: the manuscript still never leaves it. Your Invitations list stays in
+    this browser.
   </div>
 
   <main class="rf-layout">
@@ -91,6 +93,15 @@
           <tbody id="people"></tbody>
         </table></div>
       </div>
+
+      <fieldset class="match-mode">
+        <legend>How to match</legend>
+        <label><input type="radio" name="match-mode" value="standard" checked> <b>Standard</b> <span class="muted">words, phrases and
+          shared references. No AI.</span></label>
+        <label><input type="radio" name="match-mode" value="smart"> <b>Smart</b> <span class="beta">beta</span> <span class="muted">adds a
+          small AI model that reads for meaning, so experts who use different words are found too. It runs inside your browser:
+          the manuscript never leaves it. The first time, it downloads about 25 MB.</span></label>
+      </fieldset>
 
       <div class="run-row">
         <button type="button" class="button big" id="run" disabled>Find reviewers</button>
@@ -148,7 +159,10 @@ window.GS_SCROLL = {
 <script src="/assets/scroll.js"></script>
 <script src="/assets/account.js"></script>
 <script src="/assets/feedback.js"></script>
+<script src="/assets/engine.js"></script>
 <script src="pulse.js"></script>
+<script src="contact.js"></script>
+<script src="smart.js"></script>
 <script src="rf.js"></script>
 </body>
 </html>

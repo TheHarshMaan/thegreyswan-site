@@ -66,7 +66,57 @@ function download(name, data, type) {
 function store(key, value) { try { value === undefined ? localStorage.removeItem(key) : localStorage.setItem(key, value); } catch (e) { /* off */ } }
 function stored(key, fallback = "") { try { return localStorage.getItem(key) ?? fallback; } catch (e) { return fallback; } }
 function keys() {
-  return JSON.stringify({ openalex: stored("gs-openalex-key").trim() || SITE_OPENALEX_KEY, ror: ROR_CLIENT_ID });
+  return JSON.stringify({ openalex: stored("gs-openalex-key").trim() || SITE_OPENALEX_KEY, ror: ROR_CLIENT_ID, engine: window.GS_ENGINE || "" });
+}
+const emailOf = (c) => c.email || (c.found_email && c.found_email.email) || "";
+
+// ---------------------------------------------------------------------------
+// Matching mode: Standard (no AI) or Smart (a small model in this browser, see smart.js)
+// ---------------------------------------------------------------------------
+const mode = () => (stored("gs-rf-mode") === "smart" ? "smart" : "standard");
+document.querySelectorAll('input[name="match-mode"]').forEach((r) => {
+  r.checked = r.value === mode();
+  r.addEventListener("change", async () => {
+    if (!r.checked) return;
+    store("gs-rf-mode", r.value);
+    countEvent(`reviewers-mode-${r.value}`);
+    if (!lastOut) return;
+    if (r.value === "smart") await applySmart();
+    else { window.GSSmart && GSSmart.restore(lastOut); setStatus("Standard matching: candidates in their usual order.", "done"); }
+    renderCandidates();
+  });
+});
+async function applySmart() {
+  if (!window.GSSmart || !lastOut) return;
+  const text = [$("ms-title").value.trim(), $("ms-abstract").value.trim()].filter(Boolean).join(". ");
+  setStatus("Smart matching: loading the language model in your browser…", "busy");
+  try {
+    await GSSmart.rerank(lastOut, text, (pct) => setStatus(`Smart matching: downloading the language model (${pct}%, first time only)…`, "busy"));
+    setStatus("Smart matching: candidates re-ordered by how close their work is in meaning, as well as in words.", "done");
+  } catch (err) {
+    GSSmart.restore(lastOut);
+    const r = document.querySelector('input[name="match-mode"][value="standard"]');
+    if (r) r.checked = true;
+    setStatus(`Smart matching couldn't start here (${err.message || "the model didn't load"}), so Standard matching is used.`, "error");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Public emails (contact.js): looked up for the first few candidates, the rest on request
+// ---------------------------------------------------------------------------
+const AUTO_EMAILS = 10;
+async function lookUpEmail(c) {
+  if (!window.GSContact || c.found_email === "busy") return;
+  c.found_email = "busy";
+  renderCandidates();
+  try { c.found_email = await GSContact.findEmail(c); if (c.found_email) countEvent("reviewers-email-found"); }
+  catch (err) { c.found_email = "error"; }
+  renderCandidates();
+  renderShortlist();
+}
+async function autoEmails() {
+  const todo = visible().slice(0, AUTO_EMAILS).filter((c) => c.found_email === undefined);
+  for (let i = 0; i < todo.length; i += 2) await Promise.all(todo.slice(i, i + 2).map(lookUpEmail));
 }
 const yearsLabel = () => { const y = lastOut ? +lastOut.retrieved.slice(0, 4) : new Date().getFullYear(); return `${y - 2}–${y}`; };
 const doiUrl = (d) => (d ? (d.startsWith("http") ? d : `https://doi.org/${d}`) : "");
@@ -234,6 +284,7 @@ async function run() {
   setStatus("Searching OpenAlex…", "busy");
   try {
     lastOut = JSON.parse(await rpc("rf_find", JSON.stringify(session()), keys()));
+    if (mode() === "smart") await applySmart();
     const ids = new Set(lastOut.candidates.map((c) => c.id));
     shortlist = shortlist.filter((s) => ids.has(s.id));
     for (const s of shortlist) { const c = byId(s.id); if (c && c.tracker && c.tracker.this_manuscript) s.logged = true; }
@@ -242,6 +293,7 @@ async function run() {
     setStatus(n ? `Found ${n} candidates${m ? `; ${m} with a potential overlap with the authors, listed separately` : ""}. Pick your shortlist below.`
       : "No candidates found. Try broader keywords, or papers from the last 8 years in Search settings.", n ? "done" : "error");
     if (!seeds.length) $("results").scrollIntoView({ behavior: "smooth", block: "start" });
+    autoEmails();
   } catch (err) {
     setStatus(`${err.message.split("\n").pop()}`, "error");
   }
@@ -264,7 +316,7 @@ function visible() {
   let list = lastOut.candidates.filter((c) => filters.seniority.has(c.seniority)
     && (filters.outlook === "any" || OUTLOOK_RANK[c.outlook] >= OUTLOOK_RANK[filters.outlook])
     && !(filters.hideFlagged && c.flags.length)
-    && !(filters.contactOnly && !c.email && !c.contact_paper)
+    && !(filters.contactOnly && !emailOf(c) && !c.contact_paper)
     && !(c.country && bad.has(c.country.toUpperCase())));
   if (filters.sort === "fit") return list.sort((a, b) => b.fit - a.fit);
   if (filters.sort === "outlook") return list.sort((a, b) => b.outlook_points - a.outlook_points || b.score - a.score);
@@ -274,11 +326,13 @@ function visible() {
 }
 function diversify(list) {
   // Best first, but a colleague or co-author of someone already above moves down, and one country can't fill the top
-  const left = list.slice(), out = [], inst = new Set(), ids = new Set(), country = {};
+  // ...and someone who covers an angle of the manuscript nobody above covers yet moves up (a panel, not copies)
+  const left = list.slice(), out = [], inst = new Set(), ids = new Set(), country = {}, seen = new Set();
   while (left.length) {
     let best = 0, bestV = -Infinity;
     left.forEach((c, i) => {
       let v = c.score;
+      if (out.length) v += 5 * Math.min(3, (c.covers || []).filter((a) => !seen.has(a)).length);
       if (c.institution_key && inst.has(c.institution_key)) v -= 25;
       if (c.coauthors_in_list.some((x) => ids.has(x))) v -= 15;
       v -= 6 * Math.max(0, (country[c.country || "?"] || 0) - 1);
@@ -287,6 +341,7 @@ function diversify(list) {
     const c = left.splice(best, 1)[0];
     out.push(c);
     ids.add(c.id);
+    (c.covers || []).forEach((a) => seen.add(a));
     if (c.institution_key) inst.add(c.institution_key);
     country[c.country || "?"] = (country[c.country || "?"] || 0) + 1;
   }
@@ -365,11 +420,12 @@ function addToTracker(c, msId, logInvite) {
   const key = (n) => n.toLowerCase().replace(/\W/g, "");
   let r = (c.tracker && data.reviewers.find((x) => x.id === c.tracker.tracker_id)) || data.reviewers.find((x) => key(x.name) === key(c.name));
   if (!r) {
-    r = { id: newTid(), name: c.name, email: c.email || "", affiliation: c.institution, keywords: [...new Set([...c.matches, ...c.fields])].slice(0, 6),
+    r = { id: newTid(), name: c.name, email: emailOf(c), affiliation: c.institution, keywords: [...new Set([...c.matches, ...c.fields])].slice(0, 6),
           dead: false, source: "reviewer-finder",
           notes: `Found via Find reviewers (${today()})${msId ? ` for ${msId}` : ""}. OpenAlex: ${c.url}` +
                  `${c.orcid ? ` · ORCID: https://orcid.org/${c.orcid}` : ""}${c.contact_paper ? ` · Email in: ${doiUrl(c.contact_paper.doi)}` : ""}.` +
-                 `${c.email ? "" : " Email not known yet."}` };
+                 `${c.found_email && c.found_email.email && !c.email ? ` Email from: ${c.found_email.url} (${c.found_email.date}).` : ""}` +
+                 `${emailOf(c) ? "" : " Email not known yet."}` };
     data.reviewers.push(r);
   }
   if (logInvite) data.invites.push({ id: newTid(), reviewerId: r.id, manuscript: msId || "", invited: today(), outcome: "awaiting", reported: null });
@@ -404,7 +460,12 @@ function renderShortlist() {
     ${alt.length ? `<p class="sl-label">Alternates, in order</p><ol class="sl-list alt">${alt.map(row).join("")}</ol>` : ""}
     ${list.length ? `<div class="sl-mix"><span>${countries.length} ${countries.length === 1 ? "country" : "countries"}${countries.length ? ` (${esc(countries.join(", "))})` : ""}</span>
         <span>${stages.map(esc).join(", ")}</span>
-        <span>${new Set(list.map((x) => x.c.institution_key).filter(Boolean)).size} institutions</span></div>` : ""}
+        <span>${new Set(list.map((x) => x.c.institution_key).filter(Boolean)).size} institutions</span></div>
+      ${(lastOut.method.aspects || []).length ? (() => {
+        const got = new Set(list.flatMap((x) => x.c.covers || []));
+        const all = lastOut.method.aspects, miss = all.filter((a) => !got.has(a));
+        return `<p class="sl-cover"><b>Angles covered:</b> ${all.filter((a) => got.has(a)).map(esc).join(", ") || "none yet"}${miss.length ? `<br><b>Not covered yet:</b> ${miss.map(esc).join(", ")}` : ""}</p>`;
+      })() : ""}` : ""}
     ${checks.length ? `<ul class="sl-checks">${checks.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : list.length ? '<p class="sl-ok">No shared institution or publication detected within the shortlist (OpenAlex data).</p>' : ""}
     ${list.length ? `<details class="sl-invite" ${prim.length ? "open" : ""}><summary>Invitations</summary>
       <div class="sl-fields">
@@ -422,7 +483,7 @@ function renderShortlist() {
           <pre class="note">${esc(noteFor(c))}</pre>
           <div class="row-actions">
             <button type="button" class="button ghost small" data-act="copy-note" data-id="${esc(c.id)}">Copy note</button>
-            ${c.email ? `<a class="button ghost small" href="mailto:${esc(c.email)}?subject=${encodeURIComponent(`Invitation to review: ${$("ms-title").value.trim()}`)}&body=${encodeURIComponent(noteFor(c))}" data-act="mail" data-id="${esc(c.id)}">Email</a>` : ""}
+            ${emailOf(c) ? `<a class="button ghost small" href="mailto:${esc(emailOf(c))}?subject=${encodeURIComponent(`Invitation to review: ${$("ms-title").value.trim()}`)}&body=${encodeURIComponent(noteFor(c))}" data-act="mail" data-id="${esc(c.id)}">Email</a>` : ""}
             <button type="button" class="button small" data-act="log" data-id="${esc(c.id)}" ${s.logged ? "disabled" : ""}>${s.logged ? "Logged in tracker" : "Log invitation in tracker"}</button>
           </div></div>`).join("")}
     </details>` : ""}`;
@@ -430,6 +491,7 @@ function renderShortlist() {
 function contactLinks(c) {
   const bits = [];
   if (c.email) bits.push(`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`);
+  else if (c.found_email && c.found_email.email) bits.push(`<a href="mailto:${esc(c.found_email.email)}">${esc(c.found_email.email)}</a> (<a href="${esc(c.found_email.url)}" target="_blank" rel="noopener">verify</a>)`);
   if (c.contact_paper) bits.push(`<a href="${esc(doiUrl(c.contact_paper.doi))}" target="_blank" rel="noopener" title="${esc(c.contact_paper.title)}">email in their ${esc(c.contact_paper.year)} paper</a>`);
   if (c.orcid) bits.push(`<a href="https://orcid.org/${esc(c.orcid)}" target="_blank" rel="noopener">ORCID</a>`);
   bits.push(`<a href="https://www.google.com/search?q=${encodeURIComponent(`"${c.name}" ${c.institution} email`)}" target="_blank" rel="noopener">search the web</a>`);
@@ -454,6 +516,7 @@ function candCard(c, n) {
       <div class="c-chips">
         <span class="chip fit-${c.fit_label.toLowerCase()}" title="How closely their recent work matches the manuscript">${c.fit_label} fit</span>
         <span class="chip out-${c.outlook.toLowerCase()}" title="How likely they are to accept">${c.outlook} outlook</span>
+        ${c.ai_label ? `<span class="chip ai ai-${c.ai_label.toLowerCase()}" title="Smart matching: how close their work is to the manuscript in meaning">${c.ai_label} in meaning</span>` : ""}
       </div>
     </div>
     <div class="c-body">
@@ -467,6 +530,11 @@ function candCard(c, n) {
     </div>
     ${c.flags.length || c.pair_notes.length ? `<div class="c-flags">${c.flags.map((f) => `<span class="flag ${f.level}">${esc(f.text)}</span>`).join("")}${c.pair_notes.map((t) => `<span class="flag pair">${esc(t)}</span>`).join("")}</div>` : ""}
     ${c.pulse && window.PulseView ? `<div class="c-pulse">${PulseView.line(c.pulse, { checkId: c.id })}</div>` : ""}
+    <div class="c-contact">
+      <p class="profiles"><span class="muted">Profiles:</span> ${window.GSContact ? GSContact.profileLinks(c) : ""}</p>
+      <p class="email-line"><span class="muted">Email:</span> ${c.email ? `<code class="email">${esc(c.email)}</code> <span class="muted small">(from your tracker)</span>` : window.GSContact ? GSContact.emailHtml(c) : ""}</p>
+      ${(c.covers || []).length ? `<p class="covers"><span class="muted">Covers:</span> ${c.covers.map(esc).join(", ")}</p>` : ""}
+    </div>
     <div class="c-foot">
       <span class="contact">${contactLinks(c)}</span>
       <span class="c-actions">
@@ -586,7 +654,7 @@ function refreshNotes() {
     if (!c) return;
     card.querySelector(".note").textContent = noteFor(c);
     const mail = card.querySelector('[data-act="mail"]');
-    if (mail) mail.href = `mailto:${c.email}?subject=${encodeURIComponent(`Invitation to review: ${$("ms-title").value.trim()}`)}&body=${encodeURIComponent(noteFor(c))}`;
+    if (mail) mail.href = `mailto:${emailOf(c)}?subject=${encodeURIComponent(`Invitation to review: ${$("ms-title").value.trim()}`)}&body=${encodeURIComponent(noteFor(c))}`;
   });
 }
 
@@ -616,6 +684,13 @@ $("results").addEventListener("click", async (e) => {
     return renderShortlist();
   }
   if (act === "reset-note") { store("gs-rf-note"); return renderShortlist(); }
+  if (act === "find-email" && c) return lookUpEmail(c);
+  if (act === "copy-email" && c && emailOf(c)) {
+    try { await navigator.clipboard.writeText(emailOf(c)); t.textContent = "Copied"; countEvent("reviewers-email-copied"); }
+    catch (err) { t.textContent = "Copy failed"; }
+    setTimeout(() => (t.textContent = "Copy"), 1500);
+    return;
+  }
   if (act === "copy-note" && c) {
     try { await navigator.clipboard.writeText(noteFor(c)); t.textContent = "Copied"; countEvent("reviewers-note-copied"); }
     catch (err) { t.textContent = "Copy failed"; }

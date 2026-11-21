@@ -1,0 +1,9 @@
+name = "grey-swan-engine"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://thegreyswan.in,https://www.thegreyswan.in"
+CONTACT_EMAIL = "editorial@thegreyswan.in"
+
+# The OpenAlex API key is a secret, never written here:  npx wrangler secret put OPENALEX_KEY
