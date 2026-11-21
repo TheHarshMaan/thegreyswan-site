@@ -1,4 +1,4 @@
-/* The editor workspace: one tab bar across Find reviewers, Check a person and Invitations */
+/* The editor workspace: one tab bar across Find reviewers, Check conflicts and Invitations */
 .workspace-tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--line, #2E2A24); margin: 4px 0 24px; }
 .workspace-tabs a { padding: 12px 18px; font-size: 0.95rem; color: var(--muted, #A9A49B); text-decoration: none;
   border-bottom: 2px solid transparent; margin-bottom: -1px; }

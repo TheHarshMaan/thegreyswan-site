@@ -39,7 +39,7 @@
     document.head.appendChild(css);
   }
 
-  const PAGES = { "/checker/": "Check your manuscript", "/references/": "Reference check", "/researchers/": "Check a person",
+  const PAGES = { "/checker/": "Check your manuscript", "/references/": "Reference check", "/researchers/": "Check conflicts",
                   "/reviewers/": "Find reviewers", "/tracker/": "Invitations", "/cygnus/": "Cygnus Program", "/studio/": "Studio", "/account/": "Account", "/privacy/": "Privacy page", "/": "Home page" };
   function pageName() {
     const p = location.pathname.replace(/index\.html$/, "");

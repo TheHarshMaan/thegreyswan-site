@@ -1,4 +1,4 @@
-// The Grey Swan Editorial: Check a person, the researcher identity and overlap check (website)
+// The Grey Swan Editorial: Check conflicts, the researcher identity and overlap check (website)
 // Python (worker.js + idcheck.py) reads the files, looks people up in OpenAlex, ROR and ORCID through the browser,
 // and decides each verdict; this page collects who to check and shows the results.
 

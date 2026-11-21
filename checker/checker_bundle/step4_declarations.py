@@ -141,13 +141,15 @@ DECLARATIONS = [
 SAMPLE_WORDS = (r"patients?|participants?|subjects?|respondents?|isolates?|samples?|"
                 r"specimens?|cases?|children|women|men|individuals|students|volunteers|"
                 r"mice|rats|animals|studies|articles|records|trials|workers|nurses|doctors|physicians|"
-                r"mothers|households|pregnant women|adults|adolescents|caregivers|teachers|pharmacists")
-HUMAN_WORDS = r"\b(patients?|participants?|respondents?|subjects?|volunteers|women|men|children|students)\b"
+                r"mothers|households|pregnant women|adults|adolescents|caregivers|teachers|pharmacists|"
+                r"neonates?|infants?|newborns?|babies|people|persons|families|pregnancies|admissions|births")
+HUMAN_WORDS = r"\b(patients?|participants?|respondents?|subjects?|volunteers|women|men|children|students|neonates?|infants?|newborns?)\b"
 MINOR_WORDS = r"\b(child(ren)?|minors?|adolescents?|paediatric|pediatric|infants?|neonates?|school students|under 18|<\s?18 years)\b"
 ANIMAL_WORDS = r"\b(mice|mouse|rats?|rabbits?|guinea pigs?|zebrafish|animals?)\b"
 DATE = (r"\b(\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}|\d{4}-\d{2}-\d{2}|"
         r"(\d{1,2}(st|nd|rd|th)?\s+)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?,?\s+(\d{1,2},?\s+)?\d{4})\b")
-APPROVAL_NO = r"(no\.?|number|ref(erence)?\.?|approval|protocol|letter)\s*(id)?\s*[:#]?\s*[A-Z0-9/\-]*\d[A-Z0-9/\-.]{2,}"
+APPROVAL_NO = (r"(no\.?|number|ref(erence)?\.?|approval|protocol|letter|code)\s*(id)?\s*[:#]?\s*[A-Z0-9/\-]*\d[A-Z0-9/\-.]{2,}"
+               r"|(?-i:\b[A-Z]{2,}[A-Z0-9]*(?:[./\-][A-Z0-9]+)+[./\-]\d[\dA-Z./\-]{1,})")    # (IEC/2021/045), IR.LUMS.REC.1399.123
 COMMITTEE = r"ethics committee|ethical committee|review board|\bIRB\b|\bIEC\b|\bIAEC\b|research ethics|ethics board"
 
 

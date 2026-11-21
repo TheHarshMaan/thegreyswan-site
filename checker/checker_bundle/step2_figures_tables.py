@@ -19,7 +19,7 @@ MENTION = re.compile(
 )
 
 # A caption is a paragraph that STARTS with "Figure 2." / "Fig. 2:" / "Table 1 "
-CAPTION = re.compile(r"^(Fig(?:ure)?\.?|Table)\s*(\d+)\s*[.:\-–|]?\s", re.IGNORECASE)
+CAPTION = re.compile(r"^(Fig(?:ure)?\.?|Table)\s*(\d+)\s*(?:[.:\-–|]\s*|\s+(?!(?:shows?|presents?|summari[sz]es?|lists?|illustrates?|depicts?|displays?|gives?|provides?|compares?|reports?|describes?|demonstrates?|indicates?|contains?|and|to|in|of|was|were|is|are)\b))", re.IGNORECASE)
 
 
 def kind_of(label):

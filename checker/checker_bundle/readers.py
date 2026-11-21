@@ -119,10 +119,41 @@ def _large_image_with_sparse_text(page, extracted_text):
     return False
 
 
+# Superscript marks after authors' names (Hanieh Rajabzadeh¹, Ali Ghiasi³, Elham Goodarzi⁴˒⁵). Many PDFs, Word's
+# among them, store them as separate raised text, so the text comes out one fragment per line:
+#     "Hanieh Rajabzadeh" / "1" / ", Kazhaal Sheikhi" / "2" / ...
+# and the bare "1" would later be dropped as a page number. Before the first heading of the first page, such pieces
+# are put back on one line, so the author line reads as one again.
+_MARKS_ONLY = re.compile(r"^\s*(?:\d{1,2}(?:\s*[,–-]\s*\d{1,2})*\s*[*†‡§¶#]*|[*†‡§¶#]+)\s*$")
+_GOES_ON = re.compile(r"^\s*(?:[,;&]|and\s)")
+_NAME_END = re.compile(r"[A-Z][a-z'’\-]+\s*$")
+
+
+def _rejoin_author_marks(lines):
+    from step1_split_sections import match_section
+    out, joined = [], False
+    for i, line in enumerate(lines):
+        if match_section(Paragraph(line.strip())):
+            return out + lines[i:]
+        nxt = lines[i + 1] if i + 1 < len(lines) else ""
+        if out and _MARKS_ONLY.match(line) and (joined or _GOES_ON.match(nxt)) \
+                and (_NAME_END.search(out[-1]) or joined):
+            out[-1] = out[-1].rstrip() + line.strip()          # "Hanieh Rajabzadeh" + "1"
+            joined = True
+        elif out and joined and _GOES_ON.match(line):
+            out[-1] = out[-1].rstrip() + " " + line.strip()    # ... + ", Kazhaal Sheikhi"
+        else:
+            out.append(line)
+            joined = False
+    return out
+
+
 def read_pdf(source):
     from pypdf import PdfReader
     reader = PdfReader(io.BytesIO(read_bytes(source)))
     pages = [(page.extract_text() or "").splitlines() for page in reader.pages]
+    if pages:
+        pages[0] = _rejoin_author_marks(pages[0])
     # A PDF may have a readable title page followed by scanned/image-only pages.
     # In that case, continuing with manuscript checks would produce false omissions.
     unreadable_image_pages = []

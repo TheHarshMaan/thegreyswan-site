@@ -1173,7 +1173,8 @@ def search_name(name):
 ROLE_START = re.compile(r"^(?:(?:associate|assistant|adjunct|visiting|full|senior|junior|emeritus|research|clinical|"
                         r"honorary|principal|postdoctoral|doctoral|phd|graduate|undergraduate|master'?s?)\s+)*"
                         r"(?:professor|lecturer|reader|researcher|scientist|fellow|student|candidate|scholar|director|"
-                        r"head|dean|chair|consultant|resident|registrar|physician|surgeon|nurse|associate|instructor)\b",
+                        r"head|dean|chair|consultant|resident|registrar|physician|surgeon|nurse|associate|instructor)\b"
+                        r"(?!\s+(?:research\s+committee|committee|union|council|affairs|association|research\s+cent))",
                         re.IGNORECASE)
 
 

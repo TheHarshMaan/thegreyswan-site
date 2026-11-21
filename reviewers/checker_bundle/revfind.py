@@ -611,7 +611,7 @@ async def find(session, fetch, progress=None):
     if unresolved:
         warnings.append("Couldn't confirm a research profile for " + ", ".join(unresolved) + ": co-authorship with "
                         + ("them" if len(unresolved) > 1 else "this author")
-                        + " is checked by name only. Pick their profile in Check a person for a full check.")
+                        + " is checked by name only. Pick their profile in Check conflicts for a full check.")
     suggested_results = ic.results_from(people, infos, rors, {**ctx}, fetch)
     suggested_results = [r for r in suggested_results["results"] if r["role"] == "reviewer"] if pairs else []
 
