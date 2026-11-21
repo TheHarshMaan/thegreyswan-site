@@ -545,8 +545,9 @@ function renderResults() {
     <details class="box"><summary><h4>How these were found</h4></summary>
       <ul class="method">
         <li>Searches: ${m.queries.map((q) => `<code>${esc(q)}</code>`).join(" ")}</li>
+        ${m.phrases && m.phrases.length ? `<li>Key phrases from the manuscript: ${esc(m.phrases.join(", "))}</li>` : ""}
         <li>Research topics: ${esc(m.topics.join(", ") || "none")}</li>
-        <li>References with a DOI: ${m.references_with_doi} (${m.references_found} found in OpenAlex)</li>
+        <li>References with a DOI: ${m.references_with_doi} (${m.references_found} found in OpenAlex)${m.references_compared ? `; ${m.sharing_papers} recent papers found that cite at least 2 of the same references (very widely cited references left out)` : ""}</li>
         <li>${m.considered} researchers considered, ${m.profiles} profiles read${m.low_fit ? `, ${m.low_fit} left out because their work doesn't match` : ""}${m.seeds.length ? `, networks of ${m.seeds.length} reviewer(s) explored` : ""}</li>
         <li>Ranking: fit 60% (how closely their recent work matches the manuscript), outlook 25% (your tracker history first, then career stage, recent activity and open invitations), activity 15% (papers in ${yearsLabel()}). Public reviewing records are shown but never counted. Anyone with a potential overlap with the authors is listed separately and kept out of the ranking; finding no overlap doesn't confirm independence.</li>
         <li>${out.requests} database requests.</li></ul></details>`;
